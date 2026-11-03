@@ -1261,7 +1261,7 @@ function parseBirth(str){
   if((m = v.match(/^(\d{1,2})[\/.](\d{4})$/))) return { y:+m[2], m:+m[1] };
   const low = v.toLowerCase();
   for(let i=0;i<12;i++){
-    const names = [MONTHS_DE[i], MONTHS_EN[i], MONTHS_DE[i].slice(0,3), MONTHS_EN[i].slice(0,3), i===2?'maerz':''].filter(Boolean).map(x=>x.toLowerCase());
+    const names = [MONTHS_DE[i], MONTHS_EN[i], MONTHS_DE[i].slice(0,3), MONTHS_EN[i].slice(0,3), i===2?'maerz':'', i===0?'jänner':'', i===0?'jaenner':''].filter(Boolean).map(x=>x.toLowerCase());
     if(names.some(n => low.startsWith(n))){ const y = v.match(/(\d{4})/); if(y) return { y:+y[1], m:i+1 }; }
   }
   if((m = v.match(/^(\d{4})$/))) return { y:+m[1], m:null };
@@ -2958,7 +2958,7 @@ async function buildPdf(title, fileName, draw){
 function quarantineBirthText(d){
   const b = parseBirth(d.birthEstimate);
   if(!b) return d.birthEstimate ? String(d.birthEstimate) : 'unbekannt / unknown';
-  return b.m ? `${String(b.m).padStart(2,'0')}/${b.y}` : String(b.y);
+  return b.m ? `${MONTHS_DE[b.m-1]} ${b.y} / ${MONTHS_EN[b.m-1]} ${b.y}` : String(b.y);
 }
 function quarantineSexText(d){ return d.sex==='m' ? 'männlich / male' : d.sex==='f' ? 'weiblich / female' : 'unbekannt / unknown'; }
 async function downloadQuarantinePhoto(d){
