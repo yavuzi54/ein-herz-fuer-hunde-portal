@@ -164,6 +164,40 @@
   .stage-completed{background:var(--moss);color:#fff;}
   .stage-rejected{background:#EFE3E3;color:#8A3B3B;}
   .stage-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px;}
+  /* Christmas cards (admin) */
+  .xmas-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start;}
+  .xmas-settings{padding:20px 22px;}
+  .xmas-formats{display:flex;flex-direction:column;gap:6px;}
+  .xmas-format{display:flex;gap:8px;align-items:center;font-weight:500;font-size:0.9rem;border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--paper);cursor:pointer;}
+  .xmas-format.on{border-color:var(--clay);background:var(--paper-card);}
+  .xmas-check{display:flex;gap:8px;align-items:center;font-size:0.9rem;margin-top:4px;cursor:pointer;}
+  .xmas-list{display:flex;flex-direction:column;gap:10px;}
+  .xmas-row{display:grid;grid-template-columns:200px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--paper-card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;}
+  .xmas-row.on{border-color:var(--moss);box-shadow:inset 3px 0 0 var(--moss);}
+  .xmas-row.previewing{outline:2px solid var(--clay);outline-offset:1px;}
+  .xmas-pick{display:flex;gap:10px;align-items:center;cursor:pointer;font-size:0.92rem;line-height:1.35;}
+  .xmas-pick input{width:18px;height:18px;flex-shrink:0;}
+  .xmas-thumb{width:46px;height:52px;border-radius:23px 23px 6px 6px;overflow:hidden;background:var(--moss);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.6rem;text-align:center;}
+  .xmas-thumb img{width:100%;height:100%;object-fit:cover;}
+  .xmas-wish{width:100%;min-height:52px;resize:vertical;font:inherit;font-size:0.88rem;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;}
+  .xmas-actions{display:flex;flex-direction:column;gap:6px;}
+  .xmas-preview-box{position:sticky;top:16px;}
+  .xmas-preview-img{width:100%;height:auto;display:block;border-radius:4px;box-shadow:0 10px 26px -12px rgba(36,50,43,0.45);}
+  .xmas-crop{margin-top:12px;background:var(--paper-card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:0.88rem;}
+  .xmas-zoom{display:flex;gap:10px;align-items:center;font-weight:600;margin-bottom:6px;}
+  .xmas-zoom input{flex:1;accent-color:var(--clay);}
+  .xmas-preview-img{cursor:crosshair;}
+  .xmas-custom{color:var(--moss);font-weight:700;}
+  .xmas-gallery-overlay{justify-content:center;align-items:flex-start;overflow-y:auto;padding:24px 12px;}
+  .xmas-gallery{background:var(--paper);border-radius:12px;width:min(1100px,100%);padding:22px 24px;}
+  .xmas-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;}
+  .xmas-gallery-card{background:none;border:1px solid transparent;border-radius:8px;padding:6px;cursor:pointer;display:flex;flex-direction:column;gap:6px;align-items:stretch;text-align:center;}
+  .xmas-gallery-card:hover{border-color:var(--clay);background:var(--paper-card);}
+  .xmas-gallery-card img{width:100%;height:auto;display:block;border-radius:3px;box-shadow:0 6px 16px -10px rgba(36,50,43,0.6);}
+  .xmas-gallery-wait{display:flex;align-items:center;justify-content:center;aspect-ratio:1;background:var(--paper-card);border-radius:3px;}
+  .xmas-gallery-name{font-size:0.82rem;font-weight:600;color:var(--ink);}
+  .xmas-preview-empty{border:1px dashed var(--line);border-radius:10px;padding:28px 18px;text-align:center;color:var(--ink-soft);font-size:0.88rem;min-height:180px;display:flex;align-items:center;justify-content:center;}
+  @media (max-width:900px){ .xmas-layout{grid-template-columns:1fr;} .xmas-preview-box{position:static;max-width:320px;} .xmas-row{grid-template-columns:1fr;} .xmas-actions{flex-direction:row;} }
   .story-photo{position:relative;}
   .story-main{cursor:zoom-in;}
   .story-nav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,0.88);color:var(--ink);font-size:1.6rem;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);z-index:2;}
@@ -2693,6 +2727,666 @@ async function uploadAdminDoc(input){
   docUploading = ''; render();
 }
 
+/* ---------------------------------------------------------
+   CHRISTMAS WISH CARDS (admin tab "Weihnachtskarten")
+   One printable card per dog: photo, name, wish, QR code to the dog's public profile.
+   Cards are drawn on a canvas at 300 dpi (so Fraunces/Karla and emojis work) and
+   placed on A4 sheets with cut marks by pdf-lib. Wishes are kept in this browser only.
+--------------------------------------------------------- */
+Object.assign(I18N.de, {
+  admin_tab_xmas:'🎄 Weihnachtskarten', xmas_title:'Weihnachtskarten',
+  xmas_intro:'Für jeden Hund eine Karte zum Ausdrucken: Foto, Name, Weihnachtswunsch und QR-Code zum Hundeprofil. Hunde auswählen, Wunsch eintragen, PDF erstellen. Ein leeres Wunschfeld bekommt Linien zum Selberschreiben.',
+  xmas_format:'Format', xmas_fmt_profile:'Wie Hundeprofil (9 × 13 cm, 4 pro Seite)', xmas_fmt_square:'Quadratisch (8 × 8 cm, 6 pro Seite)', xmas_fmt_card:'Kreditkarte (5,4 × 8,6 cm, 9 pro Seite)',
+  xmas_heading_label:'Überschrift auf der Karte', xmas_heading_default:'Mein Weihnachtswunsch',
+  xmas_qr_label:'Text neben dem QR-Code', xmas_qr_default:'Scan mich und lern mich kennen!',
+  xmas_hole:'Markierung für das Aufhänge-Loch', xmas_show:'Hunde', xmas_select_all:'Alle auswählen', xmas_select_none:'Auswahl aufheben',
+  xmas_wish_ph:'Weihnachtswunsch, z. B. „Ein warmes Körbchen und jemanden, der mit mir spazieren geht.“ Leer lassen = Linien zum Selberschreiben',
+  xmas_preview:'Vorschau', xmas_single:'PDF', xmas_pdf_selected:'PDF für {n} Karten erstellen', xmas_pdf_none:'Bitte zuerst Hunde auswählen.',
+  xmas_progress:'Karte {i} von {n} …', xmas_done:'PDF mit {n} Karten erstellt', xmas_error:'Die Karten konnten nicht erstellt werden.',
+  xmas_no_photo:'kein Foto', xmas_empty:'Keine Hunde in dieser Gruppe.', xmas_saved_hint:'Die Wünsche werden nur in diesem Browser gespeichert.',
+  xmas_preview_hint:'Auf „Vorschau“ bei einem Hund klicken, um seine Karte zu sehen.', xmas_wish_label:'Wunsch',
+  xmas_print_hint:'Drucken in „Tatsächlicher Größe“ / 100 % (nicht „An Seite anpassen“), dann an den Schnittmarken ausschneiden.',
+  xmas_crop_hint:'Foto anpassen: ins Foto klicken = diese Stelle wird die Bildmitte.', xmas_zoom:'Zoom', xmas_crop_reset:'Zurücksetzen', xmas_crop_custom:'Foto angepasst',
+  xmas_gallery_btn:'Alle {n} Karten ansehen', xmas_gallery_title:'Vorschau vor dem Drucken', xmas_gallery_hint:'So werden die Karten gedruckt. Wenn ein Foto nicht gut im Rahmen sitzt: Karte anklicken und das Foto anpassen.',
+  xmas_adjust:'Foto anpassen'
+});
+Object.assign(I18N.en, {
+  admin_tab_xmas:'🎄 Christmas cards', xmas_title:'Christmas cards',
+  xmas_intro:'A printable card for every dog: photo, name, Christmas wish and a QR code to the dog’s profile. Pick dogs, type a wish, create the PDF. An empty wish field gets lines to write on by hand.',
+  xmas_format:'Format', xmas_fmt_profile:'Like the dog profile (9 × 13 cm, 4 per page)', xmas_fmt_square:'Square (8 × 8 cm, 6 per page)', xmas_fmt_card:'Credit card (5.4 × 8.6 cm, 9 per page)',
+  xmas_heading_label:'Heading on the card', xmas_heading_default:'Mein Weihnachtswunsch',
+  xmas_qr_label:'Text next to the QR code', xmas_qr_default:'Scan mich und lern mich kennen!',
+  xmas_hole:'Mark for the hanging hole', xmas_show:'Dogs', xmas_select_all:'Select all', xmas_select_none:'Clear selection',
+  xmas_wish_ph:'Christmas wish, e.g. “A warm basket and someone to go for walks with me.” Leave empty = lines to write by hand',
+  xmas_preview:'Preview', xmas_single:'PDF', xmas_pdf_selected:'Create PDF with {n} cards', xmas_pdf_none:'Please select dogs first.',
+  xmas_progress:'Card {i} of {n} …', xmas_done:'PDF with {n} cards created', xmas_error:'The cards could not be created.',
+  xmas_no_photo:'no photo', xmas_empty:'No dogs in this group.', xmas_saved_hint:'Wishes are only saved in this browser.',
+  xmas_preview_hint:'Click “Preview” on a dog to see its card.', xmas_wish_label:'Wish',
+  xmas_print_hint:'Print at “Actual size” / 100 % (not “Fit to page”), then cut along the crop marks.',
+  xmas_crop_hint:'Adjust photo: click into the photo = that spot becomes the centre.', xmas_zoom:'Zoom', xmas_crop_reset:'Reset', xmas_crop_custom:'Photo adjusted',
+  xmas_gallery_btn:'View all {n} cards', xmas_gallery_title:'Preview before printing', xmas_gallery_hint:'This is how the cards will print. If a photo doesn’t sit well in the frame: click the card and adjust the photo.',
+  xmas_adjust:'Adjust photo'
+});
+const XMAS_FORMATS = {
+  square:  { w: 80, h: 80,  layout: 'wide' },
+  profile: { w: 90, h: 130, layout: 'tall' },
+  card:    { w: 54, h: 86,  layout: 'tall' }
+};
+const XMAS_KEY = 'ehfh_xmas_cards_v1';
+function xmasLoad(){
+  let s = {};
+  try{ s = JSON.parse(localStorage.getItem(XMAS_KEY) || '{}') || {}; }catch(_){ s = {}; }
+  return {
+    format: XMAS_FORMATS[s.format] ? s.format : 'square',
+    heading: typeof s.heading === 'string' ? s.heading : null,
+    qrText: typeof s.qrText === 'string' ? s.qrText : null,
+    hole: s.hole !== false,
+    group: ['verfuegbar','reserviert','all'].includes(s.group) ? s.group : 'all',
+    wishes: s.wishes && typeof s.wishes === 'object' ? s.wishes : {},
+    crop: s.crop && typeof s.crop === 'object' ? s.crop : {},
+    selected: Array.isArray(s.selected) ? s.selected : []
+  };
+}
+const xmas = xmasLoad();
+let xmasPreview = { id: null, url: null, photo: null };
+let xmasGallery = null; // { urls: {id: dataUrl} } while the 'all cards' preview is open
+let xmasBusy = '';
+function xmasSave(){
+  try{ localStorage.setItem(XMAS_KEY, JSON.stringify(xmas)); }catch(_){}
+}
+function xmasHeading(){ return xmas.heading == null ? t('xmas_heading_default') : xmas.heading; }
+function xmasQrText(){ return xmas.qrText == null ? t('xmas_qr_default') : xmas.qrText; }
+// Adopted dogs are left out: their profile link only says "hat schon ein Zuhause"
+function xmasDogs(){
+  return state.dogs.filter(d => d.status !== 'vermittelt' && (xmas.group === 'all' || d.status === xmas.group))
+    .slice().sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'de'));
+}
+function xmasSelectedDogs(){
+  const ids = new Set(xmas.selected);
+  return state.dogs.filter(d => d.status !== 'vermittelt' && ids.has(d.id))
+    .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'de'));
+}
+
+let qrLibPromise = null;
+function loadQrLib(){
+  if(window.qrcode) return Promise.resolve(window.qrcode);
+  if(!qrLibPromise){
+    qrLibPromise = new Promise((resolve, reject) => {
+      const sc = document.createElement('script');
+      sc.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
+      sc.onload = () => window.qrcode ? resolve(window.qrcode) : reject(new Error('qrcode'));
+      sc.onerror = () => { qrLibPromise = null; reject(new Error('qrcode')); };
+      document.head.appendChild(sc);
+    });
+  }
+  return qrLibPromise;
+}
+
+function adminXmasTab(){
+  const dogs = xmasDogs();
+  const sel = new Set(xmas.selected);
+  const nSel = xmasSelectedDogs().length;
+  const groups = [['all', t('stage_filter_all')], ['verfuegbar', statusLabel.verfuegbar], ['reserviert', statusLabel.reserviert]];
+  const count = k => state.dogs.filter(d => d.status !== 'vermittelt' && (k === 'all' || d.status === k)).length;
+  const previewDog = state.dogs.find(d => d.id === xmasPreview.id);
+  return `
+  <div class="admin-header">
+    <h1 class="page-title" style="font-size:1.6rem;">${t('xmas_title')}</h1>
+    <div class="action-row" style="margin:0;">
+    <button type="button" class="btn-secondary" data-action="xmas-gallery" ${nSel ? '' : 'disabled'}>${t('xmas_gallery_btn', { n: nSel })}</button>
+    <button type="button" class="btn-primary" data-action="xmas-pdf" ${xmasBusy ? 'disabled' : ''}>${xmasBusy ? esc(xmasBusy) : t('xmas_pdf_selected', { n: nSel })}</button>
+    </div>
+  </div>
+  <p class="page-lede" style="margin-bottom:18px;">${t('xmas_intro')}</p>
+  <div class="xmas-layout">
+    <div>
+      <div class="card xmas-settings">
+        <div class="field"><label>${t('xmas_format')}</label>
+          <div class="xmas-formats">${Object.keys(XMAS_FORMATS).map(k => `
+            <label class="xmas-format ${xmas.format === k ? 'on' : ''}"><input type="radio" name="xmasFormat" value="${k}" data-xmas-format ${xmas.format === k ? 'checked' : ''}> ${t('xmas_fmt_' + k)}</label>`).join('')}
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label>${t('xmas_heading_label')}</label><input type="text" id="xmasHeading" maxlength="40" value="${esc(xmasHeading())}"></div>
+          <div class="field"><label>${t('xmas_qr_label')}</label><input type="text" id="xmasQrText" maxlength="60" value="${esc(xmasQrText())}"></div>
+        </div>
+        <label class="xmas-check"><input type="checkbox" id="xmasHole" ${xmas.hole ? 'checked' : ''}> ${t('xmas_hole')}</label>
+        <p class="hint" style="margin:8px 0 0;">${t('xmas_print_hint')} ${t('xmas_saved_hint')}</p>
+      </div>
+      <div class="stage-tabs" style="margin-top:20px;">${groups.map(([k, l]) => `<button type="button" class="chip ${xmas.group === k ? 'on' : ''}" data-action="xmas-group" data-group="${k}">${l} <span class="chip-n">${count(k)}</span></button>`).join('')}
+        <button type="button" class="link-btn" data-action="xmas-select" data-all="1" style="margin-left:8px;">${t('xmas_select_all')}</button>
+        <button type="button" class="link-btn" data-action="xmas-select" data-all="0">${t('xmas_select_none')}</button>
+      </div>
+      ${dogs.length ? `<div class="xmas-list">${dogs.map(d => {
+        const photo = mainPhoto(d);
+        return `
+        <div class="xmas-row ${sel.has(d.id) ? 'on' : ''} ${xmasPreview.id === d.id ? 'previewing' : ''}" data-id="${d.id}">
+          <label class="xmas-pick"><input type="checkbox" data-xmas-pick="${d.id}" ${sel.has(d.id) ? 'checked' : ''}>
+            <span class="xmas-thumb">${photo ? `<img src="${esc(thumbUrl(photo))}" alt="" loading="lazy" style="object-position:${focusPos(d)}">` : `<small>${t('xmas_no_photo')}</small>`}</span>
+            <span><b>${esc(d.name)}</b><br><span class="badge status-${d.status}">${statusLabel[d.status]}</span>${xmas.crop[d.id] ? `<br><small class="xmas-custom">✓ ${t('xmas_crop_custom')}</small>` : ''}</span>
+          </label>
+          <textarea class="xmas-wish" data-xmas-wish="${d.id}" rows="2" maxlength="160" aria-label="${t('xmas_wish_label')} ${esc(d.name)}" placeholder="${esc(t('xmas_wish_ph'))}">${esc(xmas.wishes[d.id] || '')}</textarea>
+          <div class="xmas-actions">
+            <button type="button" class="btn-secondary btn-small" data-action="xmas-preview" data-id="${d.id}">${t('xmas_preview')}</button>
+            <button type="button" class="btn-secondary btn-small" data-action="xmas-pdf-one" data-id="${d.id}" ${xmasBusy ? 'disabled' : ''}>${t('xmas_single')}</button>
+          </div>
+        </div>`; }).join('')}</div>` : emptyBlock(t('xmas_empty'))}
+    </div>
+    <aside class="xmas-preview-box">
+      ${previewDog && xmasPreview.url ? `<img class="xmas-preview-img" src="${xmasPreview.url}" alt="${t('xmas_preview')}: ${esc(previewDog.name)}" title="${esc(t('xmas_crop_hint'))}">
+        ${mainPhoto(previewDog) ? `<div class="xmas-crop">
+          <p class="hint" style="margin:0 0 8px;">${t('xmas_crop_hint')}</p>
+          <label class="xmas-zoom">${t('xmas_zoom')} <input type="range" id="xmasZoom" min="100" max="300" step="5" value="${Math.round(((xmas.crop[previewDog.id] || {}).z || 1) * 100)}"></label>
+          ${xmas.crop[previewDog.id] ? `<button type="button" class="link-btn" data-action="xmas-crop-reset" data-id="${previewDog.id}">${t('xmas_crop_reset')}</button>` : ''}
+        </div>` : ''}`
+        : previewDog ? `<div class="xmas-preview-empty"><span class="spinner"></span></div>`
+        : `<div class="xmas-preview-empty">${t('xmas_preview_hint')}</div>`}
+    </aside>
+  </div>
+  ${xmasGallery ? xmasGalleryOverlay() : ''}`;
+}
+function xmasGalleryOverlay(){
+  const dogs = xmasSelectedDogs();
+  return `
+  <div class="detail-overlay xmas-gallery-overlay" data-action="xmas-gallery-close-bg">
+    <div class="xmas-gallery">
+      <div class="admin-header" style="margin-bottom:8px;">
+        <h2 style="margin:0;">${t('xmas_gallery_title')}</h2>
+        <button class="detail-close" style="margin:0;" data-action="xmas-gallery-close">${t('close')}</button>
+      </div>
+      <p class="hint" style="margin:0 0 16px;">${t('xmas_gallery_hint')}</p>
+      <div class="xmas-gallery-grid">${dogs.map(d => `
+        <button type="button" class="xmas-gallery-card" data-action="xmas-gallery-pick" data-id="${d.id}" title="${esc(t('xmas_adjust'))}">
+          ${xmasGallery.urls[d.id] ? `<img src="${xmasGallery.urls[d.id]}" alt="${esc(d.name)}">` : `<span class="xmas-gallery-wait"><span class="spinner"></span></span>`}
+          <span class="xmas-gallery-name">${esc(d.name)}${xmas.crop[d.id] ? ' ✓' : ''} · ${t('xmas_adjust')}</span>
+        </button>`).join('')}</div>
+    </div>
+  </div>`;
+}
+
+const XMAS_C = { paper:'#EFE7D8', card:'#FBF8F2', ink:'#24322B', soft:'#5b6660', clay:'#A6512E', moss:'#57684A', line:'#d9cfbd' };
+const xmasPhotoCache = new Map();
+function xmasPhoto(d){
+  const url = mainPhoto(d);
+  if(!url) return Promise.resolve(null);
+  if(!xmasPhotoCache.has(url)){
+    xmasPhotoCache.set(url, fetch(url, { mode:'cors', cache:'force-cache' })
+      .then(r => { if(!r.ok) throw new Error('photo ' + r.status); return r.blob(); })
+      .then(b => createImageBitmap(b))
+      .catch(err => { xmasPhotoCache.delete(url); console.warn('xmas photo', err); return null; }));
+  }
+  return xmasPhotoCache.get(url);
+}
+async function xmasFonts(){
+  try{ await Promise.all(['600 40px Fraunces', 'italic 500 40px Fraunces', '700 20px Karla', '400 20px Karla'].map(f => document.fonts.load(f))); }catch(_){}
+}
+let xmasLogoPromise = null;
+function xmasLogo(){
+  if(!xmasLogoPromise) xmasLogoPromise = new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = LOGO_DATA; });
+  return xmasLogoPromise;
+}
+// Wrap text into lines that fit width (canvas measureText), long words are cut
+function xmasWrap(g, text, width){
+  const lines = [];
+  String(text || '').replace(/\r/g, '').split('\n').forEach(par => {
+    let cur = '';
+    par.split(/\s+/).filter(Boolean).forEach(word => {
+      const test = cur ? cur + ' ' + word : word;
+      if(g.measureText(test).width <= width || !cur){ cur = test; }
+      else { lines.push(cur); cur = word; }
+      while(g.measureText(cur).width > width && cur.length > 1){
+        let cut = cur.length - 1;
+        while(cut > 1 && g.measureText(cur.slice(0, cut)).width > width) cut--;
+        lines.push(cur.slice(0, cut)); cur = cur.slice(cut);
+      }
+    });
+    lines.push(cur);
+  });
+  return lines.filter((l, i, a) => l || (i && i < a.length - 1));
+}
+function xmasStar(g, x, y, r, color){
+  g.save(); g.fillStyle = color; g.beginPath();
+  for(let i = 0; i < 10; i++){
+    const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r;
+    g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+  }
+  g.closePath(); g.fill(); g.restore();
+}
+function xmasFlake(g, x, y, r, color){
+  g.save(); g.strokeStyle = color; g.lineWidth = Math.max(1, r * 0.14); g.lineCap = 'round';
+  for(let i = 0; i < 6; i++){
+    const a = i * Math.PI / 3, cx = Math.cos(a), cy = Math.sin(a);
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x + cx * r, y + cy * r);
+    const bx = x + cx * r * 0.6, by = y + cy * r * 0.6;
+    [-1, 1].forEach(s => { const b = a + s * 0.7; g.moveTo(bx, by); g.lineTo(bx + Math.cos(b) * r * 0.3, by + Math.sin(b) * r * 0.3); });
+    g.stroke();
+  }
+  g.restore();
+}
+// Arch frame (straight sides, round top) like the portal's photo frames
+function xmasArchPath(g, x, y, w, h){
+  const r = w / 2;
+  g.beginPath(); g.moveTo(x, y + h); g.lineTo(x, y + r); g.arc(x + r, y + r, r, Math.PI, 0); g.lineTo(x + w, y + h); g.closePath();
+}
+// crop (optional, per card): { fx, fy } = wanted centre of the photo (0..1), z = zoom (1 = just fills the frame)
+function xmasDrawPhoto(g, img, d, x, y, w, h, crop){
+  let info = null;
+  g.save(); xmasArchPath(g, x, y, w, h); g.clip();
+  g.fillStyle = XMAS_C.moss; g.fillRect(x, y, w, h);
+  if(img){
+    let [fx, fy] = focusPos(d).split(' ').map(v => parseFloat(v) / 100);
+    if(crop && isFinite(crop.fx) && isFinite(crop.fy)){ fx = crop.fx; fy = crop.fy; }
+    const z = crop && crop.z >= 1 ? Math.min(crop.z, 4) : 1;
+    const s = Math.max(w / img.width, h / img.height) * z, sw = w / s, sh = h / s;
+    const sx = Math.max(0, Math.min(img.width - sw, img.width * fx - sw / 2));
+    const sy = Math.max(0, Math.min(img.height - sh, img.height * fy - sh / 2));
+    g.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+    info = { x, y, w, h, sx, sy, sw, sh, iw: img.width, ih: img.height };
+  }
+  g.restore();
+  g.save(); xmasArchPath(g, x, y, w, h); g.lineWidth = w * 0.022; g.strokeStyle = XMAS_C.card; g.stroke(); g.restore();
+  return info;
+}
+function xmasDrawQR(g, qr, x, y, size){
+  const n = qr.getModuleCount(), quiet = 2, cell = size / (n + quiet * 2);
+  g.fillStyle = '#ffffff'; g.fillRect(x, y, size, size);
+  g.fillStyle = XMAS_C.ink;
+  for(let r = 0; r < n; r++) for(let c = 0; c < n; c++)
+    if(qr.isDark(r, c)) g.fillRect(Math.floor(x + (c + quiet) * cell), Math.floor(y + (r + quiet) * cell), Math.ceil(cell), Math.ceil(cell));
+}
+// Text in one line, shrunk until it fits the width
+function xmasFitText(g, text, weightFamily, size, minSize, width){
+  let s = size;
+  g.font = `${weightFamily.replace('{s}', s)}`;
+  while(s > minSize && g.measureText(text).width > width){ s -= 1; g.font = weightFamily.replace('{s}', s); }
+  return s;
+}
+// Draws one card. mm → px at the given dpi.
+// Seeded random numbers, so a dog's card looks the same in preview and PDF
+function xmasRand(seed){
+  let h = 2166136261; for(const ch of String(seed)) h = Math.imul(h ^ ch.codePointAt(0), 16777619);
+  return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+const XMAS_X = { pine:'#1E3A2A', pine2:'#2C5039', gold:'#C9A24B', goldLight:'#E3C77E', cream:'#FBF3E4', red:'#B81D2E', needles:['#2F5E3E','#3D7550','#24492F','#4E8A5E','#356B47'] };
+function xmasRound(g, x, y, w, h, r){ g.beginPath(); if(g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); }
+// Fir garland with baubles along the top edge
+function xmasGarland(g, W, k, rnd, depth){
+  const step = 3.2 * k;
+  for(let x = -3 * k; x < W + 3 * k; x += step * (0.7 + rnd() * 0.5)){
+    const cy = depth * (0.35 + rnd() * 0.25);
+    const n = 26;
+    for(let i = 0; i < n; i++){
+      const a = Math.PI * (0.05 + rnd() * 0.9), len = (1.6 + rnd() * 2.6) * k;
+      g.strokeStyle = XMAS_X.needles[Math.floor(rnd() * XMAS_X.needles.length)];
+      g.lineWidth = (0.22 + rnd() * 0.18) * k; g.lineCap = 'round';
+      const sx = x + (rnd() - 0.5) * 2.4 * k, sy = cy + (rnd() - 0.6) * 1.6 * k;
+      g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx + Math.cos(a) * len * (rnd() < 0.5 ? -1 : 1), sy + Math.sin(a) * len); g.stroke();
+    }
+  }
+  // baubles hanging from the garland
+  const count = Math.max(3, Math.round(W / (14 * k)));
+  for(let i = 0; i < count; i++){
+    const bx = W * (i + 0.5) / count + (rnd() - 0.5) * 3 * k;
+    if(Math.abs(bx - W / 2) < 6 * k) continue; // keep the middle free for the bow
+    const by = depth * (0.85 + rnd() * 0.35), r = (1.3 + rnd() * 0.7) * k;
+    const col = [XMAS_X.red, XMAS_X.gold, XMAS_X.red, XMAS_X.cream][i % 4];
+    g.strokeStyle = XMAS_X.goldLight; g.lineWidth = 0.15 * k;
+    g.beginPath(); g.moveTo(bx, by - r - 1.2 * k); g.lineTo(bx, by - r); g.stroke();
+    const grd = g.createRadialGradient(bx - r * 0.35, by - r * 0.35, r * 0.1, bx, by, r);
+    grd.addColorStop(0, '#ffffff'); grd.addColorStop(0.25, col); grd.addColorStop(1, col);
+    g.fillStyle = grd; g.beginPath(); g.arc(bx, by, r, 0, Math.PI * 2); g.fill();
+    g.fillStyle = XMAS_X.gold; g.fillRect(bx - r * 0.35, by - r - 0.5 * k, r * 0.7, 0.6 * k);
+  }
+}
+// Ribbon bow (top centre)
+function xmasBow(g, x, y, s){
+  g.save(); g.fillStyle = XMAS_X.red; g.strokeStyle = '#7a1220'; g.lineWidth = s * 0.06;
+  [-1, 1].forEach(dir => {
+    g.beginPath(); g.moveTo(x, y);
+    g.bezierCurveTo(x + dir * s * 1.1, y - s * 0.9, x + dir * s * 1.4, y + s * 0.5, x, y); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x + dir * s * 0.55, y + s * 1.2); g.lineTo(x + dir * s * 0.25, y + s * 1.05); g.closePath(); g.fill();
+  });
+  g.fillStyle = '#8f1624'; g.beginPath(); g.arc(x, y, s * 0.22, 0, Math.PI * 2); g.fill();
+  g.restore();
+}
+// Holly: two leaves and three berries
+function xmasHolly(g, x, y, s, flip){
+  g.save(); g.translate(x, y); if(flip) g.scale(-1, 1);
+  [[-0.5, '#2F5E3E'], [0.45, '#3D7550']].forEach(([rot, col]) => {
+    g.save(); g.rotate(rot); g.fillStyle = col; g.beginPath(); g.moveTo(0, 0);
+    g.quadraticCurveTo(s * 0.5, -s * 0.45, s * 1.25, 0); g.quadraticCurveTo(s * 0.5, s * 0.45, 0, 0); g.fill();
+    g.strokeStyle = 'rgba(255,255,255,0.35)'; g.lineWidth = s * 0.05; g.beginPath(); g.moveTo(0, 0); g.lineTo(s * 1.1, 0); g.stroke(); g.restore();
+  });
+  g.fillStyle = XMAS_X.red;
+  [[0, -s * 0.12], [s * 0.2, s * 0.1], [-s * 0.18, s * 0.12]].forEach(([bx, by]) => { g.beginPath(); g.arc(bx, by, s * 0.17, 0, Math.PI * 2); g.fill(); });
+  g.restore();
+}
+function xmasSnow(g, W, H, k, rnd){
+  const n = Math.round(W * H / (k * k) / 28);
+  for(let i = 0; i < n; i++){
+    const r = (0.15 + rnd() * rnd() * 0.55) * k;
+    g.fillStyle = `rgba(255,255,255,${(0.25 + rnd() * 0.5).toFixed(2)})`;
+    g.beginPath(); g.arc(rnd() * W, rnd() * H, r, 0, Math.PI * 2); g.fill();
+  }
+}
+function xmasSnowHills(g, W, H, k, h){
+  g.fillStyle = '#F4F1EA';
+  g.beginPath(); g.moveTo(0, H);
+  g.lineTo(0, H - h * 0.7);
+  g.bezierCurveTo(W * 0.2, H - h * 1.25, W * 0.38, H - h * 0.45, W * 0.55, H - h * 0.8);
+  g.bezierCurveTo(W * 0.72, H - h * 1.15, W * 0.86, H - h * 0.6, W, H - h);
+  g.lineTo(W, H); g.closePath(); g.fill();
+}
+function xmasGoldArch(g, x, y, w, h, k){
+  const o = 1.1 * k;
+  g.save(); xmasArchPath(g, x - o, y - o, w + 2 * o, h + o); g.strokeStyle = XMAS_X.gold; g.lineWidth = 0.35 * k; g.stroke(); g.restore();
+}
+async function xmasCardCanvas(d, opts){
+  const fmt = XMAS_FORMATS[opts.format] || XMAS_FORMATS.profile;
+  const dpi = opts.dpi || 300, kReal = dpi / 25.4;
+  const W = Math.round(fmt.w * kReal), H = Math.round(fmt.h * kReal);
+  // the square layout is designed at 9 x 9 cm; other square sizes (8 x 8) are the same design scaled
+  const k = fmt.layout === 'wide' ? kReal * fmt.w / 90 : kReal;
+  const [qrLib, img, logo] = await Promise.all([loadQrLib(), xmasPhoto(d), xmasLogo(), xmasFonts()]);
+  const qr = qrLib(0, 'L'); qr.addData(dogShareUrl(d)); qr.make();
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.textBaseline = 'alphabetic';
+  const rnd = xmasRand(d.id + '|' + opts.format);
+  const small = fmt.w < 70;
+  // red border, pine green inside with falling snow and snowy hills
+  const band = (small ? 2.4 : 3) * k, inset = band;
+  g.fillStyle = XMAS_X.red; g.fillRect(0, 0, W, H);
+  g.save(); xmasRound(g, band, band, W - 2 * band, H - 2 * band, 1.6 * k); g.clip();
+  const bg = g.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, XMAS_X.pine); bg.addColorStop(1, XMAS_X.pine2);
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  xmasSnow(g, W, H, k, rnd);
+  g.restore();
+  // repaint plain background (no snow) behind text that sits directly on the green
+  const clearSnow = (x, y, w, h) => { g.save(); g.fillStyle = bg; g.fillRect(x, y, w, h); g.restore(); };
+  // thin gold lines on the red band
+  g.strokeStyle = XMAS_X.goldLight; g.lineWidth = 0.22 * k;
+  xmasRound(g, band * 0.45, band * 0.45, W - band * 0.9, H - band * 0.9, 1.2 * k); g.stroke();
+  g.strokeStyle = XMAS_X.gold; g.lineWidth = 0.35 * k;
+  xmasRound(g, band, band, W - 2 * band, H - 2 * band, 1.6 * k); g.stroke();
+  // garland + bow (+ hanging hole in the bow)
+  const gDepth = (small ? 7 : 9) * k;
+  const wish = String(opts.wish || '').trim();
+  const heading = String(opts.heading || '').trim();
+  const qrText = String(opts.qrText || '').trim();
+  const pad = (small ? 4.5 : 6.5) * k;
+  const drawHeading = (x, y, w, size, align) => {
+    if(!heading) return y;
+    g.textAlign = align;
+    const s = xmasFitText(g, heading, `italic 500 {s}px Fraunces, Georgia, serif`, size, size * 0.55, w - (align === 'center' ? 8 * k : 0));
+    clearSnow(x - 1 * k, y - 0.6 * k, w + 2 * k, s * 1.15);
+    g.fillStyle = XMAS_X.goldLight;
+    g.fillText(heading, align === 'center' ? x + w / 2 : x, y + s * 0.8, w);
+    if(align === 'center'){
+      const tw = Math.min(w - 4 * k, g.measureText(heading).width);
+      xmasStar(g, x + w / 2 - tw / 2 - 2.6 * k, y + s * 0.5, s * 0.32, XMAS_X.gold);
+      xmasStar(g, x + w / 2 + tw / 2 + 2.6 * k, y + s * 0.5, s * 0.32, XMAS_X.gold);
+    }
+    return y + s * 0.8 + (small ? 2 : 3) * k;
+  };
+  const drawName = (x, y, w, size, align) => {
+    g.textAlign = align; g.fillStyle = XMAS_X.cream;
+    const s = xmasFitText(g, d.name || '', '600 {s}px Fraunces, Georgia, serif', size, size * 0.45, w);
+    g.fillText(d.name || '', align === 'center' ? x + w / 2 : x, y + s * 0.78, w);
+    return y + s * 0.78 + (small ? 2 : 3) * k;
+  };
+  // cream gift tag with gold edge and a holly sprig
+  const drawWish = (x, y, w, h, base) => {
+    g.save();
+    xmasRound(g, x, y, w, h, 2 * k); g.fillStyle = XMAS_X.cream; g.fill();
+    g.strokeStyle = XMAS_X.gold; g.lineWidth = 0.35 * k; g.stroke();
+    xmasRound(g, x + 0.9 * k, y + 0.9 * k, w - 1.8 * k, h - 1.8 * k, 1.4 * k);
+    g.setLineDash([0.7 * k, 0.6 * k]); g.lineWidth = 0.18 * k; g.strokeStyle = '#d4b56a'; g.stroke(); g.setLineDash([]);
+    const ip = (small ? 1.8 : 2.8) * k;
+    if(wish){
+      let size = base, lines;
+      for(;;){
+        g.font = `italic 500 ${size}px Fraunces, Georgia, serif`;
+        lines = xmasWrap(g, '„' + wish + '“', w - 2 * ip);
+        if(lines.length * size * 1.22 <= h - 2 * ip || size <= base * 0.6) break;
+        size -= 1;
+      }
+      const lh = size * 1.22, total = lines.length * lh;
+      let ty = y + (h - total) / 2 + size * 0.92;
+      g.fillStyle = XMAS_C.ink; g.textAlign = 'center';
+      lines.forEach(l => { g.fillText(l, x + w / 2, ty, w - 2 * ip); ty += lh; });
+    } else {
+      g.strokeStyle = '#c9b48a'; g.lineWidth = 0.25 * k; g.setLineDash([0.8 * k, 0.8 * k]);
+      const n = Math.max(2, Math.min(4, Math.floor((h - 2 * ip) / (6.5 * k))));
+      const stepY = (h - 2 * ip) / n;
+      for(let i = 1; i <= n; i++){ const ly = y + ip + i * stepY - 1.2 * k; g.beginPath(); g.moveTo(x + ip, ly); g.lineTo(x + w - ip, ly); g.stroke(); }
+    }
+    g.restore();
+    xmasHolly(g, x + w - 1.6 * k, y + 0.8 * k, (small ? 3 : 4.2) * k, false);
+    xmasHolly(g, x + 1.6 * k, y + h - 0.8 * k, (small ? 2.4 : 3.2) * k, true);
+  };
+  // cream panel with QR code, text and logo
+  // cream panel: QR code on the left, the Verein logo (same size) on the right, text in between
+  // (textAbove: the text goes above the panel, for narrow panels)
+  const drawQrPanel = (x, y, w, qrSize, textSize, textAbove) => {
+    const pp = (small ? 1.2 : 1.6) * k, gapX = (small ? 1.8 : 2.6) * k;
+    if(textAbove){
+      g.textAlign = 'center';
+      g.font = `700 ${textSize}px Karla, Arial, sans-serif`;
+      const lines = xmasWrap(g, qrText, w).slice(0, 2);
+      let ty = y - 1.2 * k - (lines.length - 1) * textSize * 1.2;
+      clearSnow(x - 1 * k, ty - textSize * 1.1, w + 2 * k, lines.length * textSize * 1.2 + 0.4 * k);
+      g.fillStyle = XMAS_X.cream;
+      lines.forEach(l => { g.fillText(l, x + w / 2, ty, w); ty += textSize * 1.2; });
+    }
+    xmasRound(g, x, y, w, qrSize + 2 * pp, 2 * k); g.fillStyle = XMAS_X.cream; g.fill();
+    g.strokeStyle = XMAS_X.gold; g.lineWidth = 0.3 * k; g.stroke();
+    xmasDrawQR(g, qr, x + pp, y + pp, qrSize);
+    let right = x + w - pp * 0.7;
+    if(logo){
+      const ls = qrSize * 1.08; // as big as the QR code, at the right edge
+      const s = Math.min(ls / logo.width, ls / logo.height);
+      const lw = logo.width * s, lh = logo.height * s;
+      g.drawImage(logo, right - lw, y + pp + (qrSize - lh) / 2, lw, lh);
+      right -= lw + gapX;
+    }
+    const tx = x + pp + qrSize + gapX, tw = right - tx;
+    if(tw > 6 * k){
+      g.textAlign = 'left'; g.fillStyle = XMAS_C.ink;
+      g.font = `700 ${textSize}px Karla, Arial, sans-serif`;
+      const urlSize = textSize * 0.82;
+      const maxLines = Math.max(1, Math.floor((qrSize - urlSize * 1.3) / (textSize * 1.2)));
+      const lines = textAbove ? [] : xmasWrap(g, qrText, tw).slice(0, maxLines);
+      const blockH = lines.length * textSize * 1.2 + urlSize * 1.1;
+      let ty = y + pp + (qrSize - blockH) / 2 + textSize * 0.95;
+      lines.forEach(l => { g.fillText(l, tx, ty, tw); ty += textSize * 1.2; });
+      g.font = `400 ${urlSize}px Karla, Arial, sans-serif`; g.fillStyle = XMAS_C.soft;
+      g.fillText('einherzfuerhunde.com', tx, ty + (lines.length ? textSize * 0.1 : -textSize * 0.2), tw);
+    }
+    return y + qrSize + 2 * pp;
+  };
+  // the name on a red ribbon banner with folded ends
+  const drawBanner = (cx, cy, w, h, size) => {
+    const tail = h * 0.75, drop = h * 0.28, x0 = cx - w / 2, x1 = cx + w / 2;
+    g.save();
+    [-1, 1].forEach(dir => {
+      const ex = dir < 0 ? x0 : x1;
+      g.fillStyle = '#8f1624';
+      g.beginPath();
+      g.moveTo(ex - dir * h * 0.35, cy - h / 2 + drop); g.lineTo(ex + dir * tail, cy - h / 2 + drop);
+      g.lineTo(ex + dir * tail * 0.62, cy + drop * 0.5); g.lineTo(ex + dir * tail, cy + h / 2 + drop);
+      g.lineTo(ex - dir * h * 0.35, cy + h / 2 + drop); g.closePath(); g.fill();
+      g.fillStyle = '#5e0e18';
+      g.beginPath(); g.moveTo(ex, cy + h / 2); g.lineTo(ex + dir * h * 0.35, cy + h / 2 + drop); g.lineTo(ex, cy + h / 2 + drop); g.closePath(); g.fill();
+    });
+    const grd = g.createLinearGradient(0, cy - h / 2, 0, cy + h / 2);
+    grd.addColorStop(0, '#cf2a3b'); grd.addColorStop(1, XMAS_X.red);
+    g.fillStyle = grd; g.fillRect(x0, cy - h / 2, w, h);
+    g.strokeStyle = XMAS_X.goldLight; g.lineWidth = 0.22 * k;
+    [cy - h / 2 + 0.8 * k, cy + h / 2 - 0.8 * k].forEach(ly => { g.beginPath(); g.moveTo(x0, ly); g.lineTo(x1, ly); g.stroke(); });
+    g.textAlign = 'center'; g.fillStyle = XMAS_X.cream;
+    g.shadowColor = 'rgba(0,0,0,0.25)'; g.shadowBlur = 0.6 * k; g.shadowOffsetY = 0.25 * k;
+    const s = xmasFitText(g, d.name || '', '600 {s}px Fraunces, Georgia, serif', size, size * 0.4, w - 3 * k);
+    g.fillText(d.name || '', cx, cy + s * 0.36, w - 3 * k);
+    g.restore();
+  };
+  if(fmt.layout === 'tall'){
+    let y = gDepth + (small ? 2 : 3) * k;
+    y = drawHeading(pad, y, W - 2 * pad, (small ? 3.6 : 4.8) * k, 'center');
+    const pw = W * (small ? 0.64 : 0.68), ph = pw * (small ? 0.84 : 0.95);
+    const px = (W - pw) / 2, py = y + 1 * k;
+    c.xmasPhoto = xmasDrawPhoto(g, img, d, px, py, pw, ph, opts.crop);
+    xmasGoldArch(g, px, py, pw, ph, k);
+    const bh = (small ? 6.2 : 9) * k;
+    const by = py + ph + bh * 0.62;
+    y = by + bh / 2 + (small ? 0.8 : 1.2) * k;
+    const qrSize = (small ? 13 : 15) * k, pp = (small ? 1.2 : 1.5) * k;
+    const qrY = H - inset - (small ? 1.6 : 2.2) * k - qrSize - 2 * pp;
+    drawWish(pad, y, W - 2 * pad, qrY - y - (small ? 2 : 2.6) * k, (small ? 2.6 : 3.5) * k);
+    drawQrPanel(pad, qrY, W - 2 * pad, qrSize, (small ? 2.1 : 2.8) * k);
+    // ribbon last, so its folded ends lie on top of the wish box
+    drawBanner(W / 2, by, Math.min(W - 2 * pad - 6 * k, pw - 2 * k), bh, (small ? 4.5 : 6.2) * k);
+  } else {
+    // square: big photo on the left with the name banner, wish and QR on the right
+    const top = gDepth + 3 * k;
+    const px = inset + 4.5 * k, pw = W * 0.4, bh = 7.5 * k;
+    const ph = H - top - inset - bh / 2 - 3 * k;
+    c.xmasPhoto = xmasDrawPhoto(g, img, d, px, top + 1 * k, pw, ph - 1 * k, opts.crop);
+    xmasGoldArch(g, px, top + 1 * k, pw, ph - 1 * k, k);
+    drawBanner(px + pw / 2, top + ph - bh * 0.1, pw - 5 * k, bh, 5.2 * k);
+    const rx = px + pw + 5 * k, rw = W - rx - inset - 2.4 * k;
+    let y = top - 0.5 * k;
+    y = drawHeading(rx, y, rw, 3.6 * k, 'left');
+    const qrSize = 14 * k, pp = 1.6 * k;
+    const qrY = H - inset - 2.2 * k - qrSize - 2 * pp;
+    drawWish(rx, y, rw, qrY - y - 8 * k, 3.2 * k);
+    drawQrPanel(rx, qrY, rw, qrSize, 2.2 * k, true);
+  }
+  // garland and bow last, so nothing covers the baubles
+  xmasGarland(g, W, k, rnd, gDepth);
+  xmasBow(g, W / 2, gDepth * 0.55, (small ? 3.2 : 4.2) * k);
+  if(opts.hole){
+    g.save(); g.fillStyle = XMAS_X.cream; g.strokeStyle = XMAS_X.gold; g.lineWidth = 0.3 * k;
+    g.beginPath(); g.arc(W / 2, gDepth * 0.55, 1.5 * k, 0, Math.PI * 2); g.fill(); g.stroke(); g.restore();
+  }
+  return c;
+}
+function xmasOpts(d, dpi){
+  return { format: xmas.format, dpi, wish: xmas.wishes[d.id] || '', heading: xmasHeading(), qrText: xmasQrText(), hole: xmas.hole, crop: xmas.crop[d.id] || null };
+}
+function xmasSetPreview(d, c){
+  xmasPreview.url = c.toDataURL('image/jpeg', 0.88);
+  xmasPreview.photo = c.xmasPhoto ? { ...c.xmasPhoto, cw: c.width, ch: c.height } : null;
+  if(xmasGallery && xmasGallery.urls[d.id]) xmasGallery.urls[d.id] = xmasPreview.url;
+}
+async function xmasShowPreview(d){
+  xmasPreview = { id: d.id, url: null, photo: null }; render();
+  try{
+    const c = await xmasCardCanvas(d, xmasOpts(d, 150));
+    if(xmasPreview.id !== d.id) return;
+    xmasSetPreview(d, c);
+  }catch(err){ console.error('xmas preview', err); toast(t('xmas_error')); xmasPreview = { id: null, url: null, photo: null }; }
+  if(adminTab === 'weihnachten') render();
+}
+let xmasPreviewTimer = null;
+function xmasRefreshPreviewSoon(delay){
+  if(!xmasPreview.id) return;
+  clearTimeout(xmasPreviewTimer);
+  xmasPreviewTimer = setTimeout(async () => {
+    const d = state.dogs.find(x => x.id === xmasPreview.id); if(!d) return;
+    try{
+      const c = await xmasCardCanvas(d, xmasOpts(d, 150));
+      if(xmasPreview.id !== d.id) return;
+      xmasSetPreview(d, c);
+      const img = document.querySelector('.xmas-preview-img'); if(img) img.src = xmasPreview.url; else if(adminTab === 'weihnachten') render();
+    }catch(_){}
+  }, delay == null ? 450 : delay);
+}
+// Click into the photo of the preview card: that spot becomes the new centre of the photo
+function xmasPreviewClick(e, imgEl){
+  const p = xmasPreview.photo, d = state.dogs.find(x => x.id === xmasPreview.id);
+  if(!p || !d) return;
+  const r = imgEl.getBoundingClientRect();
+  const cx = (e.clientX - r.left) / r.width * p.cw, cy = (e.clientY - r.top) / r.height * p.ch;
+  if(cx < p.x || cx > p.x + p.w || cy < p.y || cy > p.y + p.h) return;
+  const srcX = p.sx + (cx - p.x) / p.w * p.sw, srcY = p.sy + (cy - p.y) / p.h * p.sh;
+  const old = xmas.crop[d.id] || {};
+  xmas.crop[d.id] = { fx: srcX / p.iw, fy: srcY / p.ih, z: old.z || 1 };
+  xmasSave();
+  const wasCustom = !!old.fx || !!old.z;
+  xmasRefreshPreviewSoon(0);
+  if(!wasCustom) setTimeout(() => { if(adminTab === 'weihnachten') render(); }, 300);
+}
+// "View all cards": small previews of every selected card, drawn one after the other
+async function xmasOpenGallery(){
+  const dogs = xmasSelectedDogs();
+  if(!dogs.length){ toast(t('xmas_pdf_none')); return; }
+  xmasGallery = { urls: {} }; render();
+  const mine = xmasGallery;
+  for(const d of dogs){
+    if(xmasGallery !== mine) return;
+    try{
+      const c = await xmasCardCanvas(d, xmasOpts(d, 110));
+      if(xmasGallery !== mine) return;
+      mine.urls[d.id] = c.toDataURL('image/jpeg', 0.85);
+      const slot = document.querySelector(`.xmas-gallery-card[data-id="${d.id}"]`);
+      if(slot){ const w = slot.querySelector('.xmas-gallery-wait'); if(w) w.outerHTML = `<img src="${mine.urls[d.id]}" alt="${esc(d.name)}">`; }
+    }catch(err){ console.warn('xmas gallery', err); }
+  }
+}
+// A4 sheets, cards in a grid with cut marks around every card
+async function xmasBuildPdf(dogs){
+  const { PDFDocument, rgb } = await loadPdfLib();
+  const fmt = XMAS_FORMATS[xmas.format] || XMAS_FORMATS.profile;
+  const MM = 72 / 25.4, PW = 595.28, PH = 841.89, gap = 6, margin = 6;
+  const cols = Math.max(1, Math.floor((210 - 2 * margin + gap) / (fmt.w + gap)));
+  const rows = Math.max(1, Math.floor((297 - 2 * margin + gap) / (fmt.h + gap)));
+  const per = cols * rows;
+  const gridW = cols * fmt.w + (cols - 1) * gap, gridH = rows * fmt.h + (rows - 1) * gap;
+  const x0 = (210 - gridW) / 2, y0 = (297 - gridH) / 2;
+  const doc = await PDFDocument.create();
+  doc.setTitle('Weihnachtskarten'); doc.setAuthor('Ein Herz für Hunde');
+  const mark = rgb(0.45, 0.45, 0.45);
+  let page = null;
+  for(let i = 0; i < dogs.length; i++){
+    xmasBusy = t('xmas_progress', { i: i + 1, n: dogs.length });
+    const btn = document.querySelector('[data-action="xmas-pdf"]'); if(btn) btn.textContent = xmasBusy;
+    if(i % per === 0) page = doc.addPage([PW, PH]);
+    const slot = i % per, col = slot % cols, row = Math.floor(slot / cols);
+    const xmm = x0 + col * (fmt.w + gap), ymm = y0 + row * (fmt.h + gap);
+    const canvas = await xmasCardCanvas(dogs[i], xmasOpts(dogs[i], 300));
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
+    const jpg = await doc.embedJpg(await blob.arrayBuffer());
+    const x = xmm * MM, y = PH - (ymm + fmt.h) * MM, w = fmt.w * MM, h = fmt.h * MM;
+    page.drawImage(jpg, { x, y, width: w, height: h });
+    // cut marks: short lines just outside each corner
+    const L = 2.6 * MM, o = 0.8 * MM;
+    [[x, y], [x + w, y], [x, y + h], [x + w, y + h]].forEach(([cx, cy]) => {
+      const sx = cx === x ? -1 : 1, sy = cy === y ? -1 : 1;
+      page.drawLine({ start: { x: cx + sx * o, y: cy }, end: { x: cx + sx * (o + L), y: cy }, thickness: 0.4, color: mark });
+      page.drawLine({ start: { x: cx, y: cy + sy * o }, end: { x: cx, y: cy + sy * (o + L) }, thickness: 0.4, color: mark });
+    });
+    await new Promise(r => setTimeout(r, 0)); // keep the page responsive
+  }
+  const bytes = await doc.save();
+  const name = dogs.length === 1 ? pdfFileName('Weihnachtskarte', dogs[0].name) : pdfFileName('Weihnachtskarten', `${dogs.length}_Hunde`);
+  const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+  const link = document.createElement('a');
+  link.href = url; link.download = name;
+  document.body.appendChild(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return bytes.length;
+}
+async function xmasExport(dogs){
+  if(!dogs.length){ toast(t('xmas_pdf_none')); return; }
+  if(xmasBusy) return;
+  xmasBusy = t('working'); render();
+  try{ await xmasBuildPdf(dogs); toast(t('xmas_done', { n: dogs.length })); }
+  catch(err){ console.error('xmas pdf', err); toast(t('xmas_error')); }
+  xmasBusy = ''; render();
+}
+
 function viewAdmin(){
   if(!session.admin) return viewAdminLogin();
   return `
@@ -2714,10 +3408,13 @@ function viewAdmin(){
       <button class="admin-tab ${adminTab==='transporte'?'active':''}" data-action="admin-tab" data-tab="transporte">
         <span>${t('admin_tab_transports')}</span>${adminTransports ? `<span class="count">${adminTransports.length}</span>` : ''}
       </button>
+      <button class="admin-tab ${adminTab==='weihnachten'?'active':''}" data-action="admin-tab" data-tab="weihnachten">
+        <span>${t('admin_tab_xmas')}</span>${xmas.selected.length ? `<span class="count">${xmasSelectedDogs().length}</span>` : ''}
+      </button>
       <button class="admin-tab" data-action="admin-logout" style="margin-top:24px;opacity:0.75;">${t('admin_logout')}</button>
     </div>
     <div class="admin-main">
-      ${adminTab==='interessenten' ? adminInteressentenTab() : adminTab==='hunde' ? adminHundeTab() : adminTab==='texte' ? adminTexteTab() : adminTab==='transporte' ? adminTransportsTab() : adminHappyTailsTab()}
+      ${adminTab==='interessenten' ? adminInteressentenTab() : adminTab==='hunde' ? adminHundeTab() : adminTab==='texte' ? adminTexteTab() : adminTab==='transporte' ? adminTransportsTab() : adminTab==='weihnachten' ? adminXmasTab() : adminHappyTailsTab()}
     </div>
   </div>
   ${adminDetailId ? adminDetailOverlay() : ''}
@@ -3852,6 +4549,7 @@ function render(){
    EVENT HANDLERS
 --------------------------------------------------------- */
 document.addEventListener('click', async (e) => {
+  if(e.target.classList && e.target.classList.contains('xmas-preview-img')){ xmasPreviewClick(e, e.target); return; }
   const navEl = e.target.closest('[data-nav]');
   if(navEl){
     e.preventDefault();
@@ -3947,6 +4645,26 @@ document.addEventListener('click', async (e) => {
     allDogsShown += 12;
     render();
   }
+  if(action === 'xmas-group'){ xmas.group = actionEl.getAttribute('data-group'); xmasSave(); render(); return; }
+  if(action === 'xmas-select'){
+    const ids = xmasDogs().map(d => d.id);
+    if(actionEl.getAttribute('data-all') === '1') xmas.selected = [...new Set([...xmas.selected, ...ids])];
+    else xmas.selected = xmas.selected.filter(id => !ids.includes(id));
+    xmasSave(); render(); return;
+  }
+  if(action === 'xmas-preview'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d) xmasShowPreview(d); return; }
+  if(action === 'xmas-pdf-one'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d) xmasExport([d]); return; }
+  if(action === 'xmas-pdf'){ xmasExport(xmasSelectedDogs()); return; }
+  if(action === 'xmas-gallery'){ xmasOpenGallery(); return; }
+  if(action === 'xmas-gallery-close' || (action === 'xmas-gallery-close-bg' && e.target === actionEl)){ xmasGallery = null; render(); return; }
+  if(action === 'xmas-gallery-pick'){
+    const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id'));
+    xmasGallery = null;
+    if(d){ xmasShowPreview(d).then(() => { const b = document.querySelector('.xmas-preview-box'); if(b) b.scrollIntoView({ block:'start', behavior:'smooth' }); }); }
+    else render();
+    return;
+  }
+  if(action === 'xmas-crop-reset'){ delete xmas.crop[actionEl.getAttribute('data-id')]; xmasSave(); render(); xmasRefreshPreviewSoon(0); return; }
   if(action === 'admin-tab'){
     adminTab = actionEl.getAttribute('data-tab'); adminDetailId=null;
     render();
@@ -4325,6 +5043,14 @@ document.addEventListener('click', async (e) => {
 
 document.addEventListener('input', (e) => {
   const el = e.target;
+  if(el.matches && el.matches('[data-xmas-wish]')){ xmas.wishes[el.getAttribute('data-xmas-wish')] = el.value; xmasSave(); if(xmasPreview.id === el.getAttribute('data-xmas-wish')) xmasRefreshPreviewSoon(); return; }
+  if(el.id === 'xmasZoom' && xmasPreview.id){
+    const id = xmasPreview.id, old = xmas.crop[id] || {};
+    xmas.crop[id] = { ...old, z: Number(el.value) / 100 };
+    xmasSave(); xmasRefreshPreviewSoon(120); return;
+  }
+  if(el.id === 'xmasHeading'){ xmas.heading = el.value; xmasSave(); xmasRefreshPreviewSoon(); return; }
+  if(el.id === 'xmasQrText'){ xmas.qrText = el.value; xmasSave(); xmasRefreshPreviewSoon(); return; }
   if(el.id === 'transportDogSearch'){ // filter the dog list without redrawing
     const q = el.value.trim().toLowerCase();
     document.querySelectorAll('.transport-dog-list .tdl-row').forEach(r => { r.style.display = !q || r.getAttribute('data-name').includes(q) ? '' : 'none'; });
@@ -4373,6 +5099,13 @@ const ALLOWED_VIDEO_TYPES = ['video/mp4','video/quicktime','video/webm'];
 const MAX_VIDEO_BYTES = 20 * 1024 * 1024; // 20 MB
 
 document.addEventListener('change', async (e) => {
+  if(e.target.matches && e.target.matches('[data-xmas-pick]')){
+    const id = e.target.getAttribute('data-xmas-pick');
+    xmas.selected = e.target.checked ? [...new Set([...xmas.selected, id])] : xmas.selected.filter(x => x !== id);
+    xmasSave(); render(); return;
+  }
+  if(e.target.matches && e.target.matches('[data-xmas-format]')){ xmas.format = e.target.value; xmasSave(); render(); xmasRefreshPreviewSoon(); return; }
+  if(e.target.id === 'xmasHole'){ xmas.hole = e.target.checked; xmasSave(); xmasRefreshPreviewSoon(); return; }
   if(e.target.matches && e.target.matches('[data-pickup]')){
     pickupAnswer = e.target.value;
     const box = document.getElementById('pickupQuestion');
