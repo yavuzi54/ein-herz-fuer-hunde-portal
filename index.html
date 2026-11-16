@@ -3431,7 +3431,7 @@ Object.assign(I18N.de, {
   soc_preview_hint:'Bei einem Hund auf „Vorschau“ klicken.', soc_formats_strip:'Alle Formate (antippen zum Wechseln)', soc_photo_pick:'Foto wählen',
   soc_caption:'Bildtext', soc_copy_caption:'Bildtext kopieren', soc_caption_copied:'Bildtext kopiert',
   soc_gallery_btn:'Alle {n} ansehen', soc_gallery_title:'Vorschau vor dem Posten', soc_gallery_hint:'So sehen die Bilder aus. Passt ein Foto nicht: Bild antippen und Ausschnitt anpassen.',
-  soc_saved_hint:'Einstellungen und Kurztexte werden nur in diesem Browser gespeichert.', soc_profile_title:'Steckbrief', soc_crop_hint:'Foto anpassen: ins Foto klicken oder es mit der Maus / dem Finger verschieben. Mit dem Regler kleiner oder größer machen, bis der Hund gut in die Form (z. B. das Herz) passt.',
+  soc_saved_hint:'Einstellungen und Kurztexte werden nur in diesem Browser gespeichert.', soc_profile_title:'Steckbrief', soc_slot_hint:'Regler und Verschieben gelten für Foto {n}. Ein anderes Foto im Bild anklicken, um es anzupassen.', soc_crop_hint:'Foto anpassen: ins Foto klicken oder es mit der Maus / dem Finger verschieben. Mit dem Regler kleiner oder größer machen, bis der Hund gut in die Form (z. B. das Herz) passt.',
   soc_f_age:'Alter', soc_f_breed:'Rasse', soc_f_size:'Größe', soc_f_place:'Ort',
   soc_cap_head:'🐾 {name} sucht ein Zuhause!', soc_cap_head_reserved:'🐾 {name} ist reserviert.', soc_cap_link:'Alle Infos und Bewerbung:'
 });
@@ -3452,7 +3452,7 @@ Object.assign(I18N.en, {
   soc_preview_hint:'Click “Preview” on a dog.', soc_formats_strip:'All formats (tap to switch)', soc_photo_pick:'Choose photo',
   soc_caption:'Caption', soc_copy_caption:'Copy caption', soc_caption_copied:'Caption copied',
   soc_gallery_btn:'View all {n}', soc_gallery_title:'Preview before posting', soc_gallery_hint:'This is how the pictures look. If a photo doesn’t fit: tap the picture and adjust the crop.',
-  soc_saved_hint:'Settings and short texts are only saved in this browser.', soc_profile_title:'Steckbrief', soc_crop_hint:'Adjust photo: click into the photo or drag it with the mouse or your finger. Use the slider to make it smaller or bigger until the dog fits the shape (e.g. the heart).',
+  soc_saved_hint:'Settings and short texts are only saved in this browser.', soc_profile_title:'Steckbrief', soc_slot_hint:'The slider and dragging apply to photo {n}. Click another photo in the picture to adjust it.', soc_crop_hint:'Adjust photo: click into the photo or drag it with the mouse or your finger. Use the slider to make it smaller or bigger until the dog fits the shape (e.g. the heart).',
   soc_f_age:'Alter', soc_f_breed:'Rasse', soc_f_size:'Größe', soc_f_place:'Ort',
   soc_cap_head:'🐾 {name} is looking for a home!', soc_cap_head_reserved:'🐾 {name} is reserved.', soc_cap_link:'All info and application:'
 });
@@ -3596,7 +3596,8 @@ function adminSocialTab(){
       ${pd && socPreview.url ? `<img class="soc-preview-img" src="${socPreview.url}" alt="${t('soc_preview')}: ${esc(pd.name)}" title="${esc(t('xmas_crop_hint'))}">
         ${photos.length ? `<div class="xmas-crop">
           <p class="hint" style="margin:0 0 8px;">${t('soc_crop_hint')}</p>
-          <label class="xmas-zoom">${t('xmas_zoom')} <input type="range" id="socZoom" min="40" max="300" step="5" value="${Math.round(((soc.crop[pd.id] || {}).z || 1) * 100)}"></label>
+          <label class="xmas-zoom">${t('xmas_zoom')} <input type="range" id="socZoom" min="40" max="300" step="5" value="${Math.round(((socSlotCrop(soc.crop[pd.id], socSlot) || {}).z || 1) * 100)}"></label>
+          ${(socPreview.photos || []).filter(Boolean).length > 1 ? `<p class="hint" id="socSlotHint" style="margin:0 0 6px;">${t('soc_slot_hint').replace('{n}', socSlot + 1)}</p>` : ''}
           ${soc.crop[pd.id] ? `<button type="button" class="link-btn" data-action="soc-crop-reset" data-id="${pd.id}">${t('xmas_crop_reset')}</button>` : ''}
           ${photos.length > 1 ? `<div class="soc-photos"><small>${t('soc_photo_pick')}</small><div>${photos.map((u, i) => `<button type="button" class="soc-photo ${(Number(soc.photo[pd.id]) || 0) === i ? 'on' : ''}" data-action="soc-photo" data-idx="${i}"><img src="${esc(thumbUrl(u))}" alt="" loading="lazy"></button>`).join('')}</div></div>` : ''}
         </div>` : ''}
@@ -3744,16 +3745,16 @@ function socDrawPhoto(P, i, x, y, w, h, clip){
   g.fillStyle = socRgba(P.th.bg2, 1); g.fillRect(x, y, w, h);
   if(img){
     let fx = 0.5, fy = 0.4;
-    if(i === 0){
-      if(o.photos[0] === mainPhoto(d)) [fx, fy] = focusPos(d).split(' ').map(v => parseFloat(v) / 100);
-      if(o.crop && isFinite(o.crop.fx) && isFinite(o.crop.fy)){ fx = o.crop.fx; fy = o.crop.fy; }
-    }
-    const z = i === 0 && o.crop ? o.crop.z || 1 : 1;
-    const free = i === 0 && !!o.crop && isFinite(o.crop.fx);
+    const cr = socSlotCrop(o.crop, i);
+    if(i === 0 && o.photos[0] === mainPhoto(d)) [fx, fy] = focusPos(d).split(' ').map(v => parseFloat(v) / 100);
+    if(cr && isFinite(cr.fx) && isFinite(cr.fy)){ fx = cr.fx; fy = cr.fy; }
+    const z = cr ? cr.z || 1 : 1;
+    const free = !!cr && isFinite(cr.fx);
     const pre = socCover(null, img, x, y, w, h, fx, fy, z, free);
     if(pre.dx > x + 0.5 || pre.dy > y + 0.5 || pre.dx + pre.dw < x + w - 0.5 || pre.dy + pre.dh < y + h - 0.5){ g.save(); g.filter = `blur(${Math.round(Math.max(w, h) / 30)}px) brightness(0.85)`; socCover(g, img, x - 20, y - 20, w + 40, h + 40, fx, fy, 1); g.restore(); }
     const info = socCover(g, img, x, y, w, h, fx, fy, z, free);
     if(i === 0) P.photo = info;
+    (P.photos = P.photos || [])[i] = info;
   } else {
     g.fillStyle = socRgba(P.th.on, 0.25); socPaw(g, x + w / 2, y + h / 2, Math.min(w, h) * 0.3);
   }
@@ -4218,14 +4219,17 @@ async function socCanvas(d, o){
   const P = { g, W, H, th, d, o, imgs, logo, qr, photo: null };
   const L = o.format === 'wide' ? SOC_WIDE : SOC_TALL;
   (L[o.layout] || L.bogen)(P);
-  c.socPhoto = P.photo;
+  c.socPhoto = P.photo; c.socPhotos = P.photos || [];
   return c;
 }
 
 // ---- preview, gallery, downloads ----
 function socSetPreview(d, c){
   socPreview.url = c.toDataURL('image/jpeg', 0.86);
-  socPreview.photo = c.socPhoto ? { ...c.socPhoto, cw: SOC_FORMATS[soc.format].w, ch: SOC_FORMATS[soc.format].h } : null;
+  const fw = SOC_FORMATS[soc.format].w, fh = SOC_FORMATS[soc.format].h;
+  socPreview.photo = c.socPhoto ? { ...c.socPhoto, cw: fw, ch: fh } : null;
+  socPreview.photos = (c.socPhotos || []).map(p => p ? { ...p, cw: fw, ch: fh } : null);
+  if(!socPreview.photos[socSlot]) socSlot = 0;
   if(socGallery && socGallery.urls[d.id]) socGallery.urls[d.id] = socPreview.url;
 }
 async function socRenderStrip(d){
@@ -4241,7 +4245,7 @@ async function socRenderStrip(d){
   }
 }
 async function socShowPreview(d){
-  socPreview = { id: d.id, url: null, photo: null, strip: {} }; render();
+  socPreview = { id: d.id, url: null, photo: null, strip: {} }; socSlot = 0; render();
   try{
     const c = await socCanvas(d, socOpts(d, 0.5));
     if(socPreview.id !== d.id) return;
@@ -4267,17 +4271,32 @@ function socRefreshSoon(delay, keepStrip){
   }, delay == null ? 400 : delay);
 }
 function socPreviewClick(e, imgEl){
-  const p = socPreview.photo, d = state.dogs.find(x => x.id === socPreview.id);
-  if(!p || !d) return;
+  const p0 = socPreview.photo, d = state.dogs.find(x => x.id === socPreview.id);
+  if(!p0 || !d) return;
   const r = imgEl.getBoundingClientRect();
-  const cx = (e.clientX - r.left) / r.width * p.cw, cy = (e.clientY - r.top) / r.height * p.ch;
-  if(cx < p.x || cx > p.x + p.w || cy < p.y || cy > p.y + p.h) return;
+  const cx = (e.clientX - r.left) / r.width * p0.cw, cy = (e.clientY - r.top) / r.height * p0.ch;
+  const i = socHitSlot(cx, cy); if(i < 0) return;
   if(socDragMoved){ socDragMoved = false; return; }
-  const old = soc.crop[d.id] || {};
-  soc.crop[d.id] = { fx: Math.max(0, Math.min(1, (cx - p.dx) / p.dw)), fy: Math.max(0, Math.min(1, (cy - p.dy) / p.dh)), z: old.z || 1 };
+  const p = socPreview.photos[i];
+  if(socSlot !== i){ socSlot = i; render(); return; }
+  const old = socSlotCrop(soc.crop[d.id], i) || {};
+  socSetSlot(d.id, i, { fx: Math.max(0, Math.min(1, (cx - p.dx) / p.dw)), fy: Math.max(0, Math.min(1, (cy - p.dy) / p.dh)), z: old.z || 1 });
   socSave();
   socRefreshSoon(0);
   if(!old.fx && !old.z) setTimeout(() => { if(adminTab === 'social') render(); }, 300);
+}
+// Collage etc.: every photo slot has its own position + zoom. Slot 0 lives at soc.crop[id], slot i at soc.crop[id]['s'+i].
+let socSlot = 0;
+function socSlotCrop(crop, i){ return !crop ? null : i ? crop['s' + i] || null : (isFinite(crop.fx) || crop.z ? crop : null); }
+function socSetSlot(id, i, val){
+  const cur = soc.crop[id] || {};
+  if(i){ soc.crop[id] = { ...cur, ['s' + i]: val }; }
+  else { const keep = {}; Object.keys(cur).forEach(k => { if(/^s\d$/.test(k)) keep[k] = cur[k]; }); soc.crop[id] = { ...keep, ...val }; }
+}
+function socHitSlot(cx, cy){
+  const ps = socPreview.photos || [];
+  for(let i = ps.length - 1; i >= 0; i--){ const p = ps[i]; if(p && cx >= p.x && cx <= p.x + p.w && cy >= p.y && cy <= p.y + p.h) return i; }
+  return -1;
 }
 // Live redraw while dragging / zooming: small fast render on a canvas laid over the picture, one frame at a time
 let socZoomEnd = null, socLiveBusy = false, socLiveAgain = false;
@@ -4302,9 +4321,12 @@ let socDrag = null, socDragMoved = false;
 document.addEventListener('pointerdown', e => {
   if(!e.target.classList || !e.target.classList.contains('soc-preview-img') || !socPreview.photo) return;
   const d = state.dogs.find(x => x.id === socPreview.id); if(!d) return;
-  const p = socPreview.photo, c = soc.crop[d.id] || {};
+  const r0 = e.target.getBoundingClientRect(), p0 = socPreview.photo;
+  const slot = socHitSlot((e.clientX - r0.left) / r0.width * p0.cw, (e.clientY - r0.top) / r0.height * p0.ch); if(slot < 0) return;
+  const p = socPreview.photos[slot], c = socSlotCrop(soc.crop[d.id], slot) || {};
+  if(socSlot !== slot){ socSlot = slot; const zr = document.getElementById('socZoom'); if(zr) zr.value = Math.round((c.z || 1) * 100); const sh = document.getElementById('socSlotHint'); if(sh) sh.textContent = t('soc_slot_hint').replace('{n}', slot + 1); }
   const fx = isFinite(c.fx) ? c.fx : (p.x + p.w / 2 - p.dx) / p.dw, fy = isFinite(c.fy) ? c.fy : (p.y + p.h / 2 - p.dy) / p.dh;
-  socDrag = { id: d.id, x: e.clientX, y: e.clientY, fx, fy, r: e.target.getBoundingClientRect(), p };
+  socDrag = { id: d.id, slot, x: e.clientX, y: e.clientY, fx, fy, r: e.target.getBoundingClientRect(), p };
   socDragMoved = false;
 });
 document.addEventListener('pointermove', e => {
@@ -4312,8 +4334,8 @@ document.addEventListener('pointermove', e => {
   const { r, p } = socDrag, ddx = (e.clientX - socDrag.x) / r.width * p.cw, ddy = (e.clientY - socDrag.y) / r.height * p.ch;
   if(!socDragMoved && Math.hypot(e.clientX - socDrag.x, e.clientY - socDrag.y) < 5) return;
   socDragMoved = true; e.preventDefault();
-  const old = soc.crop[socDrag.id] || {};
-  soc.crop[socDrag.id] = { fx: Math.max(0, Math.min(1, socDrag.fx - ddx / p.dw)), fy: Math.max(0, Math.min(1, socDrag.fy - ddy / p.dh)), z: old.z || 1 };
+  const old = socSlotCrop(soc.crop[socDrag.id], socDrag.slot) || {};
+  socSetSlot(socDrag.id, socDrag.slot, { fx: Math.max(0, Math.min(1, socDrag.fx - ddx / p.dw)), fy: Math.max(0, Math.min(1, socDrag.fy - ddy / p.dh)), z: old.z || 1 });
   socLiveDraw();
 });
 document.addEventListener('pointerup', () => {
@@ -6267,7 +6289,7 @@ document.addEventListener('input', (e) => {
     xmasSave(); xmasRefreshPreviewSoon(120); return;
   }
   if(el.matches && el.matches('[data-soc-note]')){ soc.notes[el.getAttribute('data-soc-note')] = el.value; socSave(); if(socPreview.id === el.getAttribute('data-soc-note')) socRefreshSoon(); return; }
-  if(el.id === 'socZoom' && socPreview.id){ const id = socPreview.id; soc.crop[id] = { ...(soc.crop[id] || {}), z: Number(el.value) / 100 }; socSave(); socLiveDraw(); clearTimeout(socZoomEnd); socZoomEnd = setTimeout(() => { socRefreshSoon(0, true); }, 250); return; }
+  if(el.id === 'socZoom' && socPreview.id){ const id = socPreview.id; socSetSlot(id, socSlot, { ...(socSlotCrop(soc.crop[id], socSlot) || {}), z: Number(el.value) / 100 }); socSave(); socLiveDraw(); clearTimeout(socZoomEnd); socZoomEnd = setTimeout(() => { socRefreshSoon(0, true); }, 250); return; }
   if(el.id === 'socSecs'){ soc.secs = Number(el.value); socSave(); const v = document.getElementById('socSecsVal'); if(v) v.textContent = soc.secs + ' s'; return; }
   if(el.id === 'socVol'){ soc.vol = Number(el.value) / 100; socSave(); return; }
   if(['socTag','socCta','socUrl','socFeeAmount','socHashtags'].includes(el.id)){
