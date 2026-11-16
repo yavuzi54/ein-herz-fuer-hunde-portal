@@ -165,6 +165,28 @@
   .stage-rejected{background:#EFE3E3;color:#8A3B3B;}
   .stage-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px;}
   /* Christmas cards (admin) */
+  .soc-seg{display:flex;flex-wrap:wrap;gap:6px;}
+  .soc-opt{display:flex;flex-direction:column;align-items:center;gap:1px;border:1px solid var(--line);border-radius:8px;padding:7px 12px;background:var(--paper);cursor:pointer;font:inherit;font-size:0.88rem;color:var(--ink);min-width:74px;}
+  .soc-opt small{font-size:0.72rem;color:var(--ink-soft);}
+  .soc-opt.on{border-color:var(--clay);background:var(--paper-card);box-shadow:inset 0 0 0 1px var(--clay);}
+  .soc-swatches{display:flex;flex-wrap:wrap;gap:8px;}
+  .soc-swatch{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:1px solid transparent;border-radius:10px;padding:5px 6px;cursor:pointer;font:inherit;color:var(--ink);}
+  .soc-swatch small{font-size:0.72rem;}
+  .soc-sw{width:38px;height:38px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.12);}
+  .soc-swatch.on{border-color:var(--clay);background:var(--paper-card);}
+  .soc-preview-img{width:100%;height:auto;display:block;border-radius:6px;box-shadow:0 10px 26px -12px rgba(36,50,43,0.45);cursor:grab;touch-action:none;user-select:none;-webkit-user-drag:none;}
+  .soc-photos{margin-top:10px;} .soc-photos > div{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+  .soc-photo{width:46px;height:46px;padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;cursor:pointer;background:none;}
+  .soc-photo img{width:100%;height:100%;object-fit:cover;display:block;} .soc-photo.on{border-color:var(--clay);}
+  .soc-strip{margin-top:12px;font-size:0.82rem;color:var(--ink-soft);} .soc-strip > div{display:flex;gap:8px;align-items:flex-end;margin-top:6px;}
+  .soc-strip-item{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:1px solid transparent;border-radius:8px;padding:4px;cursor:pointer;font:inherit;color:var(--ink);}
+  .soc-strip-item img,.soc-strip-wait{width:100%;height:auto;display:block;border-radius:3px;background:var(--paper-card);}
+  .soc-strip-item.on{border-color:var(--clay);background:var(--paper-card);}
+  .soc-caption{width:100%;font:inherit;font-size:0.84rem;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;resize:vertical;}
+  .soc-gallery-card img{aspect-ratio:auto;}
+  .soc-video{margin-top:14px;background:var(--paper-card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:0.88rem;}
+  .soc-video-player{width:100%;max-height:420px;background:#000;border-radius:6px;display:block;}
+  @media (max-width:900px){ .soc-preview-box{max-width:420px;} }
   .xmas-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start;}
   .xmas-settings{padding:20px 22px;}
   .xmas-formats{display:flex;flex-direction:column;gap:6px;}
@@ -2326,7 +2348,7 @@ function notifyParentRoute(){
   try{ window.parent.postMessage({ type:'ehfh-route', query: q }, '*'); }catch(_){}
 }
 function dogShareUrl(d){ return `${PUBLIC_PORTAL_URL}?hundeprofil=${encodeURIComponent(dogSlug(d))}`; }
-function copyText(text){
+function copyText(text, msg){
   // execCommand also works inside the WordPress iframe, where the clipboard API is often blocked
   const ta = document.createElement('textarea');
   ta.value = text; ta.setAttribute('readonly',''); ta.style.position = 'fixed'; ta.style.opacity = '0';
@@ -2334,8 +2356,8 @@ function copyText(text){
   let ok = false;
   try{ ok = document.execCommand('copy'); }catch(_){}
   ta.remove();
-  if(!ok && navigator.clipboard){ navigator.clipboard.writeText(text).then(() => toast(t('link_copied'))).catch(() => window.prompt(t('link_copy_prompt'), text)); return; }
-  if(ok) toast(t('link_copied')); else window.prompt(t('link_copy_prompt'), text);
+  if(!ok && navigator.clipboard){ navigator.clipboard.writeText(text).then(() => toast(msg || t('link_copied'))).catch(() => window.prompt(t('link_copy_prompt'), text)); return; }
+  if(ok) toast(msg || t('link_copied')); else window.prompt(t('link_copy_prompt'), text);
 }
 async function shareDog(d){
   const url = dogShareUrl(d);
@@ -3387,6 +3409,1143 @@ async function xmasExport(dogs){
   xmasBusy = ''; render();
 }
 
+// ---------- Social media pictures (admin tab "Social Media") ----------
+// One picture per dog for Instagram / Facebook: 4 formats, 4 designs, colour themes, background patterns.
+// Everything is drawn in the browser (canvas). Settings and short texts are kept in this browser only.
+Object.assign(I18N.de, {
+  admin_tab_social:'📣 Social Media', soc_fmt_a5:'A5 Flyer', soc_fmt_a5_sub:'14,8 × 21 cm · PDF', soc_fmt_a6:'A6 Flyer', soc_fmt_a6_sub:'10,5 × 14,8 cm · PDF', soc_print_hint:'Flyer werden als druckfertiges PDF (300 dpi) erstellt, immer mit QR-Code zum Hundeprofil.', soc_pdf_one:'PDF herunterladen', soc_pdf_selected:'PDF mit {n} Flyern', soc_pdf_done:'PDF mit {n} Flyern erstellt', soc_video:'Video mit Musik', soc_video_hint:'Diashow aus den Fotos des Hundes mit Abspann. Wird live aufgenommen und dauert so lange wie das Video.', soc_music:'Musik', soc_music_none:'Keine Musik', soc_music_sonnig:'Sonnig · fröhlich', soc_music_ruhig:'Ruhig · sanft', soc_music_verspielt:'Verspielt · flott', soc_listen:'▶ Anhören', soc_secs:'Sekunden pro Foto', soc_volume:'Lautstärke', soc_video_make:'🎬 Video erstellen', soc_video_recording:'Video wird aufgenommen … {s} s', soc_video_ready:'Dein Video ist fertig', soc_video_download:'Video herunterladen', soc_video_error:'Das Video konnte in diesem Browser nicht erstellt werden.', soc_video_print:'Videos gibt es nur für die Social-Media-Formate.', soc_outro:'Mehr auf', soc_music_note:'🎵 = lizenzfreie Musik (Pixabay), automatisch auf die Videolänge gekürzt und ausgeblendet. Die anderen Melodien werden im Browser erzeugt.', soc_title:'Social-Media-Bilder',
+  soc_intro:'Fertige Bilder für Instagram und Facebook: Format, Design, Farbe und Muster wählen, Hunde auswählen, herunterladen. Den passenden Bildtext mit Hashtags gibt es zum Kopieren dazu.',
+  soc_format:'Format', soc_fmt_story:'Story', soc_fmt_story_sub:'9:16 · Reel', soc_fmt_post:'Post', soc_fmt_post_sub:'4:5 · Hochformat', soc_fmt_square:'Quadrat', soc_fmt_square_sub:'1:1', soc_fmt_wide:'Link', soc_fmt_wide_sub:'1.91:1 · Facebook',
+  soc_layout:'Design', soc_lay_bogen:'Bogen', soc_lay_vollbild:'Vollbild', soc_lay_steckbrief:'Steckbrief', soc_lay_collage:'Collage', soc_lay_herz:'Herz', soc_lay_magazin:'Magazin', soc_lay_split:'Zweifarbig', soc_lay_minimal:'Schlicht', soc_lay_poster:'Plakat',
+  soc_theme:'Farben', soc_th_schwarz:'Schwarz & Gold', soc_th_gruen:'Waldgrün & Gold', soc_th_creme:'Creme & Rost', soc_th_tanne:'Tanne & Gold', soc_th_terra:'Terrakotta', soc_th_herz:'Herzrot', soc_th_himmel:'Himmelblau', soc_th_salbei:'Salbei', soc_th_sand:'Sand', soc_th_nacht:'Nacht',
+  soc_pattern:'Muster', soc_pat_pfoten:'Pfoten', soc_pat_herzen:'Herzen', soc_pat_punkte:'Punkte', soc_pat_streifen:'Streifen', soc_pat_hunde:'Hunde', soc_pat_knochen:'Knochen', soc_pat_sterne:'Sterne', soc_pat_karo:'Karo', soc_pat_wellen:'Wellen', soc_pat_konfetti:'Konfetti', soc_pat_keins:'Ohne',
+  soc_texts:'Texte', soc_tag_label:'Abzeichen', soc_tag_ph:'leer = automatisch („Sucht ein Zuhause“ / „Reserviert“)', soc_tag_default:'Sucht ein Zuhause', soc_tag_reserved:'Reserviert',
+  soc_cta_label:'Button-Text', soc_cta_default:'Jetzt kennenlernen', soc_url_label:'Webadresse auf dem Bild', soc_url_default:'einherzfuerhunde.com/vermittlung',
+  soc_qr:'QR-Code zum Hundeprofil statt Button (gut für Stories und Ausdrucke)', soc_fee:'Schutzgebühr zeigen', soc_fee_label:'Schutzgebühr', soc_fee_amount:'Betrag (€)',
+  soc_hashtags:'Hashtags für den Bildtext', soc_hashtags_default:'#einherzfuerhunde #tierschutz #adoptdontshop #hundeausbosnien #hundsuchtzuhause #tiervermittlung #adoptierenstattkaufen #rescuedog #österreich',
+  soc_note_ph:'Kurztext (optional), z. B. „Verschmust, verträgt sich mit Katzen, liebt lange Spaziergänge.“', soc_note_label:'Kurztext',
+  soc_preview:'Vorschau', soc_download:'Bild', soc_download_one:'Bild herunterladen', soc_download_all_formats:'Alle 4 Formate (ZIP)', soc_zip_selected:'{n} Bilder herunterladen (ZIP)', soc_none:'Bitte zuerst Hunde auswählen.',
+  soc_working:'Bild {i} von {n} …', soc_done:'{n} Bilder heruntergeladen', soc_done_one:'Bild heruntergeladen', soc_error:'Das Bild konnte nicht erstellt werden.',
+  soc_preview_hint:'Bei einem Hund auf „Vorschau“ klicken.', soc_formats_strip:'Alle Formate (antippen zum Wechseln)', soc_photo_pick:'Foto wählen',
+  soc_caption:'Bildtext', soc_copy_caption:'Bildtext kopieren', soc_caption_copied:'Bildtext kopiert',
+  soc_gallery_btn:'Alle {n} ansehen', soc_gallery_title:'Vorschau vor dem Posten', soc_gallery_hint:'So sehen die Bilder aus. Passt ein Foto nicht: Bild antippen und Ausschnitt anpassen.',
+  soc_saved_hint:'Einstellungen und Kurztexte werden nur in diesem Browser gespeichert.', soc_profile_title:'Steckbrief', soc_crop_hint:'Foto anpassen: ins Foto klicken oder es mit der Maus / dem Finger verschieben. Mit dem Regler kleiner oder größer machen, bis der Hund gut in die Form (z. B. das Herz) passt.',
+  soc_f_age:'Alter', soc_f_breed:'Rasse', soc_f_size:'Größe', soc_f_place:'Ort',
+  soc_cap_head:'🐾 {name} sucht ein Zuhause!', soc_cap_head_reserved:'🐾 {name} ist reserviert.', soc_cap_link:'Alle Infos und Bewerbung:'
+});
+Object.assign(I18N.en, {
+  admin_tab_social:'📣 Social media', soc_fmt_a5:'A5 flyer', soc_fmt_a5_sub:'14.8 × 21 cm · PDF', soc_fmt_a6:'A6 flyer', soc_fmt_a6_sub:'10.5 × 14.8 cm · PDF', soc_print_hint:'Flyers are made as a print-ready PDF (300 dpi), always with a QR code to the dog profile.', soc_pdf_one:'Download PDF', soc_pdf_selected:'PDF with {n} flyers', soc_pdf_done:'PDF with {n} flyers created', soc_video:'Video with music', soc_video_hint:'Slideshow of the dog’s photos with an end card. It is recorded live, so it takes as long as the video.', soc_music:'Music', soc_music_none:'No music', soc_music_sonnig:'Sunny · cheerful', soc_music_ruhig:'Calm · gentle', soc_music_verspielt:'Playful · upbeat', soc_listen:'▶ Listen', soc_secs:'Seconds per photo', soc_volume:'Volume', soc_video_make:'🎬 Create video', soc_video_recording:'Recording video … {s} s', soc_video_ready:'Your video is ready', soc_video_download:'Download video', soc_video_error:'The video could not be made in this browser.', soc_video_print:'Videos are only available for the social media formats.', soc_outro:'More at', soc_music_note:'🎵 = royalty-free music (Pixabay), cut to the video length and faded out automatically. The other tunes are generated in the browser.', soc_title:'Social media pictures',
+  soc_intro:'Ready-made pictures for Instagram and Facebook: pick format, design, colours and pattern, select dogs, download. A matching caption with hashtags comes with it to copy.',
+  soc_format:'Format', soc_fmt_story:'Story', soc_fmt_story_sub:'9:16 · Reel', soc_fmt_post:'Post', soc_fmt_post_sub:'4:5 · portrait', soc_fmt_square:'Square', soc_fmt_square_sub:'1:1', soc_fmt_wide:'Link', soc_fmt_wide_sub:'1.91:1 · Facebook',
+  soc_layout:'Design', soc_lay_bogen:'Arch', soc_lay_vollbild:'Full photo', soc_lay_steckbrief:'Profile', soc_lay_collage:'Collage', soc_lay_herz:'Heart', soc_lay_magazin:'Magazine', soc_lay_split:'Two-tone', soc_lay_minimal:'Clean', soc_lay_poster:'Poster',
+  soc_theme:'Colours', soc_th_schwarz:'Black & gold', soc_th_gruen:'Forest green & gold', soc_th_creme:'Cream & rust', soc_th_tanne:'Pine & gold', soc_th_terra:'Terracotta', soc_th_herz:'Heart red', soc_th_himmel:'Sky blue', soc_th_salbei:'Sage', soc_th_sand:'Sand', soc_th_nacht:'Night',
+  soc_pattern:'Pattern', soc_pat_pfoten:'Paws', soc_pat_herzen:'Hearts', soc_pat_punkte:'Dots', soc_pat_streifen:'Stripes', soc_pat_hunde:'Dogs', soc_pat_knochen:'Bones', soc_pat_sterne:'Stars', soc_pat_karo:'Checks', soc_pat_wellen:'Waves', soc_pat_konfetti:'Confetti', soc_pat_keins:'None',
+  soc_texts:'Texts', soc_tag_label:'Badge', soc_tag_ph:'empty = automatic (“Sucht ein Zuhause” / “Reserviert”)', soc_tag_default:'Sucht ein Zuhause', soc_tag_reserved:'Reserviert',
+  soc_cta_label:'Button text', soc_cta_default:'Jetzt kennenlernen', soc_url_label:'Web address on the picture', soc_url_default:'einherzfuerhunde.com/vermittlung',
+  soc_qr:'QR code to the dog profile instead of the button (good for stories and prints)', soc_fee:'Show adoption fee', soc_fee_label:'Schutzgebühr', soc_fee_amount:'Amount (€)',
+  soc_hashtags:'Hashtags for the caption', soc_hashtags_default:'#einherzfuerhunde #tierschutz #adoptdontshop #hundeausbosnien #hundsuchtzuhause #tiervermittlung #adoptierenstattkaufen #rescuedog #österreich',
+  soc_note_ph:'Short text (optional), e.g. “Cuddly, fine with cats, loves long walks.”', soc_note_label:'Short text',
+  soc_preview:'Preview', soc_download:'Picture', soc_download_one:'Download picture', soc_download_all_formats:'All 4 formats (ZIP)', soc_zip_selected:'Download {n} pictures (ZIP)', soc_none:'Please select dogs first.',
+  soc_working:'Picture {i} of {n} …', soc_done:'{n} pictures downloaded', soc_done_one:'Picture downloaded', soc_error:'The picture could not be created.',
+  soc_preview_hint:'Click “Preview” on a dog.', soc_formats_strip:'All formats (tap to switch)', soc_photo_pick:'Choose photo',
+  soc_caption:'Caption', soc_copy_caption:'Copy caption', soc_caption_copied:'Caption copied',
+  soc_gallery_btn:'View all {n}', soc_gallery_title:'Preview before posting', soc_gallery_hint:'This is how the pictures look. If a photo doesn’t fit: tap the picture and adjust the crop.',
+  soc_saved_hint:'Settings and short texts are only saved in this browser.', soc_profile_title:'Steckbrief', soc_crop_hint:'Adjust photo: click into the photo or drag it with the mouse or your finger. Use the slider to make it smaller or bigger until the dog fits the shape (e.g. the heart).',
+  soc_f_age:'Alter', soc_f_breed:'Rasse', soc_f_size:'Größe', soc_f_place:'Ort',
+  soc_cap_head:'🐾 {name} is looking for a home!', soc_cap_head_reserved:'🐾 {name} is reserved.', soc_cap_link:'All info and application:'
+});
+const SOC_FORMATS = { story:{ w:1080, h:1920 }, post:{ w:1080, h:1350 }, square:{ w:1080, h:1080 }, wide:{ w:1200, h:628 },
+  a5:{ w:1080, h:1532, mm:[148, 210] }, a6:{ w:1080, h:1522, mm:[105, 148] } };
+const SOC_SOCIAL = ['story', 'post', 'square', 'wide'];
+const socIsPrint = f => !!(SOC_FORMATS[f] || {}).mm;
+const SOC_LAYOUTS = ['bogen', 'vollbild', 'steckbrief', 'collage', 'herz', 'magazin', 'split', 'minimal', 'poster'];
+const SOC_PATTERNS = ['pfoten', 'herzen', 'hunde', 'knochen', 'sterne', 'punkte', 'streifen', 'karo', 'wellen', 'konfetti', 'keins'];
+// Royalty-free tracks (Pixabay) in portal/music/ + three generated tunes
+const SOC_TRACKS = { 'funny-pets':'Funny Pets', 'we-love-animals':'We Love Animals', 'spritz':'Spritz', 'funny-pets-2':'Funny Pets 2', 'sweet-animals':'Sweet Animals' };
+const SOC_MUSIC = ['none', ...Object.keys(SOC_TRACKS), 'sonnig', 'ruhig', 'verspielt'];
+// bg/bg2 = background gradient, accent = badge + button, on = text on the background, ink2 = strong colour on the cream card
+const SOC_THEMES = {
+  schwarz: { bg:'#0B100D', bg2:'#1C2620', accent:'#F2C27A', accentInk:'#0B100D', on:'#F6F0E5', soft:'rgba(246,240,229,0.66)', ink2:'#A6512E' },
+  gruen:   { bg:'#24322B', bg2:'#3A4D40', accent:'#F2C27A', accentInk:'#24322B', on:'#F6F0E5', soft:'rgba(246,240,229,0.72)', ink2:'#57684A' },
+  creme:   { bg:'#F6F0E5', bg2:'#EAD9C2', accent:'#A6512E', accentInk:'#FFFFFF', on:'#24322B', soft:'rgba(36,50,43,0.72)', ink2:'#A6512E' }
+};
+const SOC_CARD = { bg:'#FBF8F2', ink:'#24322B', soft:'#66706a' };
+const SOC_KEY = 'ehfh_social_cards_v1';
+function socLoad(){
+  let s = {};
+  try{ s = JSON.parse(localStorage.getItem(SOC_KEY) || '{}') || {}; }catch(_){ s = {}; }
+  const str = v => typeof v === 'string' ? v : null, obj = v => v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+  return {
+    format: SOC_FORMATS[s.format] ? s.format : 'post',
+    layout: SOC_LAYOUTS.includes(s.layout) ? s.layout : 'bogen',
+    theme: SOC_THEMES[s.theme] ? s.theme : 'schwarz',
+    pattern: SOC_PATTERNS.includes(s.pattern) ? s.pattern : 'pfoten',
+    tag: str(s.tag), cta: str(s.cta), url: str(s.url), hashtags: str(s.hashtags),
+    qr: !!s.qr, fee: false, music: SOC_MUSIC.includes(s.music) ? s.music : 'funny-pets', secs: s.secs >= 2 && s.secs <= 6 ? +s.secs : 3.5, vol: s.vol >= 0 && s.vol <= 1 ? +s.vol : 0.7, feeAmount: s.feeAmount != null && s.feeAmount !== '' ? String(s.feeAmount) : '430',
+    group: ['verfuegbar','reserviert','all'].includes(s.group) ? s.group : 'all',
+    notes: obj(s.notes), crop: obj(s.crop), photo: obj(s.photo),
+    selected: Array.isArray(s.selected) ? s.selected : []
+  };
+}
+const soc = socLoad();
+let socPreview = { id: null, url: null, photo: null, strip: {} };
+let socGallery = null;
+let socBusy = '';
+function socSave(){ try{ localStorage.setItem(SOC_KEY, JSON.stringify(soc)); }catch(_){} }
+function socDogs(){
+  return state.dogs.filter(d => d.status !== 'vermittelt' && (soc.group === 'all' || d.status === soc.group))
+    .slice().sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'de'));
+}
+function socSelectedDogs(){
+  const ids = new Set(soc.selected);
+  return state.dogs.filter(d => d.status !== 'vermittelt' && ids.has(d.id))
+    .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'de'));
+}
+function socTag(d){ return soc.tag ? soc.tag : d.status === 'reserviert' ? t('soc_tag_reserved') : t('soc_tag_default'); }
+function socCta(){ return soc.cta == null ? t('soc_cta_default') : soc.cta; }
+function socUrl(){ return soc.url == null ? t('soc_url_default') : soc.url; }
+function socHashtags(){ return soc.hashtags == null ? t('soc_hashtags_default') : soc.hashtags; }
+function socDetails(d){ return [d.breed, sexLabel(d), ageLabel(d)].filter(Boolean).join(' · '); }
+function socFee(){ const n = String(soc.feeAmount || '').trim(); return n ? `${n} €` : ''; }
+function socFacts(d, max){
+  const f = [[t('soc_f_age'), ageLabel(d)], [t('fact_sex'), sexLabel(d)], [t('soc_f_breed'), d.breed], [t('soc_f_place'), locationLabel(d)], [t('soc_f_size'), sizeLabel[d.size]]]
+    .filter(x => x[1]);
+  const out = f.slice(0, max);
+  return out;
+}
+function socPhotoList(d){
+  const list = (d.photos || []).filter(Boolean);
+  const i = Math.max(0, Math.min(list.length - 1, Number(soc.photo[d.id]) || 0));
+  return list.length ? [list[i], ...list.filter((_, j) => j !== i)] : [];
+}
+function socCaption(d){
+  const parts = [t(d.status === 'reserviert' ? 'soc_cap_head_reserved' : 'soc_cap_head', { name: d.name })];
+  const info = [socDetails(d), locationLabel(d) ? '📍 ' + locationLabel(d) : ''].filter(Boolean).join('\n');
+  if(info) parts.push(info);
+  if((soc.notes[d.id] || '').trim()) parts.push(soc.notes[d.id].trim());
+  parts.push(`${t('soc_cap_link')}\n${dogShareUrl(d)}`);
+  if(socHashtags().trim()) parts.push(socHashtags().trim());
+  return parts.join('\n\n');
+}
+function socOpts(d, scale, format){
+  return { format: format || soc.format, layout: soc.layout, theme: soc.theme, pattern: soc.pattern, scale: scale || 1,
+    tag: socTag(d), cta: '', url: socUrl(), qr: !!SOC_FORMATS[format || soc.format].mm, fee: '', note: (soc.notes[d.id] || '').trim(),
+    crop: soc.crop[d.id] || null, photos: socPhotoList(d) };
+}
+
+function adminSocialTab(){
+  const dogs = socDogs();
+  const sel = new Set(soc.selected);
+  const nSel = socSelectedDogs().length;
+  const groups = [['all', t('stage_filter_all')], ['verfuegbar', statusLabel.verfuegbar], ['reserviert', statusLabel.reserviert]];
+  const count = k => state.dogs.filter(d => d.status !== 'vermittelt' && (k === 'all' || d.status === k)).length;
+  const pd = state.dogs.find(d => d.id === socPreview.id);
+  const seg = (key, values, label) => `<div class="soc-seg">${values.map(v => `<button type="button" class="soc-opt ${soc[key] === v ? 'on' : ''}" data-action="soc-set" data-key="${key}" data-val="${v}">${label(v)}</button>`).join('')}</div>`;
+  const photos = pd ? (pd.photos || []).filter(Boolean) : [];
+  return `
+  <div class="admin-header">
+    <h1 class="page-title" style="font-size:1.6rem;">${t('soc_title')}</h1>
+    <div class="action-row" style="margin:0;">
+      <button type="button" class="btn-secondary" data-action="soc-gallery" ${nSel ? '' : 'disabled'}>${t('soc_gallery_btn', { n: nSel })}</button>
+      <button type="button" class="btn-primary" data-action="soc-zip" ${socBusy ? 'disabled' : ''}>${socBusy ? esc(socBusy) : t(socIsPrint(soc.format) ? 'soc_pdf_selected' : 'soc_zip_selected', { n: nSel })}</button>
+    </div>
+  </div>
+  <p class="page-lede" style="margin-bottom:18px;">${t('soc_intro')}</p>
+  <div class="xmas-layout">
+    <div>
+      <div class="card xmas-settings">
+        <div class="field"><label>${t('soc_format')}</label>
+          ${seg('format', Object.keys(SOC_FORMATS), k => `<b>${t('soc_fmt_' + k)}</b><small>${t('soc_fmt_' + k + '_sub')}</small>`)}</div>
+        <div class="field"><label>${t('soc_layout')}</label>
+          ${seg('layout', SOC_LAYOUTS, k => `<b>${t('soc_lay_' + k)}</b>`)}</div>
+        <div class="field"><label>${t('soc_theme')}</label>
+          <div class="soc-swatches">${Object.keys(SOC_THEMES).map(k => { const th = SOC_THEMES[k]; return `
+            <button type="button" class="soc-swatch ${soc.theme === k ? 'on' : ''}" data-action="soc-set" data-key="theme" data-val="${k}" title="${t('soc_th_' + k)}">
+              <span class="soc-sw" style="background:linear-gradient(135deg, ${th.bg} 0 55%, ${th.accent} 55% 100%);"></span><small>${t('soc_th_' + k)}</small></button>`; }).join('')}</div></div>
+        <div class="field"><label>${t('soc_pattern')}</label>
+          ${seg('pattern', SOC_PATTERNS, k => `<b>${t('soc_pat_' + k)}</b>`)}</div>
+        <div class="form-grid">
+          <div class="field"><label>${t('soc_tag_label')}</label><input type="text" id="socTag" maxlength="32" value="${esc(soc.tag || '')}" placeholder="${esc(t('soc_tag_ph'))}"></div>
+          <div class="field"><label>${t('soc_url_label')}</label><input type="text" id="socUrl" maxlength="48" value="${esc(socUrl())}"></div>
+        </div>
+        <div class="field" style="margin-top:12px;"><label>${t('soc_hashtags')}</label><textarea id="socHashtags" rows="2" maxlength="600">${esc(socHashtags())}</textarea></div>
+        <p class="hint" style="margin:8px 0 0;">${t('soc_saved_hint')}</p>
+      </div>
+      <div class="stage-tabs" style="margin-top:20px;">${groups.map(([k, l]) => `<button type="button" class="chip ${soc.group === k ? 'on' : ''}" data-action="soc-group" data-group="${k}">${l} <span class="chip-n">${count(k)}</span></button>`).join('')}
+        <button type="button" class="link-btn" data-action="soc-select" data-all="1" style="margin-left:8px;">${t('xmas_select_all')}</button>
+        <button type="button" class="link-btn" data-action="soc-select" data-all="0">${t('xmas_select_none')}</button>
+      </div>
+      ${dogs.length ? `<div class="xmas-list">${dogs.map(d => {
+        const photo = mainPhoto(d);
+        return `
+        <div class="xmas-row soc-row ${sel.has(d.id) ? 'on' : ''} ${socPreview.id === d.id ? 'previewing' : ''}" data-id="${d.id}">
+          <label class="xmas-pick"><input type="checkbox" data-soc-pick="${d.id}" ${sel.has(d.id) ? 'checked' : ''}>
+            <span class="xmas-thumb">${photo ? `<img src="${esc(thumbUrl(photo))}" alt="" loading="lazy" style="object-position:${focusPos(d)}">` : `<small>${t('xmas_no_photo')}</small>`}</span>
+            <span><b>${esc(d.name)}</b><br><span class="badge status-${d.status}">${statusLabel[d.status]}</span>${soc.crop[d.id] ? `<br><small class="xmas-custom">✓ ${t('xmas_crop_custom')}</small>` : ''}</span>
+          </label>
+          <textarea class="xmas-wish" data-soc-note="${d.id}" rows="2" maxlength="180" aria-label="${t('soc_note_label')} ${esc(d.name)}" placeholder="${esc(t('soc_note_ph'))}">${esc(soc.notes[d.id] || '')}</textarea>
+          <div class="xmas-actions">
+            <button type="button" class="btn-secondary btn-small" data-action="soc-preview" data-id="${d.id}">${t('soc_preview')}</button>
+            <button type="button" class="btn-secondary btn-small" data-action="soc-dl-one" data-id="${d.id}" ${socBusy ? 'disabled' : ''}>${t('soc_download')}</button>
+          </div>
+        </div>`; }).join('')}</div>` : emptyBlock(t('xmas_empty'))}
+    </div>
+    <aside class="xmas-preview-box soc-preview-box">
+      ${pd && socPreview.url ? `<img class="soc-preview-img" src="${socPreview.url}" alt="${t('soc_preview')}: ${esc(pd.name)}" title="${esc(t('xmas_crop_hint'))}">
+        ${photos.length ? `<div class="xmas-crop">
+          <p class="hint" style="margin:0 0 8px;">${t('soc_crop_hint')}</p>
+          <label class="xmas-zoom">${t('xmas_zoom')} <input type="range" id="socZoom" min="40" max="300" step="5" value="${Math.round(((soc.crop[pd.id] || {}).z || 1) * 100)}"></label>
+          ${soc.crop[pd.id] ? `<button type="button" class="link-btn" data-action="soc-crop-reset" data-id="${pd.id}">${t('xmas_crop_reset')}</button>` : ''}
+          ${photos.length > 1 ? `<div class="soc-photos"><small>${t('soc_photo_pick')}</small><div>${photos.map((u, i) => `<button type="button" class="soc-photo ${(Number(soc.photo[pd.id]) || 0) === i ? 'on' : ''}" data-action="soc-photo" data-idx="${i}"><img src="${esc(thumbUrl(u))}" alt="" loading="lazy"></button>`).join('')}</div></div>` : ''}
+        </div>` : ''}
+        <div class="soc-strip"><small>${t('soc_formats_strip')}</small><div>${Object.keys(SOC_FORMATS).map(k => `
+          <button type="button" class="soc-strip-item ${soc.format === k ? 'on' : ''}" data-action="soc-set" data-key="format" data-val="${k}" title="${t('soc_fmt_' + k)}">
+            ${socPreview.strip[k] ? `<img src="${socPreview.strip[k]}" alt="${t('soc_fmt_' + k)}">` : `<span class="soc-strip-wait" style="aspect-ratio:${SOC_FORMATS[k].w}/${SOC_FORMATS[k].h}"></span>`}<small>${t('soc_fmt_' + k)}</small></button>`).join('')}</div></div>
+        <div class="action-row" style="margin:12px 0 0;flex-wrap:wrap;">
+          <button type="button" class="btn-primary btn-small" data-action="soc-dl-one" data-id="${pd.id}" ${socBusy ? 'disabled' : ''}>${t(socIsPrint(soc.format) ? 'soc_pdf_one' : 'soc_download_one')}</button>
+          <button type="button" class="btn-secondary btn-small" data-action="soc-dl-formats" data-id="${pd.id}" ${socBusy ? 'disabled' : ''}>${t('soc_download_all_formats')}</button>
+        </div>
+        ${socIsPrint(soc.format) ? `<p class="hint" style="margin:10px 0 0;">${t('soc_print_hint')}</p>` : `
+        <div class="soc-video">
+          <b>${t('soc_video')}</b>
+          <p class="hint" style="margin:4px 0 10px;">${t('soc_video_hint')}</p>
+          <div class="soc-seg">${SOC_MUSIC.map(k => `<button type="button" class="soc-opt ${soc.music === k ? 'on' : ''}" data-action="soc-music" data-val="${k}"><b>${SOC_TRACKS[k] ? '🎵 ' + SOC_TRACKS[k] : t('soc_music_' + k)}</b></button>`).join('')}</div>
+          ${soc.music !== 'none' ? `<button type="button" class="link-btn" data-action="soc-listen" style="margin-top:6px;">${t('soc_listen')}</button>` : ''}
+          <label class="xmas-zoom" style="margin-top:10px;">${t('soc_secs')} <input type="range" id="socSecs" min="2" max="6" step="0.5" value="${soc.secs}"> <span id="socSecsVal">${soc.secs} s</span></label>
+          ${soc.music !== 'none' ? `<label class="xmas-zoom">${t('soc_volume')} <input type="range" id="socVol" min="0" max="100" step="5" value="${Math.round(soc.vol * 100)}"></label>` : ''}
+          <button type="button" class="btn-primary btn-small" data-action="soc-video" data-id="${pd.id}" ${socVideo.busy ? 'disabled' : ''}>${socVideo.busy ? t('soc_video_recording', { s: socVideo.left }) : t('soc_video_make')}</button>
+          ${socVideo.url && socVideo.id === pd.id && !socVideo.busy ? `<p style="margin:12px 0 6px;"><b>${t('soc_video_ready')}</b></p>
+            <video class="soc-video-player" src="${socVideo.url}" controls playsinline preload="metadata"></video>
+            <a class="btn-secondary btn-small" href="${socVideo.url}" download="${esc(socVideo.name)}" style="display:inline-block;margin-top:6px;">${t('soc_video_download')}</a>` : ''}
+          <p class="hint" style="margin:8px 0 0;">${t('soc_music_note')}</p>
+        </div>`}
+        <div class="field" style="margin-top:14px;"><label>${t('soc_caption')}</label><textarea class="soc-caption" rows="8" readonly>${esc(socCaption(pd))}</textarea></div>
+        <button type="button" class="btn-secondary btn-small" data-action="soc-copy-caption" data-id="${pd.id}">${t('soc_copy_caption')}</button>`
+        : pd ? `<div class="xmas-preview-empty"><span class="spinner"></span></div>`
+        : `<div class="xmas-preview-empty">${t('soc_preview_hint')}</div>`}
+    </aside>
+  </div>
+  ${socGallery ? socGalleryOverlay() : ''}`;
+}
+function socGalleryOverlay(){
+  const dogs = socSelectedDogs();
+  return `
+  <div class="detail-overlay xmas-gallery-overlay" data-action="soc-gallery-close-bg">
+    <div class="xmas-gallery">
+      <div class="admin-header" style="margin-bottom:8px;">
+        <h2 style="margin:0;">${t('soc_gallery_title')}</h2>
+        <button class="detail-close" style="margin:0;" data-action="soc-gallery-close">${t('close')}</button>
+      </div>
+      <p class="hint" style="margin:0 0 16px;">${t('soc_gallery_hint')}</p>
+      <div class="xmas-gallery-grid">${dogs.map(d => `
+        <button type="button" class="xmas-gallery-card soc-gallery-card" data-action="soc-gallery-pick" data-id="${d.id}" title="${esc(t('xmas_adjust'))}">
+          ${socGallery.urls[d.id] ? `<img src="${socGallery.urls[d.id]}" alt="${esc(d.name)}">` : `<span class="xmas-gallery-wait" style="aspect-ratio:${SOC_FORMATS[soc.format].w}/${SOC_FORMATS[soc.format].h}"><span class="spinner"></span></span>`}
+          <span class="xmas-gallery-name">${esc(d.name)}${soc.crop[d.id] ? ' ✓' : ''} · ${t('xmas_adjust')}</span>
+        </button>`).join('')}</div>
+    </div>
+  </div>`;
+}
+
+// ---- drawing ----
+function socImg(url){
+  if(!url) return Promise.resolve(null);
+  if(!xmasPhotoCache.has(url)){
+    xmasPhotoCache.set(url, fetch(url, { mode:'cors', cache:'force-cache' })
+      .then(r => { if(!r.ok) throw new Error('photo ' + r.status); return r.blob(); })
+      .then(b => createImageBitmap(b))
+      .catch(err => { xmasPhotoCache.delete(url); console.warn('social photo', err); return null; }));
+  }
+  return xmasPhotoCache.get(url);
+}
+function socRgba(hex, a){
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+}
+function socHeartPath(g, cx, cy, s){
+  g.beginPath();
+  g.moveTo(cx, cy + s * 0.42);
+  g.bezierCurveTo(cx - s * 0.08, cy + s * 0.34, cx - s * 0.52, cy + s * 0.06, cx - s * 0.5, cy - s * 0.18);
+  g.bezierCurveTo(cx - s * 0.48, cy - s * 0.44, cx - s * 0.1, cy - s * 0.5, cx, cy - s * 0.24);
+  g.bezierCurveTo(cx + s * 0.1, cy - s * 0.5, cx + s * 0.48, cy - s * 0.44, cx + s * 0.5, cy - s * 0.18);
+  g.bezierCurveTo(cx + s * 0.52, cy + s * 0.06, cx + s * 0.08, cy + s * 0.34, cx, cy + s * 0.42);
+  g.closePath();
+}
+function socPaw(g, cx, cy, s){
+  g.beginPath(); g.ellipse(cx, cy + s * 0.16, s * 0.3, s * 0.25, 0, 0, Math.PI * 2); g.fill();
+  [[-0.36, -0.08, -0.35], [-0.13, -0.32, -0.12], [0.13, -0.32, 0.12], [0.36, -0.08, 0.35]].forEach(([dx, dy, rot]) => {
+    g.beginPath(); g.ellipse(cx + dx * s, cy + dy * s, s * 0.12, s * 0.16, rot, 0, Math.PI * 2); g.fill();
+  });
+}
+function socBone(g, cx, cy, s){
+  g.fillRect(cx - s * 0.36, cy - s * 0.09, s * 0.72, s * 0.18);
+  [[-0.38, -0.12], [-0.38, 0.12], [0.38, -0.12], [0.38, 0.12]].forEach(([dx, dy]) => { g.beginPath(); g.arc(cx + dx * s, cy + dy * s, s * 0.14, 0, Math.PI * 2); g.fill(); });
+}
+function socDogHead(g, cx, cy, s){
+  g.beginPath(); g.ellipse(cx, cy, s * 0.3, s * 0.32, 0, 0, Math.PI * 2); g.fill();
+  [-1, 1].forEach(k => { g.beginPath(); g.ellipse(cx + k * s * 0.3, cy + s * 0.02, s * 0.11, s * 0.26, k * 0.35, 0, Math.PI * 2); g.fill(); });
+  g.beginPath(); g.ellipse(cx, cy + s * 0.24, s * 0.17, s * 0.13, 0, 0, Math.PI * 2); g.fill();
+}
+function socPattern(g, W, H, kind, th, seed){
+  if(kind === 'keins') return;
+  const rnd = xmasRand(seed);
+  g.save(); g.fillStyle = th.on; g.strokeStyle = th.on; g.globalAlpha = 0.15;
+  if(kind === 'punkte'){
+    const st = 64;
+    for(let y = 0, r = 0; y < H + st; y += st, r++) for(let x = (r % 2) * st / 2; x < W + st; x += st){ g.beginPath(); g.arc(x, y, 7, 0, Math.PI * 2); g.fill(); }
+  } else if(kind === 'streifen'){
+    g.lineWidth = 26;
+    for(let x = -H; x < W + H; x += 96){ g.beginPath(); g.moveTo(x, 0); g.lineTo(x + H * 0.6, H); g.stroke(); }
+  } else if(kind === 'karo'){
+    g.globalAlpha = 0.1; const st = 90;
+    for(let x = 0; x < W; x += st * 2) g.fillRect(x, 0, st, H);
+    for(let y = 0; y < H; y += st * 2) g.fillRect(0, y, W, st);
+  } else if(kind === 'wellen'){
+    g.lineWidth = 10; g.lineCap = 'round';
+    for(let y = 40; y < H + 60; y += 80){ g.beginPath(); for(let x = -20; x <= W + 20; x += 10) g.lineTo(x, y + Math.sin(x / 60) * 18); g.stroke(); }
+  } else if(kind === 'konfetti'){
+    g.globalAlpha = 0.22;
+    for(let i = 0; i < W * H / 9000; i++){
+      g.save(); g.translate(rnd() * W, rnd() * H); g.rotate(rnd() * Math.PI);
+      const k = rnd(); if(k < 0.4) g.fillRect(-12, -4, 24, 8); else if(k < 0.7){ g.beginPath(); g.arc(0, 0, 7, 0, 7); g.fill(); } else { xmasStar(g, 0, 0, 12, th.on); }
+      g.restore();
+    }
+  } else {
+    const st = 170;
+    for(let y = st / 2, r = 0; y < H + st; y += st * 0.86, r++) for(let x = (r % 2) * st / 2; x < W + st; x += st){
+      const s = 40 + rnd() * 22;
+      g.save(); g.translate(x + (rnd() - 0.5) * 30, y + (rnd() - 0.5) * 30); g.rotate((rnd() - 0.5) * 0.9);
+      if(kind === 'herzen'){ socHeartPath(g, 0, 0, s); g.fill(); }
+      else if(kind === 'sterne') xmasStar(g, 0, 0, s * 0.55, th.on);
+      else if(kind === 'knochen') socBone(g, 0, 0, s * 1.2);
+      else if(kind === 'hunde') socDogHead(g, 0, 0, s * 1.1);
+      else socPaw(g, 0, 0, s * 1.1);
+      g.restore();
+    }
+  }
+  g.restore();
+}
+// cover-crop img into the box; focus = wanted centre (0..1), z = zoom
+// z < 1 = zoomed out: the whole photo gets smaller inside the shape (to fit a dog into the heart etc.)
+function socCover(g, img, x, y, w, h, fx, fy, z){
+  const s = Math.max(w / img.width, h / img.height) * Math.max(0.4, Math.min(z || 1, 4));
+  const dw = img.width * s, dh = img.height * s;
+  const place = (c, size, box, f) => { const want = c + box / 2 - f * size; return size >= box ? Math.max(c + box - size, Math.min(c, want)) : Math.max(c, Math.min(c + box - size, want)); };
+  const dx = place(x, dw, w, fx), dy = place(y, dh, h, fy);
+  g.drawImage(img, dx, dy, dw, dh);
+  return { x, y, w, h, dx, dy, dw, dh, iw: img.width, ih: img.height };
+}
+// photo i of the dog into a clipped shape; photo 0 remembers its position for click-to-recentre
+function socDrawPhoto(P, i, x, y, w, h, clip){
+  const { g, imgs, d, o } = P, img = imgs[i];
+  g.save(); clip(); g.clip();
+  g.fillStyle = socRgba(P.th.bg2, 1); g.fillRect(x, y, w, h);
+  if(img){
+    let fx = 0.5, fy = 0.4;
+    if(i === 0){
+      if(o.photos[0] === mainPhoto(d)) [fx, fy] = focusPos(d).split(' ').map(v => parseFloat(v) / 100);
+      if(o.crop && isFinite(o.crop.fx) && isFinite(o.crop.fy)){ fx = o.crop.fx; fy = o.crop.fy; }
+    }
+    const z = i === 0 && o.crop ? o.crop.z || 1 : 1;
+    if(z < 1){ g.save(); g.filter = `blur(${Math.round(Math.max(w, h) / 30)}px) brightness(0.85)`; socCover(g, img, x - 20, y - 20, w + 40, h + 40, fx, fy, 1); g.restore(); }
+    const info = socCover(g, img, x, y, w, h, fx, fy, z);
+    if(i === 0) P.photo = info;
+  } else {
+    g.fillStyle = socRgba(P.th.on, 0.25); socPaw(g, x + w / 2, y + h / 2, Math.min(w, h) * 0.3);
+  }
+  g.restore();
+}
+function socShadow(g, blur, dy, a){ g.shadowColor = `rgba(0,0,0,${a == null ? 0.28 : a})`; g.shadowBlur = blur; g.shadowOffsetY = dy; }
+function socNoShadow(g){ g.shadowColor = 'transparent'; g.shadowBlur = 0; g.shadowOffsetY = 0; }
+// Pill with a small heart: returns its width. align: 'left' | 'right' | 'center' around x
+function socPill(g, text, x, y, h, bg, ink, align){
+  g.font = `800 ${Math.round(h * 0.42)}px Karla`;
+  const tw = g.measureText(text).width, hs = h * 0.42, w = tw + h * 0.9 + hs + h * 0.25;
+  const left = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  g.save(); socShadow(g, h * 0.3, h * 0.08, 0.22); g.fillStyle = bg; xmasRound(g, left, y, w, h, h / 2); g.fill(); g.restore();
+  g.fillStyle = ink; socHeartPath(g, left + h * 0.45 + hs / 2, y + h / 2 + hs * 0.04, hs); g.fill();
+  g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(text, left + h * 0.45 + hs + h * 0.25, y + h / 2 + h * 0.03);
+  g.textBaseline = 'alphabetic';
+  return w;
+}
+// Round "stamp" with the badge text, a little rotated
+function socSeal(g, th, text, cx, cy, r, rot){
+  g.save(); g.translate(cx, cy); g.rotate(rot);
+  socShadow(g, r * 0.3, r * 0.08, 0.3); g.fillStyle = th.accent; g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fill(); socNoShadow(g);
+  g.strokeStyle = socRgba(th.accentInk, 0.55); g.lineWidth = Math.max(2, r * 0.03); g.setLineDash([r * 0.07, r * 0.06]);
+  g.beginPath(); g.arc(0, 0, r * 0.86, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+  g.fillStyle = th.accentInk; socHeartPath(g, 0, -r * 0.5, r * 0.24); g.fill();
+  // text box: below the little heart, inside the dashed ring
+  let s = Math.round(r * 0.3), lines;
+  for(; s > r * 0.14; s--){
+    g.font = `800 ${s}px Karla`; lines = xmasWrap(g, text.toUpperCase(), r * 1.3);
+    const wMax = r * (lines.length >= 3 ? 1.12 : 1.36);
+    if(lines.length <= 3 && lines.length * s * 1.06 <= r * 0.92 && lines.every(l => g.measureText(l).width <= wMax)) break;
+  }
+  lines = lines.slice(0, 3);
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  const lh = s * 1.06, y0 = r * 0.16 - (lines.length - 1) * lh / 2;
+  lines.forEach((l, i) => g.fillText(l, 0, y0 + i * lh));
+  g.restore(); g.textBaseline = 'alphabetic';
+}
+function socLogoBadge(P, cx, cy, r){
+  const { g, logo } = P;
+  g.save(); socShadow(g, r * 0.35, r * 0.08, 0.25); g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fill(); g.restore();
+  if(logo){ const s = r * 1.42; g.drawImage(logo, cx - s / 2, cy - s / 2 * logo.height / logo.width + r * 0.04, s, s * logo.height / logo.width); }
+}
+function socQrBox(P, x, y, size){
+  const { g, qr } = P, pad = size * 0.06;
+  g.save(); socShadow(g, size * 0.12, size * 0.03, 0.22); g.fillStyle = '#FFFFFF'; xmasRound(g, x, y, size, size, size * 0.08); g.fill(); g.restore();
+  xmasDrawQR(g, qr, x + pad, y + pad, size - 2 * pad);
+}
+function socNoteLines(P, size, w, max){
+  const { g, o } = P;
+  if(!o.note || !(max > 0) || !size) return [];
+  g.font = `italic 500 ${size}px Fraunces`;
+  let ls = xmasWrap(g, o.note, w);
+  if(ls.length > max){ ls = ls.slice(0, max); let l = ls[max - 1]; while(l.length > 1 && g.measureText(l + ' …').width > w) l = l.slice(0, -1); ls[max - 1] = l.trim() + ' …'; }
+  return ls;
+}
+// Name, details, fee, short text. dry = only measure. Returns the height.
+function socTextBlock(P, b, dry){
+  const { g, d, o } = P;
+  const ax = b.align === 'center' ? b.x + b.w / 2 : b.x;
+  g.textAlign = b.align;
+  let h = 0;
+  const ns = xmasFitText(g, d.name || '', '600 {s}px Fraunces', b.name, Math.round(b.name * 0.6), b.w);
+  g.font = `600 ${ns}px Fraunces`;
+  const nameLines = g.measureText(d.name || '').width > b.w ? xmasWrap(g, d.name || '', b.w).slice(0, 2) : [d.name || ''];
+  nameLines.forEach((l, i) => { h += ns * (i ? 1.02 : 0.92); if(!dry){ g.fillStyle = b.color; g.fillText(l, ax, b.y + h); } });
+  const det = b.noDetails ? '' : socDetails(d);
+  if(det){
+    const ds = xmasFitText(g, det, '700 {s}px Karla', b.det, Math.round(b.det * 0.7), b.w);
+    h += ds * 1.55; if(!dry){ g.fillStyle = b.soft; g.fillText(det, ax, b.y + h); }
+  }
+  if(o.fee && !b.noFee){
+    const fs = Math.round(b.det * 0.95); g.font = `800 ${fs}px Karla`;
+    h += fs * 1.5; if(!dry){ g.fillStyle = b.feeColor || b.color; g.fillText(`${t('soc_fee_label')}: ${o.fee}`, ax, b.y + h); }
+  }
+  const ls = socNoteLines(P, b.note, b.w, b.lines);
+  if(ls.length){
+    g.font = `italic 500 ${b.note}px Fraunces`;
+    h += b.note * 0.35;
+    ls.forEach(l => { h += b.note * 1.28; if(!dry){ g.fillStyle = b.color; g.fillText(l, ax, b.y + h); } });
+  }
+  return h + b.det * 0.3;
+}
+// Bottom row: logo + "Ein Herz für Hunde" + web address, button or QR code on the right
+function socFooter(P, x, y, w, h, colors, noCta){
+  const { g, o, th } = P, c = colors || th;
+  const r = Math.min(h * 0.4, 60);
+  let right = 0, socLogoBadgeMove = 0;
+  if(o.qr && P.qr){ right = h * 1.15; socQrBox(P, x + w - right, y + h / 2 - right / 2, right); }
+  else if(o.cta && !noCta){
+    const ph = h * 0.56; g.font = `800 ${Math.round(ph * 0.4)}px Karla`;
+    const label = o.cta + '  →', pw = g.measureText(label).width + ph * 0.9;
+    right = pw;
+    g.save(); socShadow(g, ph * 0.3, ph * 0.08, 0.22); g.fillStyle = th.accent; xmasRound(g, x + w - pw, y + h / 2 - ph / 2, pw, ph, ph / 2); g.fill(); g.restore();
+    g.fillStyle = th.accentInk; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(label, x + w - pw / 2, y + h / 2 + ph * 0.03); g.textBaseline = 'alphabetic';
+  }
+  let tx = x + 2 * r + h * 0.22, tw = w - (tx - x) - right - h * 0.2;
+  g.textAlign = 'left';
+  const s1 = xmasFitText(g, 'Ein Herz für Hunde', '600 {s}px Fraunces', Math.round(Math.min(h * 0.27, 40)), 18, tw);
+  // nothing on the right: centre logo + text as one group under centred layouts
+  if(!right && P.footCenter){
+    const w1 = g.measureText('Ein Herz für Hunde').width; g.save(); xmasFitText(g, o.url || '', '700 {s}px Karla', Math.round(Math.min(h * 0.19, 26)), 13, tw); const w2 = o.url ? g.measureText(o.url).width : 0; g.restore();
+    g.font = `600 ${s1}px Fraunces`;
+    const total = 2 * r + h * 0.22 + Math.max(w1, w2), sx = x + (w - total) / 2;
+    socLogoBadgeMove = sx - x; tx = sx + 2 * r + h * 0.22;
+  }
+  g.fillStyle = c.on; g.fillText('Ein Herz für Hunde', tx, y + h / 2 - h * 0.02);
+  if(o.url){ xmasFitText(g, o.url, '700 {s}px Karla', Math.round(Math.min(h * 0.19, 26)), 13, tw); g.fillStyle = c.soft; g.fillText(o.url, tx, y + h / 2 + s1 * 0.95); }
+  socLogoBadge(P, x + socLogoBadgeMove + r, y + h / 2, r);
+}
+function socBg(P){
+  const { g, W, H, th, o, d } = P;
+  const gr = g.createLinearGradient(0, 0, W * 0.35, H); gr.addColorStop(0, th.bg); gr.addColorStop(1, th.bg2);
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  socPattern(g, W, H, o.pattern, th, d.id || d.name);
+}
+function socRoundClip(g, x, y, w, h, r){ return () => xmasRound(g, x, y, w, h, r); }
+
+// ---- layouts: tall (story / post / square) ----
+const SOC_TALL = {
+  herz(P){
+    P.footCenter = true;
+    const { g, W, H, th } = P, m = 72, story = P.o.format === 'story', sq = H <= 1080;
+    socBg(P);
+    const fh = P.o.qr ? (sq ? 160 : 200) : (sq ? 110 : 132), fy = H - m - fh - (story ? 70 : 0), tw = W - 2 * m;
+    const b = { x: m, w: tw, align: 'center', name: sq ? 86 : story ? 122 : 104, det: sq ? 29 : 34, note: sq ? 30 : 36, lines: sq ? 1 : story ? 3 : 2, color: th.on, soft: th.soft };
+    const ty = fy - (sq ? 26 : 40) - socTextBlock(P, { ...b, y: 0 }, true);
+    const top = m + (story ? 120 : 0) + (sq ? 70 : 88), avail = ty - 20 - top;
+    const S = Math.min(W - 2 * m + 40, avail / 0.92), cx = W / 2, cy = top + avail / 2 + S * 0.03;
+    socPill(g, P.o.tag, cx, m + (story ? 120 : 0), sq ? 60 : 70, th.accent, th.accentInk, 'center');
+    g.save(); socShadow(g, 40, 14, 0.3); g.fillStyle = th.accent; socHeartPath(g, cx, cy, S * 1.06); g.fill(); g.restore();
+    g.fillStyle = SOC_CARD.bg; socHeartPath(g, cx, cy, S * 1.025); g.fill();
+    socDrawPhoto(P, 0, cx - S / 2, cy - S * 0.5, S, S * 0.92, () => socHeartPath(g, cx, cy, S));
+    socTextBlock(P, { ...b, y: ty });
+    socFooter(P, m, fy, tw, fh);
+  },
+  magazin(P){
+    const { g, W, H, th } = P, m = 64, story = P.o.format === 'story', sq = H <= 1080;
+    g.fillStyle = th.bg; g.fillRect(0, 0, W, H);
+    const fh = P.o.qr ? (sq ? 160 : 200) : (sq ? 110 : 132), fy = H - m - fh - (story ? 70 : 0), tw = W - 2 * m;
+    const ns = sq ? 120 : story ? 170 : 150;
+    g.font = `800 ${ns}px Karla`;
+    const name = String(P.d.name || '').toUpperCase();
+    const nsz = xmasFitText(g, name, '800 {s}px Karla', ns, 54, tw);
+    const b = { x: m, w: tw, align: 'left', name: 0, det: sq ? 28 : 34, note: sq ? 28 : 34, lines: sq ? 1 : story ? 3 : 2, color: th.on, soft: th.soft };
+    const below = (P.d.breed || P.d.sex ? b.det * 1.6 : 0) + socNoteLines(P, b.note, tw, b.lines).length * b.note * 1.28 + 30;
+    const ph = fy - 34 - below - nsz * 1.05;
+    socDrawPhoto(P, 0, 0, 0, W, ph, () => { g.beginPath(); g.rect(0, 0, W, ph); });
+    const tg = g.createLinearGradient(0, 0, 0, 230 + (story ? 120 : 0)); tg.addColorStop(0, 'rgba(0,0,0,0.45)'); tg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = tg; g.fillRect(0, 0, W, 230 + (story ? 120 : 0));
+    const top = m - 10 + (story ? 110 : 0);
+    g.textAlign = 'left'; g.fillStyle = '#FFFFFF'; g.font = `800 ${sq ? 26 : 30}px Karla`;
+    g.fillText('EIN HERZ FÜR HUNDE  ·  ADOPTION', m, top + 30);
+    socPill(g, P.o.tag, W - m, top, sq ? 54 : 62, th.accent, th.accentInk, 'right');
+    g.fillStyle = th.accent; g.fillRect(m, ph + 26, 120, 10);
+    g.fillStyle = th.on; g.font = `800 ${nsz}px Karla`; g.fillText(name, m - 4, ph + 30 + nsz * 0.95);
+    let y = ph + 30 + nsz * 1.0;
+    const det = socDetails(P.d);
+    if(det){ xmasFitText(g, det.toUpperCase(), '700 {s}px Karla', b.det, 18, tw); g.fillStyle = th.soft; g.fillText(det.toUpperCase(), m, y + b.det * 1.3); y += b.det * 1.6; }
+    g.font = `italic 500 ${b.note}px Fraunces`; g.fillStyle = th.on;
+    socNoteLines(P, b.note, tw, b.lines).forEach((l, i) => g.fillText(l, m, y + b.note * 1.28 * (i + 1)));
+    socFooter(P, m, fy, tw, fh);
+  },
+  split(P){
+    const { g, W, H, th } = P, m = 72, story = P.o.format === 'story', sq = H <= 1080;
+    g.fillStyle = th.accent; g.fillRect(0, 0, W, H);
+    const inv = { ...th, accent: th.bg, accentInk: th.on, on: th.accentInk, soft: socRgba(th.accentInk, 0.75) };
+    const P2 = { ...P, th: inv };
+    const fh = P.o.qr ? (sq ? 160 : 200) : (sq ? 110 : 132), fy = H - m - fh - (story ? 70 : 0), tw = W - 2 * m;
+    const b = { x: m, w: tw, align: 'left', name: sq ? 96 : story ? 130 : 114, det: sq ? 29 : 34, note: sq ? 30 : 36, lines: sq ? 1 : story ? 3 : 2, color: inv.on, soft: inv.soft };
+    const ty = fy - 36 - socTextBlock(P2, { ...b, y: 0 }, true);
+    const ph = ty - 70;
+    socDrawPhoto(P, 0, 0, 0, W, ph, () => { g.beginPath(); g.moveTo(0, 0); g.lineTo(W, 0); g.lineTo(W, ph - 60); g.bezierCurveTo(W * 0.7, ph + 30, W * 0.3, ph - 110, 0, ph - 20); g.closePath(); });
+    g.save(); g.strokeStyle = th.bg; g.lineWidth = 10; g.beginPath(); g.moveTo(W, ph - 60); g.bezierCurveTo(W * 0.7, ph + 30, W * 0.3, ph - 110, 0, ph - 20); g.stroke(); g.restore();
+    socPill(g, P.o.tag, m, m + (story ? 110 : 0), sq ? 60 : 70, th.bg, th.on, 'left');
+    socTextBlock(P2, { ...b, y: ty });
+    socFooter(P2, m, fy, tw, fh);
+  },
+  minimal(P){
+    P.footCenter = true;
+    const { g, W, H, th } = P, m = 80, story = P.o.format === 'story', sq = H <= 1080;
+    g.fillStyle = SOC_CARD.bg; g.fillRect(0, 0, W, H);
+    const lt = { ...th, accent: th.ink2, accentInk: '#FFFFFF', on: SOC_CARD.ink, soft: SOC_CARD.soft };
+    const P2 = { ...P, th: lt };
+    g.strokeStyle = th.ink2; g.lineWidth = 3; g.strokeRect(36, 36, W - 72, H - 72);
+    const fh = P.o.qr ? (sq ? 160 : 200) : (sq ? 110 : 132), fy = H - m - fh - (story ? 70 : 0), tw = W - 2 * m;
+    const b = { x: m, w: tw, align: 'center', name: sq ? 84 : story ? 116 : 100, det: sq ? 26 : 30, note: sq ? 28 : 34, lines: sq ? 1 : story ? 3 : 2, color: SOC_CARD.ink, soft: SOC_CARD.soft };
+    const ty = fy - (sq ? 30 : 44) - socTextBlock(P2, { ...b, y: 0 }, true);
+    const top = m + (story ? 110 : 0) + (sq ? 40 : 56);
+    g.textAlign = 'center'; g.fillStyle = th.ink2; g.font = `800 ${sq ? 22 : 26}px Karla`;
+    const tag = P.o.tag.toUpperCase().split('').join(String.fromCharCode(8202));
+    g.fillText('—  ' + tag + '  —', W / 2, top - (sq ? 16 : 22));
+    socDrawPhoto(P, 0, m, top, tw, ty - 36 - top, () => { g.beginPath(); g.rect(m, top, tw, ty - 36 - top); });
+    socTextBlock(P2, { ...b, y: ty });
+    socFooter(P2, m, fy, tw, fh);
+  },
+  poster(P){
+    P.footCenter = true;
+    const { g, W, H, th } = P, m = 64, story = P.o.format === 'story', sq = H <= 1080;
+    socBg(P);
+    const fh = P.o.qr ? (sq ? 160 : 200) : (sq ? 110 : 132), fy = H - m - fh - (story ? 70 : 0), tw = W - 2 * m;
+    const top = m + (story ? 110 : 0);
+    const head = P.o.tag.toUpperCase();
+    let hs = sq ? 92 : story ? 140 : 118, lines;
+    for(; hs > 40; hs -= 2){ g.font = `800 ${hs}px Karla`; lines = xmasWrap(g, head, tw); if(lines.length <= 2 && lines.every(l => g.measureText(l).width <= tw)) break; }
+    g.textAlign = 'center'; g.fillStyle = th.accent;
+    lines.slice(0, 2).forEach((l, i) => g.fillText(l, W / 2, top + hs * 0.85 + i * hs * 0.95));
+    const hy = top + hs * 0.95 * Math.min(2, lines.length) + (sq ? 24 : 36);
+    const b = { x: m, w: tw, align: 'center', name: sq ? 80 : story ? 112 : 98, det: sq ? 28 : 32, note: sq ? 28 : 34, lines: sq ? 1 : story ? 3 : 2, color: th.on, soft: th.soft };
+    const ty = fy - (sq ? 26 : 40) - socTextBlock(P, { ...b, y: 0 }, true);
+    const ph = ty - 40 - hy, pw = Math.min(tw - 40, sq ? ph * 1.15 : tw - 40), px = (W - pw) / 2;
+    g.save(); g.translate(W / 2, hy + ph / 2); g.rotate(-0.035); g.translate(-W / 2, -(hy + ph / 2));
+    g.save(); socShadow(g, 40, 16, 0.35); g.fillStyle = th.accent; xmasRound(g, px - 14, hy - 14, pw + 28, ph + 28, 44); g.fill(); g.restore();
+    socDrawPhoto(P, 0, px, hy, pw, ph, socRoundClip(g, px, hy, pw, ph, 32));
+    g.restore();
+    socTextBlock(P, { ...b, y: ty });
+    socFooter(P, m, fy, tw, fh);
+  },
+  bogen(P){
+    P.footCenter = true;
+    const { g, W, H, th } = P, m = 72, story = P.o.format === 'story', sq = H <= 1080;
+    socBg(P);
+    const fh = P.o.qr ? (sq ? 160 : 200) : (sq ? 110 : 132), fy = H - m - fh - (story ? 70 : 0), tw = W - 2 * m;
+    const b = { x: m, w: tw, align: 'center', name: sq ? 86 : story ? 122 : 104, det: sq ? 29 : 34, note: sq ? 30 : 37, lines: sq ? 1 : story ? 3 : 2, color: th.on, soft: th.soft, feeColor: th.accent };
+    const th_ = socTextBlock(P, { ...b, y: 0 }, true);
+    const ty = fy - (sq ? 30 : 46) - th_, top = m + (story ? 130 : 0);
+    const ph = ty - (sq ? 36 : 48) - top, pw = Math.min(tw - 80, ph * 0.8), px = (W - pw) / 2;
+    g.save(); g.strokeStyle = th.accent; g.lineWidth = 5; xmasArchPath(g, px - 22, top - 22, pw + 44, ph + 44); g.stroke(); g.restore();
+    g.save(); socShadow(g, 40, 14, 0.3); g.fillStyle = SOC_CARD.bg; xmasArchPath(g, px, top, pw, ph); g.fill(); g.restore();
+    socDrawPhoto(P, 0, px + 12, top + 12, pw - 24, ph - 24, () => xmasArchPath(g, px + 12, top + 12, pw - 24, ph - 24));
+    const sr = sq ? 84 : story ? 112 : 100;
+    socSeal(g, th, P.o.tag, px + pw - sr * 0.35, top + ph - sr * 0.7, sr, -0.2);
+    socTextBlock(P, { ...b, y: ty });
+    socFooter(P, m, fy, tw, fh);
+  },
+  vollbild(P){
+    const { g, W, H, th } = P, m = 72, story = P.o.format === 'story', sq = H <= 1080;
+    g.fillStyle = th.bg; g.fillRect(0, 0, W, H);
+    socDrawPhoto(P, 0, 0, 0, W, H, () => { g.beginPath(); g.rect(0, 0, W, H); });
+    const fh = P.o.qr ? (sq ? 160 : 200) : (sq ? 110 : 132), fy = H - m - fh - (story ? 70 : 0), tw = W - 2 * m - 20;
+    const b = { x: m + 10, w: tw, align: 'left', name: sq ? 104 : story ? 140 : 124, det: sq ? 30 : 36, note: sq ? 30 : 38, lines: sq ? 1 : story ? 3 : 2, color: th.on, soft: th.soft, feeColor: th.accent };
+    const th_ = socTextBlock(P, { ...b, y: 0 }, true);
+    const ty = fy - 40 - th_;
+    const gTop = Math.max(0, ty - 260), gr = g.createLinearGradient(0, gTop, 0, H);
+    gr.addColorStop(0, socRgba(th.bg, 0)); gr.addColorStop(Math.min(0.55, 260 / (H - gTop)), socRgba(th.bg, 0.86)); gr.addColorStop(1, socRgba(th.bg, 0.97));
+    g.fillStyle = gr; g.fillRect(0, gTop, W, H - gTop);
+    const tg = g.createLinearGradient(0, 0, 0, 260 + (story ? 130 : 0)); tg.addColorStop(0, socRgba(th.bg, 0.55)); tg.addColorStop(1, socRgba(th.bg, 0));
+    g.fillStyle = tg; g.fillRect(0, 0, W, 260 + (story ? 130 : 0));
+    g.save(); g.strokeStyle = th.accent; g.lineWidth = 5; xmasRound(g, 34, 34, W - 68, H - 68, 34); g.stroke(); g.restore();
+    const top = m + (story ? 110 : 0);
+    socPill(g, P.o.tag, m + 6, top, sq ? 66 : 76, th.accent, th.accentInk, 'left');
+    socTextBlock(P, { ...b, y: ty });
+    socFooter(P, m + 10, fy, tw, fh);
+  },
+  steckbrief(P){
+    P.footCenter = true;
+    const { g, W, H, th } = P, m = 64, story = P.o.format === 'story', sq = H <= 1080;
+    socBg(P);
+    const fh = P.o.qr ? (sq ? 160 : 200) : (sq ? 110 : 132), fy = H - m - fh - (story ? 70 : 0), tw = W - 2 * m;
+    const top = m + (story ? 120 : 0);
+    // header: title left, badge right
+    g.textAlign = 'left'; g.fillStyle = th.on; g.font = `italic 600 ${sq ? 50 : 60}px Fraunces`;
+    g.fillText(t('soc_profile_title'), m + 6, top + (sq ? 46 : 56));
+    socPill(g, P.o.tag, W - m, top + (sq ? 0 : 4), sq ? 60 : 68, th.accent, th.accentInk, 'right');
+    const cy0 = top + (sq ? 86 : 108), cy1 = fy - (sq ? 26 : 40), ch = cy1 - cy0;
+    g.save(); socShadow(g, 40, 14, 0.25); g.fillStyle = SOC_CARD.bg; xmasRound(g, m, cy0, tw, ch, 40); g.fill(); g.restore();
+    const facts = socFacts(P.d, story ? 6 : 4);
+    const rowH = sq ? 74 : 92, rows = Math.ceil(facts.length / 2);
+    const b = { x: m + 40, w: tw - 80, align: 'center', name: sq ? 74 : story ? 104 : 90, det: sq ? 26 : 30, note: sq ? 28 : 34, lines: sq ? 1 : story ? 3 : 2, color: SOC_CARD.ink, soft: SOC_CARD.soft, noDetails: true, noFee: true };
+    const nameH = socTextBlock(P, { ...b, y: 0, note: 0, lines: 0 }, true);
+    const noteLines = socNoteLines(P, b.note, b.w, b.lines), noteH = noteLines.length ? noteLines.length * b.note * 1.28 + b.note * 0.4 : 0;
+    const content = nameH + rows * rowH + noteH + (sq ? 36 : 60);
+    const D = Math.max(160, Math.min(tw * 0.66, ch - content - (sq ? 52 : 80)));
+    const ccx = W / 2, ccy = cy0 + (sq ? 26 : 44) + D / 2;
+    g.save(); g.strokeStyle = th.ink2; g.lineWidth = 6; g.beginPath(); g.arc(ccx, ccy, D / 2 + 14, 0, Math.PI * 2); g.stroke(); g.restore();
+    socDrawPhoto(P, 0, ccx - D / 2, ccy - D / 2, D, D, () => { g.beginPath(); g.arc(ccx, ccy, D / 2, 0, Math.PI * 2); });
+    let y = ccy + D / 2 + (sq ? 22 : 36);
+    y += socTextBlock(P, { ...b, y, note: 0, lines: 0 });
+    // facts grid
+    const gx = m + 40, gw = tw - 80, cw = gw / 2;
+    facts.forEach(([label, val], i) => {
+      const col = i % 2, row = Math.floor(i / 2), fx = gx + col * cw + cw / 2, fy0 = y + row * rowH;
+      g.strokeStyle = socRgba(SOC_CARD.ink, 0.12); g.lineWidth = 2; g.beginPath(); g.moveTo(gx + col * cw + 18, fy0); g.lineTo(gx + (col + 1) * cw - 18, fy0); g.stroke();
+      g.textAlign = 'center'; g.fillStyle = th.ink2; g.font = `800 ${sq ? 19 : 22}px Karla`; g.fillText(label.toUpperCase(), fx, fy0 + (sq ? 27 : 33));
+      g.fillStyle = SOC_CARD.ink; xmasFitText(g, val, '600 {s}px Fraunces', sq ? 32 : 38, 22, cw - 30); g.fillText(val, fx, fy0 + (sq ? 63 : 76));
+    });
+    y += rows * rowH;
+    g.textAlign = 'center'; g.fillStyle = SOC_CARD.ink; g.font = `italic 500 ${b.note}px Fraunces`;
+    noteLines.forEach((l, i) => g.fillText(l, W / 2, y + b.note * (0.4 + 1.28 * (i + 1))));
+    socFooter(P, m, fy, tw, fh);
+  },
+  collage(P){
+    const { g, W, H, th, imgs } = P, m = 64, story = P.o.format === 'story', sq = H <= 1080;
+    socBg(P);
+    const fh = P.o.qr ? (sq ? 160 : 200) : (sq ? 110 : 132), fy = H - m - fh - (story ? 70 : 0), tw = W - 2 * m;
+    const b = { x: m + 8, w: tw - 16, align: 'left', name: sq ? 90 : story ? 124 : 108, det: sq ? 29 : 34, note: sq ? 30 : 36, lines: sq ? 1 : story ? 3 : 2, color: th.on, soft: th.soft, feeColor: th.accent };
+    const th_ = socTextBlock(P, { ...b, y: 0 }, true);
+    const ty = fy - (sq ? 28 : 44) - th_, top = m + (story ? 120 : 0), ah = ty - (sq ? 30 : 44) - top;
+    const n = imgs.filter(Boolean).length, gap = 22, br = 30;
+    const frame = (i, x, y, w, h, rot) => {
+      g.save(); g.translate(x + w / 2, y + h / 2); g.rotate(rot || 0); g.translate(-(x + w / 2), -(y + h / 2));
+      g.save(); socShadow(g, 34, 12, 0.3); g.fillStyle = SOC_CARD.bg; xmasRound(g, x - 10, y - 10, w + 20, h + 20, br + 8); g.fill(); g.restore();
+      socDrawPhoto(P, i, x, y, w, h, socRoundClip(g, x, y, w, h, br));
+      g.restore();
+    };
+    if(n >= 3){
+      const bh = Math.round(ah * (sq ? 0.6 : 0.64)), sh = ah - bh - gap - 10, sw = (tw - gap) / 2;
+      frame(1, m + 6, top + bh + gap + 10, sw - 12, sh, -0.025);
+      frame(2, m + sw + gap + 6, top + bh + gap + 10, sw - 12, sh, 0.03);
+      frame(0, m + 10, top + 10, tw - 20, bh - 10, 0);
+    } else if(n === 2){
+      const bh = Math.round(ah * 0.62), sh = ah - bh - gap;
+      frame(1, m + tw * 0.42, top + bh + gap - 6, tw * 0.56, sh, 0.03);
+      frame(0, m + 10, top + 10, tw - 20, bh - 10, 0);
+    } else frame(0, m + 10, top + 10, tw - 20, ah - 10, 0);
+    const sr = sq ? 80 : story ? 108 : 96;
+    socSeal(g, th, P.o.tag, W - m - sr * 0.6, top + sr * 0.75, sr, 0.18);
+    socTextBlock(P, { ...b, y: ty });
+    socFooter(P, m + 8, fy, tw - 16, fh);
+  }
+};
+// ---- layouts: wide link picture (1200 × 628) ----
+const SOC_WIDE = {
+  herz(P){
+    const { g, H, th } = P, m = 40;
+    socBg(P);
+    const S = (H - 2 * m) / 0.92 - 10, cx = m + 20 + S / 2, cy = H / 2 + S * 0.04;
+    g.save(); socShadow(g, 30, 10, 0.3); g.fillStyle = th.accent; socHeartPath(g, cx, cy, S * 1.06); g.fill(); g.restore();
+    g.fillStyle = SOC_CARD.bg; socHeartPath(g, cx, cy, S * 1.025); g.fill();
+    socDrawPhoto(P, 0, cx - S / 2, cy - S * 0.5, S, S * 0.92, () => socHeartPath(g, cx, cy, S));
+    const rx = cx + S / 2 + 50; SOC_WIDE._right(P, rx, P.W - rx - m);
+  },
+  magazin(P){
+    const { g, W, H, th } = P, m = 40, pw = Math.round(W * 0.52);
+    g.fillStyle = th.bg; g.fillRect(0, 0, W, H);
+    socDrawPhoto(P, 0, 0, 0, pw, H, () => { g.beginPath(); g.rect(0, 0, pw, H); });
+    g.fillStyle = th.accent; g.fillRect(pw, 0, 12, H);
+    SOC_WIDE._right(P, pw + 50, W - pw - 50 - m);
+  },
+  split(P){
+    const { g, W, H, th } = P, m = 40, pw = Math.round(W * 0.5);
+    g.fillStyle = th.accent; g.fillRect(0, 0, W, H);
+    socDrawPhoto(P, 0, 0, 0, pw, H, () => { g.beginPath(); g.moveTo(0, 0); g.lineTo(pw + 40, 0); g.bezierCurveTo(pw - 40, H * 0.35, pw + 50, H * 0.7, pw - 20, H); g.lineTo(0, H); g.closePath(); });
+    const inv = { ...th, accent: th.bg, accentInk: th.on, on: th.accentInk, soft: socRgba(th.accentInk, 0.75) };
+    SOC_WIDE._right({ ...P, th: inv }, pw + 70, W - pw - 70 - m, inv);
+  },
+  minimal(P){
+    const { g, W, H, th } = P, m = 40;
+    g.fillStyle = SOC_CARD.bg; g.fillRect(0, 0, W, H);
+    g.strokeStyle = th.ink2; g.lineWidth = 3; g.strokeRect(20, 20, W - 40, H - 40);
+    const pw = Math.round(W * 0.46);
+    socDrawPhoto(P, 0, m + 10, m + 10, pw, H - 2 * m - 20, () => { g.beginPath(); g.rect(m + 10, m + 10, pw, H - 2 * m - 20); });
+    const lt = { ...th, accent: th.ink2, accentInk: '#FFFFFF', on: SOC_CARD.ink, soft: SOC_CARD.soft };
+    SOC_WIDE._right({ ...P, th: lt }, m + pw + 60, W - (m + pw + 60) - m, lt);
+  },
+  poster(P){
+    const { g, W, H, th } = P, m = 40;
+    socBg(P);
+    const pw = Math.round(W * 0.42), ph = H - 2 * m - 30, px = m + 20, py = m + 15;
+    g.save(); g.translate(px + pw / 2, py + ph / 2); g.rotate(-0.035); g.translate(-(px + pw / 2), -(py + ph / 2));
+    g.save(); socShadow(g, 30, 12, 0.35); g.fillStyle = th.accent; xmasRound(g, px - 12, py - 12, pw + 24, ph + 24, 36); g.fill(); g.restore();
+    socDrawPhoto(P, 0, px, py, pw, ph, socRoundClip(g, px, py, pw, ph, 26));
+    g.restore();
+    const rx = px + pw + 60, rw = W - rx - m;
+    let hs = 64; for(; hs > 28; hs -= 2){ g.font = `800 ${hs}px Karla`; if(g.measureText(P.o.tag.toUpperCase()).width <= rw) break; }
+    g.textAlign = 'left'; g.fillStyle = th.accent; g.fillText(P.o.tag.toUpperCase(), rx, m + hs * 0.9);
+    const P2 = { ...P }; SOC_WIDE._right(P2, rx, rw, null, { noPill: true, top: m + hs * 1.2 });
+  },
+  _right(P, rx, rw, colors, opts){
+    const { g, H, th } = P, m = 40, c = colors || th;
+    const fh = 124, fy = H - m - fh;
+    let y = opts && opts.top ? opts.top : m + 8;
+    if(!(opts && opts.noPill)){ socPill(g, P.o.tag, rx, y, 54, th.accent, th.accentInk, 'left'); y += 54 + 18; }
+    const b = { x: rx, w: rw, align: 'left', name: 78, det: 26, note: 27, lines: 2, color: c.on, soft: c.soft, feeColor: c.fee || th.accent };
+    const ctaH = P.o.qr || !P.o.cta ? 0 : 52 + 22;
+    let avail = fy - 22 - y - ctaH;
+    while(socTextBlock(P, { ...b, y: 0 }, true) > avail && b.lines > 0) b.lines--;
+    y += socTextBlock(P, { ...b, y });
+    if(ctaH){
+      const ph = 52; g.font = `800 ${Math.round(ph * 0.4)}px Karla`;
+      const label = P.o.cta + '  →', pw = g.measureText(label).width + ph * 0.9, cy = Math.min(y + 14, fy - 18 - ph);
+      g.save(); socShadow(g, ph * 0.3, ph * 0.08, 0.22); g.fillStyle = th.accent; xmasRound(g, rx, cy, pw, ph, ph / 2); g.fill(); g.restore();
+      g.fillStyle = th.accentInk; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(label, rx + pw / 2, cy + ph / 2 + ph * 0.03); g.textBaseline = 'alphabetic';
+    }
+    socFooter(P, rx, fy, rw, fh, c, true);
+  },
+  bogen(P){
+    const { g, H, th } = P, m = 40;
+    socBg(P);
+    const ph = H - 2 * m - 20, pw = ph * 0.78, px = m + 40, top = m + 10;
+    g.save(); g.strokeStyle = th.accent; g.lineWidth = 4; xmasArchPath(g, px - 16, top - 16, pw + 32, ph + 32); g.stroke(); g.restore();
+    g.save(); socShadow(g, 30, 10, 0.3); g.fillStyle = SOC_CARD.bg; xmasArchPath(g, px, top, pw, ph); g.fill(); g.restore();
+    socDrawPhoto(P, 0, px + 10, top + 10, pw - 20, ph - 20, () => xmasArchPath(g, px + 10, top + 10, pw - 20, ph - 20));
+    socSeal(g, th, P.o.tag, px + pw - 20, top + ph - 62, 72, -0.2);
+    const rx = px + pw + 80;
+    SOC_WIDE._right(P, rx, P.W - rx - m, null, { noPill: true });
+  },
+  vollbild(P){
+    const { g, W, H, th } = P, m = 40, pw = Math.round(W * 0.5);
+    socBg(P);
+    socDrawPhoto(P, 0, 0, 0, pw, H, () => { g.beginPath(); g.rect(0, 0, pw, H); });
+    const gr = g.createLinearGradient(pw - 180, 0, pw, 0); gr.addColorStop(0, socRgba(th.bg, 0)); gr.addColorStop(1, socRgba(th.bg, 1));
+    g.fillStyle = gr; g.fillRect(pw - 180, 0, 181, H);
+    g.save(); g.strokeStyle = th.accent; g.lineWidth = 4; xmasRound(g, 22, 22, W - 44, H - 44, 26); g.stroke(); g.restore();
+    SOC_WIDE._right(P, pw + 20, W - pw - 20 - m - 10);
+  },
+  steckbrief(P){
+    const { g, W, H, th } = P, m = 40;
+    socBg(P);
+    const D = H - 2 * m - 60, ccx = m + 30 + D / 2, ccy = H / 2;
+    g.save(); g.strokeStyle = th.accent; g.lineWidth = 5; g.beginPath(); g.arc(ccx, ccy, D / 2 + 14, 0, Math.PI * 2); g.stroke(); g.restore();
+    g.save(); socShadow(g, 30, 10, 0.3); g.fillStyle = SOC_CARD.bg; g.beginPath(); g.arc(ccx, ccy, D / 2 + 4, 0, Math.PI * 2); g.fill(); g.restore();
+    socDrawPhoto(P, 0, ccx - D / 2, ccy - D / 2, D, D, () => { g.beginPath(); g.arc(ccx, ccy, D / 2, 0, Math.PI * 2); });
+    const cx = ccx + D / 2 + 50, cw = W - cx - m, cy = m, ch = H - 2 * m;
+    g.save(); socShadow(g, 30, 10, 0.25); g.fillStyle = SOC_CARD.bg; xmasRound(g, cx, cy, cw, ch, 30); g.fill(); g.restore();
+    const ix = cx + 34, iw = cw - 68;
+    g.textAlign = 'left'; g.fillStyle = th.ink2; g.font = `italic 600 30px Fraunces`; g.fillText(t('soc_profile_title'), ix, cy + 52);
+    socPill(g, P.o.tag, cx + cw - 30, cy + 22, 44, th.accent, th.accentInk, 'right');
+    let y = cy + 70;
+    y += socTextBlock(P, { x: ix, w: iw, y, align: 'left', name: 64, det: 24, note: 0, lines: 0, color: SOC_CARD.ink, soft: SOC_CARD.soft, noDetails: true, noFee: true });
+    const facts = socFacts(P.d, 4), colW = iw / 2, rowH = 64;
+    facts.forEach(([label, val], i) => {
+      const col = i % 2, row = Math.floor(i / 2), fx = ix + col * colW, fy0 = y + row * rowH;
+      g.textAlign = 'left'; g.fillStyle = th.ink2; g.font = '800 17px Karla'; g.fillText(label.toUpperCase(), fx, fy0 + 20);
+      g.fillStyle = SOC_CARD.ink; xmasFitText(g, val, '600 {s}px Fraunces', 28, 18, colW - 16); g.fillText(val, fx, fy0 + 52);
+    });
+    socFooter(P, ix, cy + ch - 136, iw, 116, { on: SOC_CARD.ink, soft: SOC_CARD.soft }, true);
+  },
+  collage(P){
+    const { g, W, H, th, imgs } = P, m = 40;
+    socBg(P);
+    const n = imgs.filter(Boolean).length, aw = Math.round(W * 0.5) - m, ah = H - 2 * m;
+    const frame = (i, x, y, w, h, rot) => {
+      g.save(); g.translate(x + w / 2, y + h / 2); g.rotate(rot || 0); g.translate(-(x + w / 2), -(y + h / 2));
+      g.save(); socShadow(g, 24, 8, 0.3); g.fillStyle = SOC_CARD.bg; xmasRound(g, x - 8, y - 8, w + 16, h + 16, 26); g.fill(); g.restore();
+      socDrawPhoto(P, i, x, y, w, h, socRoundClip(g, x, y, w, h, 20));
+      g.restore();
+    };
+    if(n >= 3){
+      const bw = Math.round(aw * 0.6), sw = aw - bw - 18, sh = (ah - 18) / 2;
+      frame(1, m + bw + 26, m + 8, sw - 8, sh - 8, 0.03);
+      frame(2, m + bw + 26, m + sh + 26, sw - 8, sh - 8, -0.03);
+      frame(0, m + 8, m + 8, bw - 8, ah - 16, 0);
+    } else if(n === 2){
+      frame(1, m + aw * 0.5, m + ah * 0.42, aw * 0.5, ah * 0.56, 0.04);
+      frame(0, m + 8, m + 8, aw * 0.62, ah * 0.7, -0.02);
+    } else frame(0, m + 8, m + 8, aw - 8, ah - 16, 0);
+    SOC_WIDE._right(P, m + aw + 50, W - (m + aw + 50) - m);
+  }
+};
+async function socCanvas(d, o){
+  await xmasFonts();
+  const f = SOC_FORMATS[o.format] || SOC_FORMATS.post, W = f.w, H = f.h, sc = o.scale || 1;
+  const c = document.createElement('canvas'); c.width = Math.round(W * sc); c.height = Math.round(H * sc);
+  const g = c.getContext('2d'); g.scale(sc, sc);
+  const th = SOC_THEMES[o.theme] || SOC_THEMES.schwarz;
+  const need = o.layout === 'collage' ? 3 : 1;
+  const imgs = await Promise.all(o.photos.slice(0, need).map(socImg));
+  const logo = await xmasLogo();
+  let qr = null;
+  if(o.qr){ try{ const q = await loadQrLib(); qr = q(0, 'M'); qr.addData(dogShareUrl(d)); qr.make(); }catch(err){ console.warn('qr', err); } }
+  const P = { g, W, H, th, d, o, imgs, logo, qr, photo: null };
+  const L = o.format === 'wide' ? SOC_WIDE : SOC_TALL;
+  (L[o.layout] || L.bogen)(P);
+  c.socPhoto = P.photo;
+  return c;
+}
+
+// ---- preview, gallery, downloads ----
+function socSetPreview(d, c){
+  socPreview.url = c.toDataURL('image/jpeg', 0.86);
+  socPreview.photo = c.socPhoto ? { ...c.socPhoto, cw: SOC_FORMATS[soc.format].w, ch: SOC_FORMATS[soc.format].h } : null;
+  if(socGallery && socGallery.urls[d.id]) socGallery.urls[d.id] = socPreview.url;
+}
+async function socRenderStrip(d){
+  for(const k of Object.keys(SOC_FORMATS)){
+    if(socPreview.id !== d.id) return;
+    try{
+      const c = await socCanvas(d, socOpts(d, 0.2, k));
+      if(socPreview.id !== d.id) return;
+      socPreview.strip[k] = c.toDataURL('image/jpeg', 0.8);
+      const slot = document.querySelector(`.soc-strip-item[data-val="${k}"]`);
+      if(slot){ const w = slot.querySelector('.soc-strip-wait, img'); if(w) w.outerHTML = `<img src="${socPreview.strip[k]}" alt="${t('soc_fmt_' + k)}">`; }
+    }catch(_){}
+  }
+}
+async function socShowPreview(d){
+  socPreview = { id: d.id, url: null, photo: null, strip: {} }; render();
+  try{
+    const c = await socCanvas(d, socOpts(d, 0.5));
+    if(socPreview.id !== d.id) return;
+    socSetPreview(d, c);
+  }catch(err){ console.error('social preview', err); toast(t('soc_error')); socPreview = { id: null, url: null, photo: null, strip: {} }; }
+  if(adminTab === 'social') render();
+  socRenderStrip(d);
+}
+let socPreviewTimer = null, socStripTimer = null;
+function socRefreshSoon(delay, keepStrip){
+  if(!socPreview.id) return;
+  clearTimeout(socPreviewTimer);
+  socPreviewTimer = setTimeout(async () => {
+    const d = state.dogs.find(x => x.id === socPreview.id); if(!d) return;
+    try{
+      const c = await socCanvas(d, socOpts(d, 0.5));
+      if(socPreview.id !== d.id) return;
+      socSetPreview(d, c);
+      const img = document.querySelector('.soc-preview-img'); if(img) img.src = socPreview.url; else if(adminTab === 'social') render();
+      const cap = document.querySelector('.soc-caption'); if(cap) cap.value = socCaption(d);
+    }catch(_){}
+    if(!keepStrip){ clearTimeout(socStripTimer); socStripTimer = setTimeout(() => socRenderStrip(d), 300); }
+  }, delay == null ? 400 : delay);
+}
+function socPreviewClick(e, imgEl){
+  const p = socPreview.photo, d = state.dogs.find(x => x.id === socPreview.id);
+  if(!p || !d) return;
+  const r = imgEl.getBoundingClientRect();
+  const cx = (e.clientX - r.left) / r.width * p.cw, cy = (e.clientY - r.top) / r.height * p.ch;
+  if(cx < p.x || cx > p.x + p.w || cy < p.y || cy > p.y + p.h) return;
+  if(socDragMoved){ socDragMoved = false; return; }
+  const old = soc.crop[d.id] || {};
+  soc.crop[d.id] = { fx: Math.max(0, Math.min(1, (cx - p.dx) / p.dw)), fy: Math.max(0, Math.min(1, (cy - p.dy) / p.dh)), z: old.z || 1 };
+  socSave();
+  socRefreshSoon(0);
+  if(!old.fx && !old.z) setTimeout(() => { if(adminTab === 'social') render(); }, 300);
+}
+// Drag the photo inside its shape (mouse or finger)
+let socDrag = null, socDragMoved = false;
+document.addEventListener('pointerdown', e => {
+  if(!e.target.classList || !e.target.classList.contains('soc-preview-img') || !socPreview.photo) return;
+  const d = state.dogs.find(x => x.id === socPreview.id); if(!d) return;
+  const p = socPreview.photo, c = soc.crop[d.id] || {};
+  const fx = isFinite(c.fx) ? c.fx : (p.x + p.w / 2 - p.dx) / p.dw, fy = isFinite(c.fy) ? c.fy : (p.y + p.h / 2 - p.dy) / p.dh;
+  socDrag = { id: d.id, x: e.clientX, y: e.clientY, fx, fy, r: e.target.getBoundingClientRect(), p };
+  socDragMoved = false;
+});
+document.addEventListener('pointermove', e => {
+  if(!socDrag) return;
+  const { r, p } = socDrag, ddx = (e.clientX - socDrag.x) / r.width * p.cw, ddy = (e.clientY - socDrag.y) / r.height * p.ch;
+  if(!socDragMoved && Math.hypot(e.clientX - socDrag.x, e.clientY - socDrag.y) < 5) return;
+  socDragMoved = true; e.preventDefault();
+  const old = soc.crop[socDrag.id] || {};
+  soc.crop[socDrag.id] = { fx: Math.max(0, Math.min(1, socDrag.fx - ddx / p.dw)), fy: Math.max(0, Math.min(1, socDrag.fy - ddy / p.dh)), z: old.z || 1 };
+  socRefreshSoon(40, true);
+});
+document.addEventListener('pointerup', () => {
+  if(!socDrag) return;
+  const moved = socDragMoved; socDrag = null;
+  if(moved){ socSave(); socRefreshSoon(0); setTimeout(() => { socDragMoved = false; }, 50); setTimeout(() => { if(adminTab === 'social' && !document.querySelector('.soc-row .xmas-custom')) render(); }, 400); }
+});
+async function socOpenGallery(){
+  const dogs = socSelectedDogs();
+  if(!dogs.length){ toast(t('soc_none')); return; }
+  socGallery = { urls: {} }; render();
+  const mine = socGallery;
+  for(const d of dogs){
+    if(socGallery !== mine) return;
+    try{
+      const c = await socCanvas(d, socOpts(d, 0.3));
+      if(socGallery !== mine) return;
+      mine.urls[d.id] = c.toDataURL('image/jpeg', 0.84);
+      const slot = document.querySelector(`.soc-gallery-card[data-id="${d.id}"]`);
+      if(slot){ const w = slot.querySelector('.xmas-gallery-wait'); if(w) w.outerHTML = `<img src="${mine.urls[d.id]}" alt="${esc(d.name)}">`; }
+    }catch(err){ console.warn('social gallery', err); }
+  }
+}
+function socFileName(d, fmt){
+  const clean = String(d.name || '').replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/Ä/g,'Ae').replace(/Ö/g,'Oe').replace(/Ü/g,'Ue').replace(/ß/g,'ss')
+    .normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'') || 'Hund';
+  return `${clean}_${t('soc_fmt_' + fmt).replace(/[^A-Za-z]/g, '')}_${SOC_FORMATS[fmt].w}x${SOC_FORMATS[fmt].h}.jpg`;
+}
+async function socJpeg(d, fmt){
+  const c = await socCanvas(d, socOpts(d, 1, fmt));
+  const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+  return new Uint8Array(await blob.arrayBuffer());
+}
+function socDownload(blob, name){
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+// Minimal ZIP (stored, no compression: JPEGs are already compressed)
+let socCrcTable = null;
+function socCrc(buf){
+  if(!socCrcTable){ socCrcTable = new Uint32Array(256); for(let n = 0; n < 256; n++){ let c = n; for(let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; socCrcTable[n] = c >>> 0; } }
+  let c = 0xFFFFFFFF; for(let i = 0; i < buf.length; i++) c = socCrcTable[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function socZip(files){
+  const enc = new TextEncoder(), parts = [], central = [], now = new Date();
+  const tm = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1), dt = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  let off = 0;
+  for(const f of files){
+    const name = enc.encode(f.name), data = f.data, crc = socCrc(data);
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+    h.setUint16(10, tm, true); h.setUint16(12, dt, true); h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true);
+    h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+    parts.push(new Uint8Array(h.buffer), name, data);
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true); cd.setUint16(8, 0x0800, true); cd.setUint16(10, 0, true);
+    cd.setUint16(12, tm, true); cd.setUint16(14, dt, true); cd.setUint32(16, crc, true); cd.setUint32(20, data.length, true); cd.setUint32(24, data.length, true);
+    cd.setUint16(28, name.length, true); cd.setUint32(42, off, true);
+    central.push(new Uint8Array(cd.buffer), name);
+    off += 30 + name.length + data.length;
+  }
+  const size = central.reduce((s, p) => s + p.length, 0), e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, off, true);
+  return new Blob([...parts, ...central, new Uint8Array(e.buffer)], { type: 'application/zip' });
+}
+// jobs: [{ d, fmt }]; one job = plain JPEG, more = ZIP
+async function socExport(jobs, zipName){
+  if(!jobs.length){ toast(t('soc_none')); return; }
+  if(socBusy) return;
+  socBusy = t('working'); render();
+  try{
+    if(socIsPrint(jobs[0].fmt)){ await socBuildPdf(jobs); toast(t('soc_pdf_done', { n: jobs.length })); }
+    else if(jobs.length === 1){
+      const { d, fmt } = jobs[0];
+      socDownload(new Blob([await socJpeg(d, fmt)], { type: 'image/jpeg' }), socFileName(d, fmt));
+      toast(t('soc_done_one'));
+    } else {
+      const files = [], used = new Set();
+      for(let i = 0; i < jobs.length; i++){
+        socBusy = t('soc_working', { i: i + 1, n: jobs.length });
+        const btn = document.querySelector('[data-action="soc-zip"]'); if(btn) btn.textContent = socBusy;
+        let name = socFileName(jobs[i].d, jobs[i].fmt); while(used.has(name)) name = name.replace(/\.jpg$/, '_2.jpg'); used.add(name);
+        files.push({ name, data: await socJpeg(jobs[i].d, jobs[i].fmt) });
+        await new Promise(r => setTimeout(r, 0));
+      }
+      socDownload(socZip(files), zipName);
+      toast(t('soc_done', { n: files.length }));
+    }
+  }catch(err){ console.error('social export', err); toast(t('soc_error')); }
+  socBusy = ''; render();
+}
+
+// ---- print flyers (A5 / A6 PDF, 300 dpi) ----
+async function socBuildPdf(jobs){
+  const { PDFDocument } = await loadPdfLib();
+  const doc = await PDFDocument.create(); doc.setTitle('Flyer'); doc.setAuthor('Ein Herz für Hunde');
+  const MM = 72 / 25.4;
+  for(let i = 0; i < jobs.length; i++){
+    socBusy = t('soc_working', { i: i + 1, n: jobs.length });
+    const btn = document.querySelector('[data-action="soc-zip"]'); if(btn) btn.textContent = socBusy;
+    const { d, fmt } = jobs[i], F = SOC_FORMATS[fmt];
+    const c = await socCanvas(d, socOpts(d, F.mm[0] / 25.4 * 300 / F.w, fmt));
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.9));
+    const jpg = await doc.embedJpg(await blob.arrayBuffer());
+    const page = doc.addPage([F.mm[0] * MM, F.mm[1] * MM]);
+    page.drawImage(jpg, { x: 0, y: 0, width: F.mm[0] * MM, height: F.mm[1] * MM });
+    await new Promise(r => setTimeout(r, 0));
+  }
+  const bytes = await doc.save(), fmtName = jobs[0].fmt.toUpperCase();
+  socDownload(new Blob([bytes], { type: 'application/pdf' }), jobs.length === 1 ? pdfFileName('Flyer_' + fmtName, jobs[0].d.name) : pdfFileName('Flyer_' + fmtName, `${jobs.length}_Hunde`));
+}
+
+// ---- music: little tunes generated in the browser (no third-party songs) ----
+const SOC_SONGS = {
+  sonnig:    { bpm: 112, prog: [[60,64,67],[67,71,74],[69,72,76],[65,69,72]], arp: [0,1,2,1,0,1,2,1], wave: 'triangle', lead: 0.11, pad: 0.035, shaker: false },
+  ruhig:     { bpm: 72,  prog: [[57,60,64],[53,57,60],[60,64,67],[55,59,62]], arp: [0,2,1,2], wave: 'sine', lead: 0.14, pad: 0.05, shaker: false },
+  verspielt: { bpm: 128, prog: [[62,66,69],[67,71,74],[64,67,71],[69,73,76]], arp: [0,2,1,2,0,2,1,0], wave: 'square', lead: 0.045, pad: 0, shaker: true }
+};
+// Royalty-free tracks (Pixabay), pre-cut to 42 s clips in portal/music/; cut again to the video length with a fade-out
+function socMusicUrl(id){ return (/^https?:$/.test(location.protocol) ? '' : 'https://ein-herz-fuer-hunde-portal.vercel.app/') + 'music/' + id + '.mp3'; }
+const socTrackBytes = new Map();
+function socTrackData(id){
+  if(!socTrackBytes.has(id)) socTrackBytes.set(id, fetch(socMusicUrl(id)).then(r => { if(!r.ok) throw new Error('music ' + r.status); return r.arrayBuffer(); }).catch(e => { socTrackBytes.delete(id); throw e; }));
+  return socTrackBytes.get(id);
+}
+// plays a track or a generated tune into out, from t0 for dur seconds, fading out at the end
+async function socPlayMusic(ac, out, id, t0, dur, vol){
+  if(!SOC_TRACKS[id]){ socPlaySong(ac, out, id, t0, dur, vol); return; }
+  const buf = await ac.decodeAudioData((await socTrackData(id)).slice(0));
+  const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = buf;
+  const len = Math.min(dur, buf.duration), start = Math.max(t0, ac.currentTime + 0.02);
+  g.gain.setValueAtTime(0, start); g.gain.linearRampToValueAtTime(vol, start + 0.15);
+  g.gain.setValueAtTime(vol, start + Math.max(0.3, len - 1.8)); g.gain.linearRampToValueAtTime(0, start + len);
+  src.connect(g); g.connect(out); src.start(start, 0, len);
+}
+function socPlaySong(ac, out, style, t0, dur, vol){
+  const S = SOC_SONGS[style]; if(!S) return;
+  const hz = n => 440 * Math.pow(2, (n - 69) / 12), beat = 60 / S.bpm, bar = beat * 4, step = bar / S.arp.length;
+  const master = ac.createGain(); master.connect(out);
+  master.gain.setValueAtTime(0, t0); master.gain.linearRampToValueAtTime(vol, t0 + 0.4);
+  master.gain.setValueAtTime(vol, t0 + Math.max(0.5, dur - 1.8)); master.gain.linearRampToValueAtTime(0, t0 + dur);
+  const note = (freq, at, len, type, gain, attack) => {
+    const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(gain, at + (attack || 0.01)); g.gain.exponentialRampToValueAtTime(0.0008, at + len);
+    o.connect(g); g.connect(master); o.start(at); o.stop(at + len + 0.05);
+  };
+  let noise = null;
+  if(S.shaker){ noise = ac.createBuffer(1, ac.sampleRate * 0.08, ac.sampleRate); const ch = noise.getChannelData(0); for(let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / ch.length); }
+  const hp = S.shaker ? ac.createBiquadFilter() : null; if(hp){ hp.type = 'highpass'; hp.frequency.value = 6000; hp.connect(master); }
+  for(let b = 0; b * bar < dur; b++){
+    const at = t0 + b * bar, ch = S.prog[b % S.prog.length];
+    note(hz(ch[0] - 24), at, beat * 1.8, 'sine', 0.22, 0.02); note(hz(ch[0] - 24), at + beat * 2, beat * 1.8, 'sine', 0.18, 0.02);
+    if(S.pad) ch.forEach(n => [-4, 4].forEach(det => { const o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+      o.type = 'sawtooth'; o.frequency.value = hz(n); o.detune.value = det; f.type = 'lowpass'; f.frequency.value = 900;
+      g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(S.pad / 2, at + bar * 0.3); g.gain.linearRampToValueAtTime(0, at + bar);
+      o.connect(f); f.connect(g); g.connect(master); o.start(at); o.stop(at + bar + 0.05); }));
+    S.arp.forEach((idx, k) => { const nt = at + k * step; if(nt < t0 + dur) note(hz(ch[idx] + 12), nt, step * 0.95, S.wave, S.lead); });
+    if(noise) for(let k = 0; k < 8; k++){ const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = noise; g.gain.value = k % 2 ? 0.05 : 0.09; src.connect(g); g.connect(hp); src.start(at + k * beat / 2); }
+  }
+}
+let socListenCtx = null;
+function socListen(){
+  try{
+    if(socListenCtx){ socListenCtx.close(); socListenCtx = null; return; }
+    const ac = new (window.AudioContext || window.webkitAudioContext)(); socListenCtx = ac;
+    socPlayMusic(ac, ac.destination, soc.music, ac.currentTime + 0.05, 10, soc.vol).catch(err => { console.warn('music', err); toast(t('soc_video_error')); });
+    setTimeout(() => { if(socListenCtx === ac){ ac.close(); socListenCtx = null; } }, 11000);
+  }catch(err){ console.warn('listen', err); }
+}
+
+// ---- video: slideshow of the dog's photos + end card, recorded live from a canvas ----
+let socVideo = { id: null, url: null, name: '', busy: false, left: 0 };
+async function socOutroCanvas(d, fmt){
+  await xmasFonts();
+  const F = SOC_FORMATS[fmt], c = document.createElement('canvas'); c.width = F.w; c.height = F.h;
+  const g = c.getContext('2d'), th = SOC_THEMES[soc.theme] || SOC_THEMES.schwarz;
+  const P = { g, W: F.w, H: F.h, th, d, o: { pattern: soc.pattern }, logo: await xmasLogo() };
+  socBg(P);
+  const r = Math.min(F.w, F.h) * 0.17, cy = F.h * 0.4;
+  socLogoBadge(P, F.w / 2, cy, r);
+  g.textAlign = 'center'; g.fillStyle = th.on;
+  xmasFitText(g, 'Ein Herz für Hunde', '600 {s}px Fraunces', Math.round(r * 0.62), 30, F.w * 0.85); g.fillText('Ein Herz für Hunde', F.w / 2, cy + r * 1.75);
+  g.fillStyle = th.soft; g.font = `700 ${Math.round(r * 0.26)}px Karla`; g.fillText(t('soc_outro'), F.w / 2, cy + r * 2.35);
+  g.fillStyle = th.accent; xmasFitText(g, socUrl(), '800 {s}px Karla', Math.round(r * 0.34), 20, F.w * 0.85); g.fillText(socUrl(), F.w / 2, cy + r * 2.85);
+  return c;
+}
+function socVideoFrame(g, F, slides, outro, secs, tt){
+  const n = slides.length, fade = 0.6;
+  const draw = (img, local, alpha) => {
+    const z = 1 + 0.045 * Math.min(1, Math.max(0, local) / (secs + fade));
+    g.save(); g.globalAlpha = alpha; g.translate(F.w / 2, F.h / 2); g.scale(z, z); g.drawImage(img, -F.w / 2, -F.h / 2, F.w, F.h); g.restore();
+  };
+  const i = Math.floor(tt / secs);
+  if(i >= n){ g.drawImage(outro, 0, 0, F.w, F.h); return; }
+  g.fillStyle = '#000'; g.fillRect(0, 0, F.w, F.h);
+  draw(slides[i], tt - i * secs, 1);
+  const into = tt - (i + 1) * secs + fade;
+  if(into > 0){
+    if(i + 1 < n) draw(slides[i + 1], 0, into / fade);
+    else { g.save(); g.globalAlpha = into / fade; g.drawImage(outro, 0, 0, F.w, F.h); g.restore(); }
+  }
+}
+async function socMakeVideo(d){
+  if(socVideo.busy) return;
+  if(socIsPrint(soc.format)){ toast(t('soc_video_print')); return; }
+  if(!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream){ toast(t('soc_video_error')); return; }
+  if(socVideo.url) URL.revokeObjectURL(socVideo.url);
+  socVideo = { id: d.id, url: null, name: '', busy: true, left: 0 }; render();
+  let ac = null;
+  try{
+    const fmt = soc.format, F = SOC_FORMATS[fmt], list = socPhotoList(d).slice(0, 6), n = Math.max(1, list.length);
+    const slides = [];
+    for(let i = 0; i < n; i++){
+      const o = socOpts(d, 1, fmt);
+      if(list.length){ o.photos = [list[i], ...list.filter((_, j) => j !== i)]; if(i) o.crop = null; }
+      slides.push(await socCanvas(d, o));
+    }
+    const outro = await socOutroCanvas(d, fmt), secs = soc.secs, total = n * secs + 3;
+    const c = document.createElement('canvas'); c.width = F.w; c.height = F.h;
+    const g = c.getContext('2d'); g.drawImage(slides[0], 0, 0);
+    const stream = c.captureStream(30);
+    if(soc.music !== 'none'){
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      const dest = ac.createMediaStreamDestination();
+      await socPlayMusic(ac, dest, soc.music, ac.currentTime + 0.25, total, soc.vol);
+      dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
+    }
+    const types = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    const mime = types.find(m => MediaRecorder.isTypeSupported(m)) || '';
+    const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 6000000 } : {});
+    const chunks = []; rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+    const stopped = new Promise(r => { rec.onstop = r; });
+    rec.start(500);
+    const start = performance.now();
+    await new Promise(resolve => {
+      const frame = () => {
+        const tt = (performance.now() - start) / 1000;
+        socVideoFrame(g, F, slides, outro, secs, Math.min(tt, total));
+        const left = Math.max(0, Math.ceil(total - tt));
+        if(left !== socVideo.left){ socVideo.left = left; const b = document.querySelector('[data-action="soc-video"]'); if(b) b.textContent = t('soc_video_recording', { s: left }); }
+        if(tt >= total) resolve(); else setTimeout(frame, 1000 / 30);
+      };
+      frame();
+    });
+    rec.stop(); await stopped;
+    const type = (rec.mimeType || mime || 'video/webm').split(';')[0];
+    const blob = new Blob(chunks, { type });
+    socVideo = { id: d.id, url: URL.createObjectURL(blob), name: socFileName(d, fmt).replace(/\.jpg$/, '_Video.' + (type.includes('mp4') ? 'mp4' : 'webm')), busy: false, left: 0, size: blob.size };
+  }catch(err){ console.error('social video', err); toast(t('soc_video_error')); socVideo = { id: null, url: null, name: '', busy: false, left: 0 }; }
+  if(ac) try{ ac.close(); }catch(_){}
+  if(adminTab === 'social') render();
+}
+
 function viewAdmin(){
   if(!session.admin) return viewAdminLogin();
   return `
@@ -3408,13 +4567,16 @@ function viewAdmin(){
       <button class="admin-tab ${adminTab==='transporte'?'active':''}" data-action="admin-tab" data-tab="transporte">
         <span>${t('admin_tab_transports')}</span>${adminTransports ? `<span class="count">${adminTransports.length}</span>` : ''}
       </button>
+      <button class="admin-tab ${adminTab==='social'?'active':''}" data-action="admin-tab" data-tab="social">
+        <span>${t('admin_tab_social')}</span>${soc.selected.length ? `<span class="count">${socSelectedDogs().length}</span>` : ''}
+      </button>
       <button class="admin-tab ${adminTab==='weihnachten'?'active':''}" data-action="admin-tab" data-tab="weihnachten">
         <span>${t('admin_tab_xmas')}</span>${xmas.selected.length ? `<span class="count">${xmasSelectedDogs().length}</span>` : ''}
       </button>
       <button class="admin-tab" data-action="admin-logout" style="margin-top:24px;opacity:0.75;">${t('admin_logout')}</button>
     </div>
     <div class="admin-main">
-      ${adminTab==='interessenten' ? adminInteressentenTab() : adminTab==='hunde' ? adminHundeTab() : adminTab==='texte' ? adminTexteTab() : adminTab==='transporte' ? adminTransportsTab() : adminTab==='weihnachten' ? adminXmasTab() : adminHappyTailsTab()}
+      ${adminTab==='interessenten' ? adminInteressentenTab() : adminTab==='hunde' ? adminHundeTab() : adminTab==='texte' ? adminTexteTab() : adminTab==='transporte' ? adminTransportsTab() : adminTab==='weihnachten' ? adminXmasTab() : adminTab==='social' ? adminSocialTab() : adminHappyTailsTab()}
     </div>
   </div>
   ${adminDetailId ? adminDetailOverlay() : ''}
@@ -4550,6 +5712,7 @@ function render(){
 --------------------------------------------------------- */
 document.addEventListener('click', async (e) => {
   if(e.target.classList && e.target.classList.contains('xmas-preview-img')){ xmasPreviewClick(e, e.target); return; }
+  if(e.target.classList && e.target.classList.contains('soc-preview-img')){ socPreviewClick(e, e.target); return; }
   const navEl = e.target.closest('[data-nav]');
   if(navEl){
     e.preventDefault();
@@ -4645,6 +5808,37 @@ document.addEventListener('click', async (e) => {
     allDogsShown += 12;
     render();
   }
+  if(action === 'soc-set'){
+    const key = actionEl.getAttribute('data-key'), val = actionEl.getAttribute('data-val');
+    if(['format','layout','theme','pattern'].includes(key) && soc[key] !== val){ soc[key] = val; socSave(); render(); socRefreshSoon(0, key === 'format'); }
+    return;
+  }
+  if(action === 'soc-music'){ soc.music = actionEl.getAttribute('data-val'); socSave(); render(); return; }
+  if(action === 'soc-listen'){ socListen(); return; }
+  if(action === 'soc-video'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d) socMakeVideo(d); return; }
+  if(action === 'soc-group'){ soc.group = actionEl.getAttribute('data-group'); socSave(); render(); return; }
+  if(action === 'soc-select'){
+    const ids = socDogs().map(d => d.id);
+    if(actionEl.getAttribute('data-all') === '1') soc.selected = [...new Set([...soc.selected, ...ids])];
+    else soc.selected = soc.selected.filter(id => !ids.includes(id));
+    socSave(); render(); return;
+  }
+  if(action === 'soc-preview'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d) socShowPreview(d); return; }
+  if(action === 'soc-dl-one'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d) socExport([{ d, fmt: soc.format }]); return; }
+  if(action === 'soc-dl-formats'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d) socExport(SOC_SOCIAL.map(fmt => ({ d, fmt })), socFileName(d, 'post').replace(/_Post_.*$/, '_alle_Formate.zip')); return; }
+  if(action === 'soc-zip'){ const dogs = socSelectedDogs(); socExport(dogs.map(d => ({ d, fmt: soc.format })), `Social_Media_${dogs.length}_Hunde_${t('soc_fmt_' + soc.format).replace(/[^A-Za-z]/g, '')}.zip`); return; }
+  if(action === 'soc-gallery'){ socOpenGallery(); return; }
+  if(action === 'soc-gallery-close' || (action === 'soc-gallery-close-bg' && e.target === actionEl)){ socGallery = null; render(); return; }
+  if(action === 'soc-gallery-pick'){
+    const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id'));
+    socGallery = null;
+    if(d){ socShowPreview(d).then(() => { const b = document.querySelector('.soc-preview-box'); if(b) b.scrollIntoView({ block:'start', behavior:'smooth' }); }); }
+    else render();
+    return;
+  }
+  if(action === 'soc-crop-reset'){ delete soc.crop[actionEl.getAttribute('data-id')]; socSave(); render(); socRefreshSoon(0); return; }
+  if(action === 'soc-photo'){ if(socPreview.id){ soc.photo[socPreview.id] = Number(actionEl.getAttribute('data-idx')) || 0; delete soc.crop[socPreview.id]; socSave(); render(); socRefreshSoon(0); } return; }
+  if(action === 'soc-copy-caption'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d){ copyText(socCaption(d), t('soc_caption_copied')); } return; }
   if(action === 'xmas-group'){ xmas.group = actionEl.getAttribute('data-group'); xmasSave(); render(); return; }
   if(action === 'xmas-select'){
     const ids = xmasDogs().map(d => d.id);
@@ -5049,6 +6243,14 @@ document.addEventListener('input', (e) => {
     xmas.crop[id] = { ...old, z: Number(el.value) / 100 };
     xmasSave(); xmasRefreshPreviewSoon(120); return;
   }
+  if(el.matches && el.matches('[data-soc-note]')){ soc.notes[el.getAttribute('data-soc-note')] = el.value; socSave(); if(socPreview.id === el.getAttribute('data-soc-note')) socRefreshSoon(); return; }
+  if(el.id === 'socZoom' && socPreview.id){ const id = socPreview.id; soc.crop[id] = { ...(soc.crop[id] || {}), z: Number(el.value) / 100 }; socSave(); socRefreshSoon(120, true); return; }
+  if(el.id === 'socSecs'){ soc.secs = Number(el.value); socSave(); const v = document.getElementById('socSecsVal'); if(v) v.textContent = soc.secs + ' s'; return; }
+  if(el.id === 'socVol'){ soc.vol = Number(el.value) / 100; socSave(); return; }
+  if(['socTag','socCta','socUrl','socFeeAmount','socHashtags'].includes(el.id)){
+    const key = { socTag:'tag', socCta:'cta', socUrl:'url', socFeeAmount:'feeAmount', socHashtags:'hashtags' }[el.id];
+    soc[key] = el.value; socSave(); socRefreshSoon(); return;
+  }
   if(el.id === 'xmasHeading'){ xmas.heading = el.value; xmasSave(); xmasRefreshPreviewSoon(); return; }
   if(el.id === 'xmasQrText'){ xmas.qrText = el.value; xmasSave(); xmasRefreshPreviewSoon(); return; }
   if(el.id === 'transportDogSearch'){ // filter the dog list without redrawing
@@ -5105,6 +6307,12 @@ document.addEventListener('change', async (e) => {
     xmasSave(); render(); return;
   }
   if(e.target.matches && e.target.matches('[data-xmas-format]')){ xmas.format = e.target.value; xmasSave(); render(); xmasRefreshPreviewSoon(); return; }
+  if(e.target.matches && e.target.matches('[data-soc-pick]')){
+    const id = e.target.getAttribute('data-soc-pick');
+    soc.selected = e.target.checked ? [...new Set([...soc.selected, id])] : soc.selected.filter(x => x !== id);
+    socSave(); render(); return;
+  }
+  if(e.target.id === 'socQr' || e.target.id === 'socFee'){ soc[e.target.id === 'socQr' ? 'qr' : 'fee'] = e.target.checked; socSave(); socRefreshSoon(0); return; }
   if(e.target.id === 'xmasHole'){ xmas.hole = e.target.checked; xmasSave(); xmasRefreshPreviewSoon(); return; }
   if(e.target.matches && e.target.matches('[data-pickup]')){
     pickupAnswer = e.target.value;
