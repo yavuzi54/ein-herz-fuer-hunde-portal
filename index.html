@@ -5788,6 +5788,12 @@ function adminDogFormOverlay(){
    MAIN RENDER
 --------------------------------------------------------- */
 function render(){
+  // keep the scroll position of inner scroll panels (social media preview) across re-renders
+  const keepScroll = ['.soc-preview-box', '.soc-scenes > div', '.soc-photos > div'].map(q => [...document.querySelectorAll(q)].map(el => [el.scrollTop, el.scrollLeft]));
+  renderInner();
+  ['.soc-preview-box', '.soc-scenes > div', '.soc-photos > div'].forEach((q, k) => document.querySelectorAll(q).forEach((el, i) => { const v = keepScroll[k][i]; if(v){ el.scrollTop = v[0]; el.scrollLeft = v[1]; } }));
+}
+function renderInner(){
   renderNav();
   const footerEl = document.getElementById('footerText');
   if(footerEl){
