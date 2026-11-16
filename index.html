@@ -174,6 +174,7 @@
   .soc-swatch small{font-size:0.72rem;}
   .soc-sw{width:38px;height:38px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.12);}
   .soc-swatch.on{border-color:var(--clay);background:var(--paper-card);}
+  .soc-live{position:absolute;pointer-events:none;border-radius:6px;}
   .soc-preview-img{width:100%;height:auto;display:block;border-radius:6px;box-shadow:0 10px 26px -12px rgba(36,50,43,0.45);cursor:grab;touch-action:none;user-select:none;-webkit-user-drag:none;}
   .soc-photos{margin-top:10px;} .soc-photos > div{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
   .soc-photo{width:46px;height:46px;padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;cursor:pointer;background:none;}
@@ -3727,12 +3728,13 @@ function socPattern(g, W, H, kind, th, seed){
 }
 // cover-crop img into the box; focus = wanted centre (0..1), z = zoom
 // z < 1 = zoomed out: the whole photo gets smaller inside the shape (to fit a dog into the heart etc.)
-function socCover(g, img, x, y, w, h, fx, fy, z){
+function socCover(g, img, x, y, w, h, fx, fy, z, free){
   const s = Math.max(w / img.width, h / img.height) * Math.max(0.4, Math.min(z || 1, 4));
   const dw = img.width * s, dh = img.height * s;
   const place = (c, size, box, f) => { const want = c + box / 2 - f * size; return size >= box ? Math.max(c + box - size, Math.min(c, want)) : Math.max(c, Math.min(c + box - size, want)); };
-  const dx = place(x, dw, w, fx), dy = place(y, dh, h, fy);
-  g.drawImage(img, dx, dy, dw, dh);
+  // free: the photo follows the finger without hitting an edge (gaps get a blurred fill behind)
+  const dx = free ? x + w / 2 - fx * dw : place(x, dw, w, fx), dy = free ? y + h / 2 - fy * dh : place(y, dh, h, fy);
+  if(g) g.drawImage(img, dx, dy, dw, dh);
   return { x, y, w, h, dx, dy, dw, dh, iw: img.width, ih: img.height };
 }
 // photo i of the dog into a clipped shape; photo 0 remembers its position for click-to-recentre
@@ -3747,8 +3749,10 @@ function socDrawPhoto(P, i, x, y, w, h, clip){
       if(o.crop && isFinite(o.crop.fx) && isFinite(o.crop.fy)){ fx = o.crop.fx; fy = o.crop.fy; }
     }
     const z = i === 0 && o.crop ? o.crop.z || 1 : 1;
-    if(z < 1){ g.save(); g.filter = `blur(${Math.round(Math.max(w, h) / 30)}px) brightness(0.85)`; socCover(g, img, x - 20, y - 20, w + 40, h + 40, fx, fy, 1); g.restore(); }
-    const info = socCover(g, img, x, y, w, h, fx, fy, z);
+    const free = i === 0 && !!o.crop && isFinite(o.crop.fx);
+    const pre = socCover(null, img, x, y, w, h, fx, fy, z, free);
+    if(pre.dx > x + 0.5 || pre.dy > y + 0.5 || pre.dx + pre.dw < x + w - 0.5 || pre.dy + pre.dh < y + h - 0.5){ g.save(); g.filter = `blur(${Math.round(Math.max(w, h) / 30)}px) brightness(0.85)`; socCover(g, img, x - 20, y - 20, w + 40, h + 40, fx, fy, 1); g.restore(); }
+    const info = socCover(g, img, x, y, w, h, fx, fy, z, free);
     if(i === 0) P.photo = info;
   } else {
     g.fillStyle = socRgba(P.th.on, 0.25); socPaw(g, x + w / 2, y + h / 2, Math.min(w, h) * 0.3);
@@ -4256,7 +4260,7 @@ function socRefreshSoon(delay, keepStrip){
       const c = await socCanvas(d, socOpts(d, 0.5));
       if(socPreview.id !== d.id) return;
       socSetPreview(d, c);
-      const img = document.querySelector('.soc-preview-img'); if(img) img.src = socPreview.url; else if(adminTab === 'social') render();
+      const img = document.querySelector('.soc-preview-img'); if(img){ img.src = socPreview.url; if(!socDrag) socLiveEnd(); } else if(adminTab === 'social') render();
       const cap = document.querySelector('.soc-caption'); if(cap) cap.value = socCaption(d);
     }catch(_){}
     if(!keepStrip){ clearTimeout(socStripTimer); socStripTimer = setTimeout(() => socRenderStrip(d), 300); }
@@ -4275,6 +4279,24 @@ function socPreviewClick(e, imgEl){
   socRefreshSoon(0);
   if(!old.fx && !old.z) setTimeout(() => { if(adminTab === 'social') render(); }, 300);
 }
+// Live redraw while dragging / zooming: small fast render on a canvas laid over the picture, one frame at a time
+let socZoomEnd = null, socLiveBusy = false, socLiveAgain = false;
+async function socLiveDraw(){
+  if(socLiveBusy){ socLiveAgain = true; return; }
+  const d = state.dogs.find(x => x.id === socPreview.id), img = document.querySelector('.soc-preview-img');
+  if(!d || !img) return;
+  socLiveBusy = true;
+  try{
+    const c = await socCanvas(d, socOpts(d, 0.3));
+    const box = img.parentElement; if(getComputedStyle(box).position === 'static') box.style.position = 'relative'; let lc = box.querySelector('.soc-live');
+    if(!lc){ lc = document.createElement('canvas'); lc.className = 'soc-live'; box.appendChild(lc); }
+    lc.style.left = img.offsetLeft + 'px'; lc.style.top = img.offsetTop + 'px'; lc.style.width = img.offsetWidth + 'px'; lc.style.height = img.offsetHeight + 'px';
+    lc.width = c.width; lc.height = c.height; lc.getContext('2d').drawImage(c, 0, 0);
+  }catch(_){}
+  socLiveBusy = false;
+  if(socLiveAgain){ socLiveAgain = false; requestAnimationFrame(socLiveDraw); }
+}
+function socLiveEnd(){ const img = document.querySelector('.soc-preview-img'), lc = document.querySelector('.soc-live'); if(!lc) return; const rm = () => lc.remove(); if(img && !img.complete) img.addEventListener('load', rm, { once: true }); else setTimeout(rm, 30); }
 // Drag the photo inside its shape (mouse or finger)
 let socDrag = null, socDragMoved = false;
 document.addEventListener('pointerdown', e => {
@@ -4292,12 +4314,12 @@ document.addEventListener('pointermove', e => {
   socDragMoved = true; e.preventDefault();
   const old = soc.crop[socDrag.id] || {};
   soc.crop[socDrag.id] = { fx: Math.max(0, Math.min(1, socDrag.fx - ddx / p.dw)), fy: Math.max(0, Math.min(1, socDrag.fy - ddy / p.dh)), z: old.z || 1 };
-  socRefreshSoon(40, true);
+  socLiveDraw();
 });
 document.addEventListener('pointerup', () => {
   if(!socDrag) return;
   const moved = socDragMoved; socDrag = null;
-  if(moved){ socSave(); socRefreshSoon(0); setTimeout(() => { socDragMoved = false; }, 50); setTimeout(() => { if(adminTab === 'social' && !document.querySelector('.soc-row .xmas-custom')) render(); }, 400); }
+  if(moved){ socSave(); socRefreshSoon(0); setTimeout(socLiveEnd, 0); setTimeout(() => { socDragMoved = false; }, 50); setTimeout(() => { if(adminTab === 'social' && !document.querySelector('.soc-row .xmas-custom')) render(); }, 400); }
 });
 async function socOpenGallery(){
   const dogs = socSelectedDogs();
@@ -6245,7 +6267,7 @@ document.addEventListener('input', (e) => {
     xmasSave(); xmasRefreshPreviewSoon(120); return;
   }
   if(el.matches && el.matches('[data-soc-note]')){ soc.notes[el.getAttribute('data-soc-note')] = el.value; socSave(); if(socPreview.id === el.getAttribute('data-soc-note')) socRefreshSoon(); return; }
-  if(el.id === 'socZoom' && socPreview.id){ const id = socPreview.id; soc.crop[id] = { ...(soc.crop[id] || {}), z: Number(el.value) / 100 }; socSave(); socRefreshSoon(120, true); return; }
+  if(el.id === 'socZoom' && socPreview.id){ const id = socPreview.id; soc.crop[id] = { ...(soc.crop[id] || {}), z: Number(el.value) / 100 }; socSave(); socLiveDraw(); clearTimeout(socZoomEnd); socZoomEnd = setTimeout(() => { socRefreshSoon(0, true); }, 250); return; }
   if(el.id === 'socSecs'){ soc.secs = Number(el.value); socSave(); const v = document.getElementById('socSecsVal'); if(v) v.textContent = soc.secs + ' s'; return; }
   if(el.id === 'socVol'){ soc.vol = Number(el.value) / 100; socSave(); return; }
   if(['socTag','socCta','socUrl','socFeeAmount','socHashtags'].includes(el.id)){
