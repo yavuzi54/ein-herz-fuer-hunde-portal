@@ -3430,7 +3430,7 @@ Object.assign(I18N.de, {
   soc_preview:'Vorschau', soc_download:'Bild', soc_download_one:'Bild herunterladen', soc_download_all_formats:'Alle 4 Formate (ZIP)', soc_zip_selected:'{n} Bilder herunterladen (ZIP)', soc_none:'Bitte zuerst Hunde auswählen.',
   soc_working:'Bild {i} von {n} …', soc_done:'{n} Bilder heruntergeladen', soc_done_one:'Bild heruntergeladen', soc_error:'Das Bild konnte nicht erstellt werden.',
   soc_preview_hint:'Bei einem Hund auf „Vorschau“ klicken.', soc_formats_strip:'Alle Formate (antippen zum Wechseln)', soc_photo_pick:'Foto wählen', soc_photo_pick3:'Fotos für die Collage wählen (bis zu 3, in Reihenfolge antippen: 1 = großes Foto)',
-  soc_caption:'Bildtext', soc_copy_caption:'Bildtext kopieren', soc_caption_copied:'Bildtext kopiert',
+  soc_caption:'Bildtext', soc_profile_link:'Link zum Hundeprofil (z. B. für den Instagram-Link-Sticker)', soc_copy_link:'🔗 Link kopieren', soc_link_copied:'Link kopiert', soc_video_layout:'Design für das Video', soc_copy_caption:'Bildtext kopieren', soc_caption_copied:'Bildtext kopiert',
   soc_gallery_btn:'Alle {n} ansehen', soc_gallery_title:'Vorschau vor dem Posten', soc_gallery_hint:'So sehen die Bilder aus. Passt ein Foto nicht: Bild antippen und Ausschnitt anpassen.',
   soc_saved_hint:'Einstellungen und Kurztexte werden nur in diesem Browser gespeichert.', soc_profile_title:'Steckbrief', soc_slot_hint:'Regler und Verschieben gelten für Foto {n}. Ein anderes Foto im Bild anklicken, um es anzupassen.', soc_crop_hint:'Foto anpassen: ins Foto klicken oder es mit der Maus / dem Finger verschieben. Mit dem Regler kleiner oder größer machen, bis der Hund gut in die Form (z. B. das Herz) passt.',
   soc_f_age:'Alter', soc_f_breed:'Rasse', soc_f_size:'Größe', soc_f_place:'Ort',
@@ -3451,7 +3451,7 @@ Object.assign(I18N.en, {
   soc_preview:'Preview', soc_download:'Picture', soc_download_one:'Download picture', soc_download_all_formats:'All 4 formats (ZIP)', soc_zip_selected:'Download {n} pictures (ZIP)', soc_none:'Please select dogs first.',
   soc_working:'Picture {i} of {n} …', soc_done:'{n} pictures downloaded', soc_done_one:'Picture downloaded', soc_error:'The picture could not be created.',
   soc_preview_hint:'Click “Preview” on a dog.', soc_formats_strip:'All formats (tap to switch)', soc_photo_pick:'Choose photo', soc_photo_pick3:'Choose the collage photos (up to 3, tap in order: 1 = big photo)',
-  soc_caption:'Caption', soc_copy_caption:'Copy caption', soc_caption_copied:'Caption copied',
+  soc_caption:'Caption', soc_profile_link:'Link to the dog profile (e.g. for the Instagram link sticker)', soc_copy_link:'🔗 Copy link', soc_link_copied:'Link copied', soc_video_layout:'Design for the video', soc_copy_caption:'Copy caption', soc_caption_copied:'Caption copied',
   soc_gallery_btn:'View all {n}', soc_gallery_title:'Preview before posting', soc_gallery_hint:'This is how the pictures look. If a photo doesn’t fit: tap the picture and adjust the crop.',
   soc_saved_hint:'Settings and short texts are only saved in this browser.', soc_profile_title:'Steckbrief', soc_slot_hint:'The slider and dragging apply to photo {n}. Click another photo in the picture to adjust it.', soc_crop_hint:'Adjust photo: click into the photo or drag it with the mouse or your finger. Use the slider to make it smaller or bigger until the dog fits the shape (e.g. the heart).',
   soc_f_age:'Alter', soc_f_breed:'Rasse', soc_f_size:'Größe', soc_f_place:'Ort',
@@ -3508,7 +3508,8 @@ function socTag(d){ return soc.tag ? soc.tag : d.status === 'reserviert' ? t('so
 function socCta(){ return soc.cta == null ? t('soc_cta_default') : soc.cta; }
 function socUrl(){ return soc.url == null ? t('soc_url_default') : soc.url; }
 function socHashtags(){ return soc.hashtags == null ? t('soc_hashtags_default') : soc.hashtags; }
-function socDetails(d){ return [d.breed, sexLabel(d), ageLabel(d), d.city || countryLabel(d.location)].filter(Boolean).join(' · '); }
+function socDetails(d){ return [d.breed, sexLabel(d), ageLabel(d)].filter(Boolean).join(' · '); }
+function socPlace(d){ const c = countryLabel(d.location) || d.city || ''; return c ? '📍 ' + c : ''; }
 function socFee(){ const n = String(soc.feeAmount || '').trim(); return n ? `${n} €` : ''; }
 function socFacts(d, max){
   const f = [[t('soc_f_age'), ageLabel(d)], [t('fact_sex'), sexLabel(d)], [t('soc_f_breed'), d.breed], [t('soc_f_place'), locationLabel(d)], [t('soc_f_size'), sizeLabel[d.size]]]
@@ -3566,7 +3567,7 @@ function socPickList(d, list){
 }
 function socCaption(d){
   const parts = [t(d.status === 'reserviert' ? 'soc_cap_head_reserved' : 'soc_cap_head', { name: d.name })];
-  const info = [socDetails(d), locationLabel(d) ? '📍 ' + locationLabel(d) : ''].filter(Boolean).join('\n');
+  const info = [socDetails(d), socPlace(d)].filter(Boolean).join('\n');
   if(info) parts.push(info);
   if((soc.notes[d.id] || '').trim()) parts.push(soc.notes[d.id].trim());
   parts.push(`${t('soc_cap_link')}\n${dogShareUrl(d)}`);
@@ -3657,6 +3658,7 @@ function adminSocialTab(){
         <div class="soc-video">
           <b>${t('soc_video')}</b>
           <p class="hint" style="margin:4px 0 10px;">${t('soc_video_hint')}</p>
+          <div class="soc-photos" style="margin:0 0 8px;"><small>${t('soc_video_layout')}</small>${seg('layout', SOC_LAYOUTS, k => `<b>${t('soc_lay_' + k)}</b>`)}</div>
           ${photos.length > 1 ? (() => { const vk = socVPickList(pd, photos); return `<div class="soc-photos" style="margin:0 0 8px;"><small>${t('soc_video_pick')}</small><div>${photos.map((u, i) => { const k = vk.indexOf(i); return `<button type="button" class="soc-photo ${k >= 0 ? 'on' : ''}" data-action="soc-vpick" data-idx="${i}" aria-pressed="${k >= 0}"><img src="${esc(thumbUrl(u))}" alt="" loading="lazy">${k >= 0 ? `<span class="soc-photo-n">${k + 1}</span>` : ''}</button>`; }).join('')}</div>${vk.length ? `<button type="button" class="link-btn" data-action="soc-vpick-reset">${t('soc_video_pick_reset')}</button>` : ''}</div>`; })() : ''}
           ${socScenesHtml(pd)}
           <div class="soc-seg">${SOC_MUSIC.map(k => `<button type="button" class="soc-opt ${soc.music === k ? 'on' : ''}" data-action="soc-music" data-val="${k}"><b>${SOC_TRACKS[k] ? '🎵 ' + SOC_TRACKS[k] : t('soc_music_' + k)}</b></button>`).join('')}</div>
@@ -3670,7 +3672,9 @@ function adminSocialTab(){
           <p class="hint" style="margin:8px 0 0;">${t('soc_music_note')}</p>
         </div>`}
         <div class="field" style="margin-top:14px;"><label>${t('soc_caption')}</label><textarea class="soc-caption" rows="8" readonly>${esc(socCaption(pd))}</textarea></div>
-        <button type="button" class="btn-secondary btn-small" data-action="soc-copy-caption" data-id="${pd.id}">${t('soc_copy_caption')}</button>`
+        <button type="button" class="btn-secondary btn-small" data-action="soc-copy-caption" data-id="${pd.id}">${t('soc_copy_caption')}</button>
+        <div class="field" style="margin-top:14px;"><label>${t('soc_profile_link')}</label><input type="text" class="soc-link" readonly value="${esc(dogShareUrl(pd))}" onfocus="this.select()"></div>
+        <button type="button" class="btn-primary btn-small" data-action="soc-copy-link" data-id="${pd.id}">${t('soc_copy_link')}</button>`
         : pd ? `<div class="xmas-preview-empty"><span class="spinner"></span></div>`
         : `<div class="xmas-preview-empty">${t('soc_preview_hint')}</div>`}
     </aside>
@@ -3876,8 +3880,7 @@ function socBrandPlate(P, x, y, w, align){
 }
 // small status badge ("Reserviert" or typed text), only when there is one
 function socBadge(P, x, y, h, align, colors){
-  if(!P.o.badge) return 0;
-  const c = colors || P.th; socPill(P.g, P.o.badge, x, y, h, c.accent, c.accentInk, align); return h;
+  return 0; // the stamp looked like a button: the status is now a plain text line under the details (socTextBlock)
 }
 function socLogoBadge(P, cx, cy, r){
   const { g, logo } = P;
@@ -3911,6 +3914,11 @@ function socTextBlock(P, b, dry){
   if(det){
     const ds = xmasFitText(g, det, '700 {s}px Karla', b.det, Math.round(b.det * 0.7), b.w);
     h += ns * 0.3 + ds * 1.1; if(!dry){ g.fillStyle = b.soft; g.fillText(det, ax, b.y + h); }
+  }
+  const extra = [b.noDetails ? '' : socPlace(d), o.badge ? String(o.badge).toUpperCase() : ''].filter(Boolean).join('  ·  ');
+  if(extra){
+    const es = xmasFitText(g, extra, '800 {s}px Karla', Math.round(b.det * 0.92), Math.round(b.det * 0.6), b.w);
+    h += (det ? es * 1.45 : ns * 0.3 + es * 1.1); if(!dry){ g.fillStyle = b.color; g.fillText(extra, ax, b.y + h); }
   }
   if(o.fee && !b.noFee){
     const fs = Math.round(b.det * 0.95); g.font = `800 ${fs}px Karla`;
@@ -4001,8 +4009,10 @@ const SOC_TALL = {
     let y = ph + 30 + nsz * 1.0;
     const det = socDetails(P.d);
     if(det){ xmasFitText(g, det.toUpperCase(), '700 {s}px Karla', b.det, 18, tw); g.fillStyle = th.soft; g.fillText(det.toUpperCase(), m, y + b.det * 1.3); y += b.det * 1.6; }
+    const extra = [socPlace(P.d), P.o.badge || ''].filter(Boolean).join('  ·  ').toUpperCase();
+    if(extra){ xmasFitText(g, extra, '800 {s}px Karla', b.det, 18, tw); g.fillStyle = th.on; g.fillText(extra, m, y + b.det * 1.15); y += b.det * 1.45; }
     g.font = `italic 500 ${b.note}px Fraunces`; g.fillStyle = th.on;
-    socNoteLines(P, b.note, tw, b.lines).forEach((l, i) => g.fillText(l, m, y + b.note * 1.28 * (i + 1)));
+    socNoteLines(P, b.note, tw, Math.max(1, b.lines - (extra ? 1 : 0))).forEach((l, i) => g.fillText(l, m, y + b.note * 1.28 * (i + 1)));
     socFooter(P, m, fy, tw, fh);
   },
   split(P){
@@ -4216,7 +4226,7 @@ const SOC_WIDE = {
     const fh = 124, fy = H - m - fh;
     let y = opts && opts.top ? opts.top : m + 8;
     if(!(opts && opts.noPill)){ y += socBrand(P, rx, y, Math.min(rw, 330), 'left', c) + 16; }
-    if(!(opts && opts.noBadge) && P.o.badge){ socBadge(P, rx, y, 44, 'left'); y += 44 + 14; }
+    
     const b = { x: rx, w: rw, align: 'left', name: 78, det: 26, note: 27, lines: 2, color: c.on, soft: c.soft, feeColor: c.fee || th.accent };
     const ctaH = P.o.qr || !P.o.cta ? 0 : 52 + 22;
     let avail = fy - 22 - y - ctaH;
@@ -6018,6 +6028,7 @@ document.addEventListener('click', async (e) => {
     return;
   }
   if(action === 'soc-photo'){ if(socPreview.id){ soc.photo[socPreview.id] = Number(actionEl.getAttribute('data-idx')) || 0; delete soc.crop[socPreview.id]; socSave(); render(); socRefreshSoon(0); } return; }
+  if(action === 'soc-copy-link'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d){ copyText(dogShareUrl(d), t('soc_link_copied')); } return; }
   if(action === 'soc-copy-caption'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d){ copyText(socCaption(d), t('soc_caption_copied')); } return; }
   if(action === 'xmas-group'){ xmas.group = actionEl.getAttribute('data-group'); xmasSave(); render(); return; }
   if(action === 'xmas-select'){
