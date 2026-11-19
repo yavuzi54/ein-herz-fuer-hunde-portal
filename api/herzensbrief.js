@@ -5,8 +5,15 @@ import { rpc, sendEmail, onlyPost, page, supporterTemplates, isEmail, lang2, API
 //   GET  ?confirm=T | ?unsubscribe=U        -> page with a button
 //   POST form confirm=T | unsubscribe=U     -> done
 //   POST ?unsubscribe=U (List-Unsubscribe=One-Click from the mail program) -> done
+//   POST ?op=send  -> team sends the letter (_herzensbrief-send.js)
+//   POST ?op=draft -> Claude drafts the letter (_herzensbrief-draft.js)
+// One function instead of three: the Vercel Hobby plan allows at most 12 functions per deployment.
+export const config = { maxDuration: 60 };
+
 export default async function handler(req, res) {
   const q = req.query || {}, body = req.body || {};
+  if (q.op === 'send') return (await import('./_herzensbrief-send.js')).sendHandler(req, res);
+  if (q.op === 'draft') return (await import('./_herzensbrief-draft.js')).draftHandler(req, res);
   const en = (q.lang || body.lang) === 'en';
   if (req.method === 'GET' && (q.confirm || q.unsubscribe)) {
     const isConfirm = !!q.confirm;
