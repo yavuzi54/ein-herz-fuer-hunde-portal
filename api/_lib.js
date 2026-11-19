@@ -163,6 +163,24 @@ export const templates = {
       <p><b>${esc(name)}</b> (${esc(email)}) hat im Vermittlungsportal eine Nachricht geschrieben.</p>
       <p>Zum Lesen und Antworten: Interner Zugang → Interessenten → ${esc(name)} → Nachrichten.</p>`)
   }),
+  accountDeleted: ({ name, mode }) => ({
+    subject: 'Ihr Konto wurde gelöscht',
+    html: wrap('Ihr Konto wurde gelöscht', `
+      <p>Hallo ${esc(name)},</p>
+      <p>wie gewünscht haben wir Ihr Konto im Vermittlungsportal gelöscht. Sie können sich nicht mehr anmelden.</p>
+      ${mode === 'retained'
+        ? '<p>Ihr unterschriebener Schutzvertrag und die dazugehörige Selbstauskunft müssen wir aus rechtlichen Gründen noch aufbewahren. Sie werden nach Ablauf der Aufbewahrungsfrist gelöscht.</p>'
+        : '<p>Ihre Selbstauskunft und Ihre Nachrichten wurden gelöscht.</p>'}
+      <p>Falls Sie das nicht selbst veranlasst haben, melden Sie sich bitte sofort bei uns.</p>`)
+  }),
+  accountDeletedTeam: ({ name, email, mode }) => ({
+    subject: `Konto gelöscht: ${name || email}`,
+    html: wrap('Eine Person hat ihr Konto gelöscht', `
+      <p><b>${esc(name)}</b> (${esc(email)}) hat das Konto im Portal (App oder Website) selbst gelöscht.</p>
+      <p>${mode === 'retained'
+        ? 'Es gibt einen unterschriebenen Schutzvertrag, darum bleiben Vertrag und Selbstauskunft gespeichert (Anmeldung ist gesperrt).'
+        : 'Selbstauskunft, Nachrichten und Notizen sind vollständig gelöscht.'}</p>`)
+  }),
   contract: ({ name, dogName }) => ({
     subject: `Schutzvertrag für ${dogName || 'Ihren Wunschhund'} freigeschaltet`,
     html: wrap('Ihr Schutzvertrag ist bereit', `
@@ -204,10 +222,174 @@ export async function sendEmail(to, { subject, html, replyTo }) {
   return true;
 }
 
+// The store app runs the portal from inside the phone (origin capacitor://localhost on iOS,
+// https://localhost on Android) and calls these functions with absolute URLs.
+// Only these origins get CORS headers; the website itself is same-origin and needs none.
+const APP_ORIGINS = ['capacitor://localhost', 'https://localhost', 'http://localhost'];
+
+export function cors(req, res) {
+  const origin = req.headers && req.headers.origin;
+  if (origin && APP_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  }
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return true;
+  }
+  return false;
+}
+
 export function onlyPost(req, res) {
+  if (cors(req, res)) return false;   // preflight answered
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return false;
   }
   return true;
+}
+
+// ======================================================================
+// Supporter area (SQL 16): sign-up, Herzensbrief, Instagram import, feed
+// ======================================================================
+
+// Where the confirm/unsubscribe links point (this Vercel project) and where people log in
+export const API_ORIGIN = () => process.env.PUBLIC_API_ORIGIN || 'https://ein-herz-fuer-hunde-portal.vercel.app';
+export const PORTAL_PAGE = 'https://einherzfuerhunde.com/vermittlung/';
+
+export const isEmail = e => typeof e === 'string' && e.length <= 200 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
+export const lang2 = l => (l === 'en' ? 'en' : 'de');
+const btn = (href, text) => `<p><a href="${esc(href)}" style="display:inline-block;background:${brand.clay};color:#fff;text-decoration:none;padding:11px 20px;border-radius:6px;font-weight:bold;">${esc(text)}</a></p>`;
+
+// Small photo version made by uploadPhoto() ("…/opt/x.jpg" -> "…/opt/x-t.jpg")
+export const thumbOf = u => (/\/opt\/[^/?]+\.jpg$/.test(String(u || '')) ? String(u).replace(/\.jpg$/, '-t.jpg') : u);
+
+// Footer for supporter emails (the portal footer talks about applications)
+const wrapSupporter = (title, bodyHtml, lang, unsubscribeUrl) => wrap(title, bodyHtml).replace(
+  /Dies ist eine automatische Nachricht unseres Vermittlungsportals\.[^<]*<br>/,
+  lang === 'en'
+    ? `You get this email because you signed up at Ein Herz für Hunde.${unsubscribeUrl ? ` <a href="${esc(unsubscribeUrl)}" style="color:${brand.soft};">Unsubscribe from the Herzensbrief</a>.` : ''}<br>`
+    : `Sie erhalten diese E-Mail, weil Sie sich bei Ein Herz für Hunde angemeldet haben.${unsubscribeUrl ? ` <a href="${esc(unsubscribeUrl)}" style="color:${brand.soft};">Herzensbrief abbestellen</a>.` : ''}<br>`);
+
+export const supporterTemplates = {
+  signupConfirm: ({ name, lang, link, newsletter }) => lang === 'en' ? {
+    subject: 'Please confirm your email',
+    html: wrapSupporter('Welcome to Ein Herz für Hunde!', `
+      <p>Hello ${esc(name)},</p>
+      <p>thank you for supporting our dogs from Bihać. Please confirm your email address so your account is switched on${newsletter ? ' and the monthly Herzensbrief can reach you' : ''}:</p>
+      ${btn(link, 'Confirm email')}
+      <p style="font-size:0.85rem;">The link is valid for 7 days. If you did not sign up, simply ignore this email.</p>`, 'en')
+  } : {
+    subject: 'Bitte bestätigen Sie Ihre E-Mail-Adresse',
+    html: wrapSupporter('Willkommen bei Ein Herz für Hunde!', `
+      <p>Hallo ${esc(name)},</p>
+      <p>danke, dass Sie unsere Hunde aus Bihać unterstützen. Bitte bestätigen Sie Ihre E-Mail-Adresse, damit Ihr Konto aktiv wird${newsletter ? ' und der monatliche Herzensbrief Sie erreicht' : ''}:</p>
+      ${btn(link, 'E-Mail bestätigen')}
+      <p style="font-size:0.85rem;">Der Link gilt 7 Tage. Falls Sie sich nicht angemeldet haben, ignorieren Sie diese E-Mail einfach.</p>`, 'de')
+  },
+  signupExists: ({ name, lang }) => lang === 'en' ? {
+    subject: 'You already have an account',
+    html: wrapSupporter('You already have an account', `
+      <p>Hello ${esc(name)},</p>
+      <p>someone (probably you) tried to sign up again with this email address. You already have an account, so you can simply log in:</p>
+      ${btn(PORTAL_PAGE + '?view=zugang', 'Log in')}
+      <p style="font-size:0.85rem;">Forgot your password? Use "Forgot password" on the login page.</p>`, 'en')
+  } : {
+    subject: 'Sie haben schon ein Konto',
+    html: wrapSupporter('Sie haben schon ein Konto', `
+      <p>Hallo ${esc(name)},</p>
+      <p>mit dieser E-Mail-Adresse wurde gerade erneut eine Anmeldung versucht (wahrscheinlich von Ihnen). Sie haben bereits ein Konto und können sich einfach anmelden:</p>
+      ${btn(PORTAL_PAGE + '?view=zugang', 'Anmelden')}
+      <p style="font-size:0.85rem;">Passwort vergessen? Auf der Anmeldeseite unter „Passwort vergessen“.</p>`, 'de')
+  },
+  newsletterConfirm: ({ lang, link }) => lang === 'en' ? {
+    subject: 'Please confirm: Herzensbrief',
+    html: wrapSupporter('One click and you are in', `
+      <p>Hello,</p>
+      <p>please confirm that you would like to receive the Herzensbrief: once a month, news from our dogs in Bihać.</p>
+      ${btn(link, 'Yes, send me the Herzensbrief')}
+      <p style="font-size:0.85rem;">If you did not ask for this, ignore this email and nothing will be sent.</p>`, 'en')
+  } : {
+    subject: 'Bitte bestätigen: Herzensbrief',
+    html: wrapSupporter('Ein Klick, und Sie sind dabei', `
+      <p>Hallo,</p>
+      <p>bitte bestätigen Sie, dass Sie den Herzensbrief erhalten möchten: einmal im Monat Neuigkeiten von unseren Hunden aus Bihać.</p>
+      ${btn(link, 'Ja, Herzensbrief erhalten')}
+      <p style="font-size:0.85rem;">Falls Sie das nicht angefordert haben, ignorieren Sie diese E-Mail. Es wird dann nichts verschickt.</p>`, 'de')
+  },
+  // The monthly letter. Posts are written by the team (German); intro/subject come in both languages.
+  herzensbrief: ({ lang, subject, intro, posts, unsubscribeUrl }) => {
+    const en = lang === 'en';
+    const more = PORTAL_PAGE + '?view=aus-bihac';
+    const postHtml = (posts || []).map(p => {
+      const photo = (p.photos || [])[0];
+      const text = String(p.body || '').length > 600 ? String(p.body).slice(0, 600).replace(/\s+\S*$/, '') + ' …' : String(p.body || '');
+      return `<div style="margin:0 0 22px;padding:0 0 18px;border-bottom:1px solid #e6dfd0;">
+        ${photo ? `<img src="${esc(thumbOf(photo))}" alt="" width="560" style="width:100%;max-width:560px;border-radius:120px 120px 8px 8px;display:block;margin:0 0 12px;">` : ''}
+        ${p.title ? `<div style="font-weight:bold;color:${brand.ink};font-size:1.05rem;margin:0 0 6px;">${esc(p.title)}</div>` : ''}
+        <div style="white-space:pre-line;">${esc(text)}</div></div>`;
+    }).join('');
+    return {
+      subject: subject || (en ? 'Herzensbrief from Bihać' : 'Herzensbrief aus Bihać'),
+      html: wrapSupporter(esc(subject || 'Herzensbrief'), `
+        <p style="white-space:pre-line;">${esc(intro || '')}</p>
+        ${postHtml}
+        ${btn(more, en ? 'More news from Bihać' : 'Mehr aus Bihać')}`, lang, unsubscribeUrl)
+    };
+  }
+};
+
+// Several emails in one Resend call (max 100). Each item: { to, subject, html, headers }
+export async function sendBatch(items) {
+  const r = await fetch('https://api.resend.com/emails/batch', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(items.map(it => ({
+      from: process.env.RESEND_NEWSLETTER_FROM || process.env.RESEND_FROM || 'onboarding@resend.dev',
+      to: it.to, subject: it.subject, html: it.html, text: toText(it.html),
+      reply_to: process.env.RESEND_REPLY_TO || 'info@einherzfuerhunde.com',
+      headers: it.headers
+    })))
+  });
+  if (!r.ok) throw new Error(`Resend batch: ${await r.text()}`);
+  return true;
+}
+
+// A small branded page for links opened from emails (confirm, unsubscribe)
+export function page(res, status, { title, text, form, lang }) {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Robots-Tag', 'noindex');
+  res.status(status).send(`<!doctype html><html lang="${lang === 'en' ? 'en' : 'de'}"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>
+<style>body{margin:0;background:${brand.paper};font-family:Georgia,serif;color:${brand.ink};}
+.c{max-width:520px;margin:60px auto;background:#FBF8F2;border-radius:12px;padding:32px 26px;}
+h1{font-size:1.4rem;margin:0 0 12px;}p{color:${brand.soft};line-height:1.6;}
+button,a.b{display:inline-block;background:${brand.clay};color:#fff;border:0;border-radius:6px;padding:12px 20px;font:bold 1rem Georgia,serif;text-decoration:none;cursor:pointer;}</style></head>
+<body><div class="c"><div style="font-weight:bold;margin-bottom:18px;">Ein Herz <em>für Hunde</em></div><h1>${esc(title)}</h1><p>${esc(text)}</p>
+${form ? `<form method="post" action="${esc(form.action)}">${Object.entries(form.fields).map(([k, v]) => `<input type="hidden" name="${esc(k)}" value="${esc(v)}">`).join('')}<button type="submit">${esc(form.button)}</button></form>`
+       : `<p><a class="b" href="${PORTAL_PAGE}">${lang === 'en' ? 'To the portal' : 'Zum Portal'}</a></p>`}
+</div></body></html>`);
+}
+
+// Uploads a file to Supabase Storage with the secret key (server only). Returns the public URL.
+export async function storageUpload(bucket, path, body, contentType) {
+  const r = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_SECRET, Authorization: `Bearer ${SUPABASE_SECRET}`, 'Content-Type': contentType,
+               'Cache-Control': 'max-age=31536000', 'x-upsert': 'true' },
+    body
+  });
+  if (!r.ok) throw new Error(`Storage ${r.status}: ${await r.text()}`);
+  return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`;
+}
+
+// The admin password is checked in the database (check_admin). Throws if wrong.
+export async function requireAdmin(password) {
+  if (!password) { const e = new Error('Falsches Passwort'); e.status = 401; throw e; }
+  try { return await rpc('admin_instagram_status', { p_password: String(password), p_auto_publish: null }); }
+  catch (e) { if (/Passwort/.test(e.message)) e.status = 401; throw e; }
 }
