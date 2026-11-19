@@ -1,0 +1,9 @@
+{
+  "name": "ein-herz-fuer-hunde-portal",
+  "private": true,
+  "type": "module",
+  "description": "Portal (index.html) + Vercel functions in api/. Only dependency: the Claude SDK for the Herzensbrief draft.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.8.0"
+  }
+}
