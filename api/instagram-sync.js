@@ -66,10 +66,28 @@ async function copyMedia(item) {
   return { photos, video_url };
 }
 
+async function viaFacebook(token, state) {
+  let id = process.env.IG_USER_ID || (state.api === 'facebook' && state.user_id) || null;
+  let lookupError = null;
+  if (!id) {
+    const a = await ig('/me/assigned_instagram_accounts', token, { fields: 'id,username' }).catch(e => { lookupError = e.message; return null; });
+    id = a && a.data && a.data[0] && a.data[0].id;
+  }
+  if (!id) {
+    const p = await ig('/me/accounts', token, { fields: 'instagram_business_account{id,username}' }).catch(() => null);
+    const hit = p && (p.data || []).find(x => x.instagram_business_account);
+    id = hit && hit.instagram_business_account.id;
+  }
+  if (!id) throw new Error(lookupError || 'Kein Instagram-Konto für diesen Token gefunden (Konto in der Konfiguration zuweisen oder IG_USER_ID setzen)');
+  const u = await ig(`/${id}`, token, { fields: 'id,username' });
+  return { user_id: String(u.id || id), username: u.username };
+}
+
 export async function runSync() {
   const state = (await rpc('server_integration_get', { p_key: 'instagram' })) || {};
-  const envToken = process.env.IG_ACCESS_TOKEN;
-  const unified = envToken ? isUnified(envToken) : false;
+  // tolerate copy/paste leftovers (spaces, line breaks, quotes) around the token
+  const envToken = (process.env.IG_ACCESS_TOKEN || '').replace(/\s+/g, '').replace(/^["']|["']$/g, '') || null;
+  let unified = envToken ? isUnified(envToken) : false;
   // unified tokens never expire and are never stored; Instagram-login tokens are refreshed and kept
   let token = unified ? envToken : (state.token || envToken);
   if (!token) return { skipped: 'not_connected' };
@@ -78,22 +96,18 @@ export async function runSync() {
   const patch = {};
   let me;
 
+  // unified (EAA) token: try graph.facebook.com first; if Meta rejects it there, the same token
+  // may be an Instagram-login token, so try graph.instagram.com/me before giving up
+  let fbError = null;
   if (unified) {
-    let id = process.env.IG_USER_ID || (state.api === 'facebook' && state.user_id) || null;
-    let lookupError = null;
-    if (!id) {
-      const a = await ig('/me/assigned_instagram_accounts', token, { fields: 'id,username' }).catch(e => { lookupError = e.message; return null; });
-      id = a && a.data && a.data[0] && a.data[0].id;
+    try { me = await viaFacebook(token, state); patch.api = 'facebook'; patch.token = null; patch.token_expires = null; }
+    catch (e) {
+      fbError = e.message;
+      if (process.env.IG_API) throw e;
+      GRAPH_BASE = 'https://graph.instagram.com';
+      try { me = await ig('/me', token, { fields: 'user_id,username' }); unified = false; patch.api = 'instagram'; patch.token = null; }
+      catch (e2) { throw new Error(`${fbError} | graph.instagram.com: ${e2.message}`); }
     }
-    if (!id) {
-      const p = await ig('/me/accounts', token, { fields: 'instagram_business_account{id,username}' }).catch(() => null);
-      const hit = p && (p.data || []).find(x => x.instagram_business_account);
-      id = hit && hit.instagram_business_account.id;
-    }
-    if (!id) throw new Error(lookupError || 'Kein Instagram-Konto für diesen Token gefunden (Konto in der Konfiguration zuweisen oder IG_USER_ID setzen)');
-    const u = await ig(`/${id}`, token, { fields: 'id,username' });
-    me = { user_id: String(u.id || id), username: u.username };
-    patch.api = 'facebook'; patch.token = null; patch.token_expires = null;
   } else {
     // long-lived tokens last 60 days; refresh once a week (only allowed when the token is > 24 h old)
     const refreshedAt = state.token_refreshed_at ? Date.parse(state.token_refreshed_at) || 0 : 0;
