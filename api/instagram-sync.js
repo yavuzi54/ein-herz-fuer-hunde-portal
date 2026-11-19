@@ -1,3 +1,4 @@
+import Anthropic from '@anthropic-ai/sdk';
 import { rpc, cors, requireAdmin, storageUpload } from './_lib.js';
 
 // Hourly import from the Verein's own Instagram (Business or Creator account, "Instagram API
@@ -14,6 +15,12 @@ import { rpc, cors, requireAdmin, storageUpload } from './_lib.js';
 //  - "Unified login" system-user token (starts with EAA..., new Meta apps): graph.facebook.com,
 //    never expires, no refresh. The Instagram account id is looked up once (or set IG_USER_ID).
 // Optional: IG_API = 'instagram' | 'facebook' to force the kind, IG_GRAPH_VERSION (default v26.0).
+//
+// News stories (needs ANTHROPIC_API_KEY, off with IG_STORIES=off): every imported draft gets a short
+// German news text written by Claude from the caption + photos (+ video cover). Each run handles up
+// to STORY_PER_RUN drafts that have no title yet, so older imports are filled in over the next runs.
+// op=story (admin button "Mit Claude neu schreiben"): the browser sends frames cut from the video,
+// Claude rewrites the story; the result goes back into the editor only (the team saves it).
 export const config = { maxDuration: 60 };
 
 const isUnified = token => {
@@ -83,7 +90,100 @@ async function viaFacebook(token, state) {
   return { user_id: String(u.id || id), username: u.username };
 }
 
+
+// ---------- news stories with Claude ----------
+const STORY_MODEL = () => process.env.ANTHROPIC_MODEL || 'claude-opus-5-5';
+const STORY_PER_RUN = 4;
+const storiesOn = () => !!process.env.ANTHROPIC_API_KEY && (process.env.IG_STORIES || '').toLowerCase() !== 'off';
+
+const STORY_SCHEMA = {
+  type: 'object', additionalProperties: false,
+  required: ['title', 'body', 'dog_ids'],
+  properties: { title: { type: 'string' }, body: { type: 'string' }, dog_ids: { type: 'array', items: { type: 'string' } } }
+};
+const STORY_SYSTEM = `You write short news posts for the website and app of "Ein Herz für Hunde", an Austrian association that rescues street dogs in Bihać (Bosnia) and places them in homes in Austria and Germany. Each post is based on one of the association's own Instagram posts, reels or stories.
+You get the original caption (may be empty) and pictures (photos, the video cover, or frames cut from the video in time order). Write in German:
+- title: short and concrete, max 70 characters, no emojis, no hashtags.
+- body: 40 to 120 words, warm and clear, plain text, short paragraphs allowed. Describe what happens using the caption and what is clearly visible in the pictures.
+Strict rules:
+- Only facts from the caption or clearly visible in the pictures. Never invent names, ages, diagnoses, numbers, places, dates, amounts or quotes. If unsure, leave it out.
+- If the caption asks for help (donations, adoption, sponsors), you may repeat that request, but no bank data and no amounts that are not in the caption.
+- No hashtags, no @mentions, no emojis in the title, at most one emoji in the body, no long dashes.
+- dog_ids: ids from the given dog list whose name clearly appears in the caption (exact name, any case). Empty if none.`;
+
+async function rest(path, opt = {}) {
+  const r = await fetch(`${process.env.SUPABASE_URL}/rest/v1/${path}`, { ...opt, headers: {
+    apikey: process.env.SUPABASE_SECRET_KEY, Authorization: `Bearer ${process.env.SUPABASE_SECRET_KEY}`,
+    'Content-Type': 'application/json', Prefer: 'return=minimal', ...(opt.headers || {}) } });
+  if (!r.ok) throw new Error(`db ${path.split('?')[0]}: ${r.status}`);
+  const t = await r.text(); return t ? JSON.parse(t) : null;
+}
+
+export async function writeStory({ caption, kind, imageUrls = [], frames = [], dogs = [] }) {
+  const content = [];
+  frames.slice(0, 8).forEach(d => content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: String(d).replace(/^data:image\/\w+;base64,/, '') } }));
+  if (!frames.length) imageUrls.slice(0, 4).forEach(u => content.push({ type: 'image', source: { type: 'url', url: u } }));
+  content.push({ type: 'text', text: JSON.stringify({
+    kind: kind || 'post', pictures: frames.length ? 'frames from the video, in time order' : 'photos / video cover',
+    caption: String(caption || '').slice(0, 2200), dogs: dogs.map(d => ({ id: d.id, name: d.name })) }) });
+  const client = writeStory.client || new Anthropic({ timeout: 25000, maxRetries: 0 });
+  const response = await client.beta.messages.create({
+    model: STORY_MODEL(), max_tokens: 4000,
+    betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
+    system: STORY_SYSTEM,
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: STORY_SCHEMA } },
+    messages: [{ role: 'user', content }]
+  });
+  if (response.stop_reason === 'refusal') throw new Error('Claude hat abgelehnt');
+  if (response.stop_reason === 'max_tokens') throw new Error('Antwort abgeschnitten');
+  const out = JSON.parse(response.content.filter(b => b.type === 'text').map(b => b.text).join(''));
+  const known = new Set(dogs.map(d => String(d.id)));
+  return {
+    title: String(out.title || '').replace(/[\u2013\u2014]/g, '-').slice(0, 200),
+    body: String(out.body || '').replace(/[\u2013\u2014]/g, '-').slice(0, 8000),
+    dog_ids: [...new Set((out.dog_ids || []).map(String))].filter(id => known.has(id))
+  };
+}
+
+const loadDogs = () => rest('dogs?select=id,name&order=name.asc', { headers: { Prefer: '' } }).catch(() => []);
+
+// fills drafts that have no title yet (newest first); runs in parallel, never fails the import
+async function fillStories(deadline) {
+  if (!storiesOn()) return { stories: 0 };
+  const todo = await rest(`posts?select=id,event,body,photos&source=eq.instagram&published_at=is.null&title=is.null&order=created_at.desc&limit=${STORY_PER_RUN}`, { headers: { Prefer: '' } }).catch(() => []);
+  if (!todo || !todo.length || Date.now() > deadline) return { stories: 0 };
+  const dogs = await loadDogs();
+  let done = 0; const errors = [];
+  await Promise.all(todo.map(async p => {
+    try {
+      const s = await writeStory({ caption: p.body, kind: p.event, imageUrls: (p.photos || []).filter(u => /^https:\/\//.test(u)), dogs });
+      if (!s.title || !s.body) return;
+      // keep the original Instagram caption under the story, so the team can compare before publishing
+      const body = p.body ? `${s.body}\n\n[Instagram-Text]\n${p.body}`.slice(0, 8000) : s.body;
+      await rest(`posts?id=eq.${encodeURIComponent(p.id)}&title=is.null`, { method: 'PATCH', body: JSON.stringify({ title: s.title, body, dog_ids: s.dog_ids }) });
+      done++;
+    } catch (e) { errors.push(e.message); }
+  }));
+  return { stories: done, story_error: errors[0] || null };
+}
+
+// op=story: admin button, returns a new story for one post (nothing saved here)
+async function storyForPost(req, res) {
+  const { adminPassword, post_id, frames } = req.body || {};
+  await requireAdmin(adminPassword);
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'ANTHROPIC_API_KEY fehlt in Vercel', code: 'no_key' });
+  const rows = await rest(`posts?select=id,event,body,photos&id=eq.${encodeURIComponent(String(post_id || ''))}`, { headers: { Prefer: '' } });
+  const p = rows && rows[0];
+  if (!p) return res.status(404).json({ error: 'Beitrag nicht gefunden' });
+  const caption = String(p.body || '').includes('[Instagram-Text]') ? String(p.body).split('[Instagram-Text]').pop().trim() : p.body;
+  const s = await writeStory({ caption, kind: p.event, frames: Array.isArray(frames) ? frames : [],
+    imageUrls: (p.photos || []).filter(u => /^https:\/\//.test(u)), dogs: await loadDogs() });
+  const body = caption ? `${s.body}\n\n[Instagram-Text]\n${caption}`.slice(0, 8000) : s.body;
+  return res.status(200).json({ ok: true, title: s.title, body, dog_ids: s.dog_ids });
+}
+
 export async function runSync() {
+  const started = Date.now();
   const state = (await rpc('server_integration_get', { p_key: 'instagram' })) || {};
   // tolerate copy/paste leftovers (spaces, line breaks, quotes) around the token
   const envToken = (process.env.IG_ACCESS_TOKEN || '').replace(/\s+/g, '').replace(/^["']|["']$/g, '') || null;
@@ -155,10 +255,12 @@ export async function runSync() {
       permalink: item.kind === 'story' ? '' : (item.permalink || ''), taken_at: item.timestamp } });
     if (id) imported++;
   }
+  // news stories for drafts without a title (this run's imports and older ones), within the time limit
+  const st = await fillStories(started + 28000).catch(e => ({ stories: 0, story_error: e.message }));
   patch.last_sync = new Date().toISOString();
-  patch.last_error = storiesError ? `Stories: ${storiesError}` : null;
+  patch.last_error = storiesError ? `Stories: ${storiesError}` : (st.story_error ? `Claude: ${st.story_error}`.slice(0, 300) : null);
   await rpc('server_integration_set', { p_key: 'instagram', p_value: patch });
-  return { imported, waiting: Math.max(0, fresh.length - known.size - todo.length), stories: !storiesError };
+  return { imported, waiting: Math.max(0, fresh.length - known.size - todo.length), stories: !storiesError, news_written: st.stories };
 }
 
 export default async function handler(req, res) {
@@ -166,6 +268,10 @@ export default async function handler(req, res) {
   const auth = (req.headers && req.headers.authorization) || '';
   const secret = process.env.CRON_SECRET;
   try {
+    if ((req.query && req.query.op) === 'story' || (req.body && req.body.op) === 'story') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+      return await storyForPost(req, res);
+    }
     if (!(secret && auth === `Bearer ${secret}`)) {
       if (req.method !== 'POST') return res.status(401).json({ error: 'unauthorized' });
       await requireAdmin((req.body || {}).adminPassword);
