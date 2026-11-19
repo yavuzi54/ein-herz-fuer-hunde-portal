@@ -8,11 +8,21 @@ import { rpc, cors, requireAdmin, storageUpload } from './_lib.js';
 //
 // Called by: Supabase pg_cron every hour (Authorization: Bearer CRON_SECRET), or the
 // "Jetzt abrufen" button in the admin tab ({ adminPassword }).
-// Env: IG_ACCESS_TOKEN (first long-lived token, only needed once; afterwards the job keeps a
-// refreshed token in the locked integration_state table), CRON_SECRET.
+// Env: IG_ACCESS_TOKEN, CRON_SECRET. Two kinds of token work:
+//  - "Instagram login" token (starts with IG..., apps made before ~Oct 2026): graph.instagram.com,
+//    lasts 60 days, the job refreshes it weekly and keeps the new one in integration_state.
+//  - "Unified login" system-user token (starts with EAA..., new Meta apps): graph.facebook.com,
+//    never expires, no refresh. The Instagram account id is looked up once (or set IG_USER_ID).
+// Optional: IG_API = 'instagram' | 'facebook' to force the kind, IG_GRAPH_VERSION (default v26.0).
 export const config = { maxDuration: 60 };
 
-const GRAPH = () => process.env.IG_GRAPH_BASE || 'https://graph.instagram.com';
+const isUnified = token => {
+  const forced = (process.env.IG_API || '').toLowerCase();
+  if (forced) return forced === 'facebook' || forced === 'unified';
+  return !String(token).startsWith('IG');
+};
+let GRAPH_BASE = 'https://graph.instagram.com';
+const GRAPH = () => process.env.IG_GRAPH_BASE || GRAPH_BASE;
 const BUCKET = 'dog-photos';
 const MAX_VIDEO_BYTES = 8 * 1024 * 1024;   // bigger reels: poster photo + link to Instagram (keeps Supabase traffic low)
 const MAX_PER_RUN = 10;
@@ -58,32 +68,56 @@ async function copyMedia(item) {
 
 export async function runSync() {
   const state = (await rpc('server_integration_get', { p_key: 'instagram' })) || {};
-  let token = state.token || process.env.IG_ACCESS_TOKEN;
+  const envToken = process.env.IG_ACCESS_TOKEN;
+  const unified = envToken ? isUnified(envToken) : false;
+  // unified tokens never expire and are never stored; Instagram-login tokens are refreshed and kept
+  let token = unified ? envToken : (state.token || envToken);
   if (!token) return { skipped: 'not_connected' };
+  GRAPH_BASE = unified ? `https://graph.facebook.com/${process.env.IG_GRAPH_VERSION || 'v26.0'}` : 'https://graph.instagram.com';
   const now = Date.now();
   const patch = {};
+  let me;
 
-  // long-lived tokens last 60 days; refresh once a week (only allowed when the token is > 24 h old)
-  const refreshedAt = state.token_refreshed_at ? Date.parse(state.token_refreshed_at) || 0 : 0;
-  if (now - refreshedAt > 7 * 864e5) {
-    try {
-      const t = await ig('/refresh_access_token', token, { grant_type: 'ig_refresh_token' });
-      token = t.access_token;
-      patch.token = token; patch.token_refreshed_at = new Date(now).toISOString();
-      patch.token_expires = new Date(now + (t.expires_in || 5184000) * 1000).toISOString();
-    } catch (e) {
-      if (!state.token) patch.token = token;   // first run: keep the env token, try refreshing next time
-      console.warn('ig refresh', e.message);
+  if (unified) {
+    let id = process.env.IG_USER_ID || (state.api === 'facebook' && state.user_id) || null;
+    let lookupError = null;
+    if (!id) {
+      const a = await ig('/me/assigned_instagram_accounts', token, { fields: 'id,username' }).catch(e => { lookupError = e.message; return null; });
+      id = a && a.data && a.data[0] && a.data[0].id;
     }
+    if (!id) {
+      const p = await ig('/me/accounts', token, { fields: 'instagram_business_account{id,username}' }).catch(() => null);
+      const hit = p && (p.data || []).find(x => x.instagram_business_account);
+      id = hit && hit.instagram_business_account.id;
+    }
+    if (!id) throw new Error(lookupError || 'Kein Instagram-Konto für diesen Token gefunden (Konto in der Konfiguration zuweisen oder IG_USER_ID setzen)');
+    const u = await ig(`/${id}`, token, { fields: 'id,username' });
+    me = { user_id: String(u.id || id), username: u.username };
+    patch.api = 'facebook'; patch.token = null; patch.token_expires = null;
+  } else {
+    // long-lived tokens last 60 days; refresh once a week (only allowed when the token is > 24 h old)
+    const refreshedAt = state.token_refreshed_at ? Date.parse(state.token_refreshed_at) || 0 : 0;
+    if (now - refreshedAt > 7 * 864e5) {
+      try {
+        const t = await ig('/refresh_access_token', token, { grant_type: 'ig_refresh_token' });
+        token = t.access_token;
+        patch.token = token; patch.token_refreshed_at = new Date(now).toISOString();
+        patch.token_expires = new Date(now + (t.expires_in || 5184000) * 1000).toISOString();
+      } catch (e) {
+        if (!state.token) patch.token = token;   // first run: keep the env token, try refreshing next time
+        console.warn('ig refresh', e.message);
+      }
+    }
+    me = await ig('/me', token, { fields: 'user_id,username' });
+    patch.api = 'instagram';
   }
-  const me = await ig('/me', token, { fields: 'user_id,username' });
   patch.username = me.username; patch.user_id = me.user_id;
   // first run: only the last 30 days, so old posts do not flood the drafts
   const since = (state.since && Date.parse(state.since)) || (now - 30 * 864e5);
   if (!state.since) patch.since = new Date(since).toISOString();
 
   const items = [];
-  const media = await ig('/me/media', token, { fields: MEDIA_FIELDS, limit: '25' });
+  const media = await ig(unified ? `/${me.user_id}/media` : '/me/media', token, { fields: MEDIA_FIELDS, limit: '25' });
   (media.data || []).forEach(m => items.push({ ...m, kind: m.media_product_type === 'REELS' ? 'reel' : 'post' }));
   let storiesError = null;
   try {
