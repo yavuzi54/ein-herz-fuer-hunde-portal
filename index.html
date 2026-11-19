@@ -7689,7 +7689,8 @@ Object.assign(I18N.de, {
   post_save_draft:'Als Entwurf speichern', post_publish:'Veröffentlichen', post_unpublish:'Zurück zu Entwurf', post_delete:'Löschen', post_delete_confirm:'Diesen Beitrag wirklich löschen?',
   post_need_text:'Bitte eine Überschrift, einen Text oder ein Foto angeben.', post_published_toast:'Veröffentlicht.', post_optimizing:'Fotos werden verkleinert…',
   post_video:'Video', post_ig_link:'Original auf Instagram', post_dog_search:'Hund suchen…',
-  ig_title:'Instagram', ig_not_connected:'Noch nicht verbunden. Anleitung: docs/INSTAGRAM-SETUP.md (Instagram muss ein Business- oder Creator-Konto sein).',
+  post_ai:'✨ Mit Claude neu schreiben', post_ai_video:'✨ Video ansehen und neu schreiben', post_ai_busy:'Claude schreibt…', post_ai_done:'Neuer Text eingesetzt. Bitte prüfen und speichern.', post_ai_hint:'Der Instagram-Text unter [Instagram-Text] wird beim Veröffentlichen entfernt.', post_ai_nokey:'Für Claude fehlt der ANTHROPIC_API_KEY in Vercel.',
+  ig_title:'Instagram', ig_not_connected:'Noch nicht verbunden. Token in Vercel (IG_ACCESS_TOKEN) eintragen, dann „Jetzt abrufen“. Anleitung: docs/SUPPORTER-SETUP.md',
   ig_connected:'Verbunden mit @{user}', ig_last_sync:'Zuletzt abgerufen: {date}', ig_imported:'{n} Beiträge übernommen', ig_sync_now:'Jetzt abrufen',
   ig_auto:'Neue Instagram-Beiträge sofort veröffentlichen (sonst als Entwurf)', ig_sync_done:'{n} neue Beiträge von Instagram übernommen.', ig_error:'Fehler beim letzten Abruf: {msg}',
   sup_admin_title:'Unterstützer', sup_admin_counts:'{s} Unterstützer:innen · {t} Teamer · {n} Herzensbrief-Leser:innen',
@@ -7754,7 +7755,8 @@ Object.assign(I18N.en, {
   post_save_draft:'Save as draft', post_publish:'Publish', post_unpublish:'Back to draft', post_delete:'Delete', post_delete_confirm:'Really delete this post?',
   post_need_text:'Please add a heading, a text or a photo.', post_published_toast:'Published.', post_optimizing:'Making photos smaller…',
   post_video:'Video', post_ig_link:'Original on Instagram', post_dog_search:'Search dog…',
-  ig_title:'Instagram', ig_not_connected:'Not connected yet. Guide: docs/INSTAGRAM-SETUP.md (Instagram must be a Business or Creator account).',
+  post_ai:'✨ Rewrite with Claude', post_ai_video:'✨ Watch video and rewrite', post_ai_busy:'Claude is writing…', post_ai_done:'New text inserted. Please check and save.', post_ai_hint:'The Instagram text below [Instagram-Text] is removed when publishing.', post_ai_nokey:'ANTHROPIC_API_KEY for Claude is missing in Vercel.',
+  ig_title:'Instagram', ig_not_connected:'Not connected yet. Put the token in Vercel (IG_ACCESS_TOKEN), then "Fetch now". Guide: docs/SUPPORTER-SETUP.md',
   ig_connected:'Connected to @{user}', ig_last_sync:'Last fetched: {date}', ig_imported:'{n} posts imported', ig_sync_now:'Fetch now',
   ig_auto:'Publish new Instagram posts at once (otherwise as draft)', ig_sync_done:'{n} new posts from Instagram.', ig_error:'Last fetch failed: {msg}',
   sup_admin_title:'Supporters', sup_admin_counts:'{s} supporters · {t} Teamers · {n} Herzensbrief readers',
@@ -8166,12 +8168,37 @@ function igStatusHTML(){
   <div class="ig-box">
     <div class="ig-head">${ic2.insta} <b>${t('ig_title')}</b>
       ${s.connected ? `<span>${t('ig_connected', { user: esc(s.username || '?') })}</span>` : ''}
-      ${s.connected ? `<button class="btn-secondary btn-small" data-action="ig-sync" style="margin-left:auto;">${t('ig_sync_now')}</button>` : ''}</div>
+      <button class="btn-secondary btn-small" data-action="ig-sync" style="margin-left:auto;">${t('ig_sync_now')}</button></div>
+    ${s.last_error ? `<div class="hint" style="color:var(--danger);">${t('ig_error', { msg: esc(s.last_error) })}</div>` : ''}
     ${s.connected ? `<div class="hint">${s.last_sync ? t('ig_last_sync', { date: fmtDateTime(s.last_sync) }) : ''} · ${t('ig_imported', { n: s.imported || 0 })}</div>
-      ${s.last_error ? `<div class="hint" style="color:var(--danger);">${t('ig_error', { msg: esc(s.last_error) })}</div>` : ''}
       <label class="check-row" style="margin-top:8px;"><input type="checkbox" data-action-change="ig-auto" ${s.auto_publish ? 'checked' : ''}> <span>${t('ig_auto')}</span></label>`
       : `<div class="hint">${t('ig_not_connected')}</div>`}
   </div>`;
+}
+// Cuts n frames (JPEG, max 640 px) evenly from a video, so Claude can "watch" a reel.
+// Works for videos in Supabase Storage (CORS allowed); big reels without a copy have no video_url.
+function videoFrames(url, n){
+  return new Promise((resolve, reject) => {
+    const v = document.createElement('video');
+    v.crossOrigin = 'anonymous'; v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
+    const out = []; let i = 0;
+    const fail = () => reject(new Error('video'));
+    const timer = setTimeout(() => out.length ? resolve(out) : fail(), 20000);
+    v.onerror = () => { clearTimeout(timer); fail(); };
+    v.onloadedmetadata = () => {
+      const d = isFinite(v.duration) && v.duration > 0 ? v.duration : 1;
+      const times = Array.from({ length: n }, (_, k) => Math.min(d - 0.05, d * (k + 0.5) / n));
+      const c = document.createElement('canvas');
+      v.onseeked = () => {
+        const sc = Math.min(1, 640 / Math.max(v.videoWidth || 640, v.videoHeight || 640));
+        c.width = Math.round((v.videoWidth || 640) * sc); c.height = Math.round((v.videoHeight || 640) * sc);
+        c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+        try { out.push(c.toDataURL('image/jpeg', 0.7)); } catch(_) { clearTimeout(timer); return fail(); }
+        if(++i < times.length) v.currentTime = times[i]; else { clearTimeout(timer); resolve(out); }
+      };
+      v.currentTime = times[0];
+    };
+  });
 }
 function openPostEditor(p){
   photoErrors.post = '';
@@ -8188,7 +8215,7 @@ function adminPostOverlay(){
     .filter(d => e.dogIds.includes(d.id) || !e.dogQ || d.name.toLowerCase().includes(e.dogQ.toLowerCase()));
   return `
   <div class="detail-overlay" data-action="close-post-overlay-bg">
-    <div class="detail-panel" onclick="event.stopPropagation()">
+    <div class="detail-panel">
       <button class="detail-close" data-action="close-post-overlay">✕ ${t('back')}</button>
       <h2 style="margin-bottom:6px;">${e.id ? esc(e.title || t('feed_admin_new')) : t('feed_admin_new')}</h2>
       <p class="hint">${postSourceLabel(e)}${e.published ? ' · ' + t('feed_admin_published') : ' · ' + t('feed_admin_drafts')}</p>
@@ -8205,6 +8232,8 @@ function adminPostOverlay(){
         </div>
         ${e.video_url ? `<div class="field"><label>${t('post_video')}</label><div class="story-video"><video controls playsinline preload="none" src="${esc(e.video_url)}"></video></div></div>` : ''}
         ${e.permalink ? `<p><a href="${esc(e.permalink)}" target="_blank" rel="noopener">${ic2.insta} ${t('post_ig_link')}</a></p>` : ''}
+        ${e.id && e.source === 'instagram' ? `<div class="action-row" style="margin:4px 0 12px;"><button type="button" class="btn-secondary btn-small" data-action="post-ai">${e.video_url ? t('post_ai_video') : t('post_ai')}</button>
+          ${/\[Instagram-Text\]/.test(e.body) ? `<span class="hint">${t('post_ai_hint')}</span>` : ''}</div>` : ''}
         <div class="field"><label>${t('post_dogs')}</label>
           <input type="search" id="postDogSearch" class="filter-search" placeholder="${t('post_dog_search')}" value="${esc(e.dogQ)}">
           <div class="dog-pick">${dogs.map(d => `<label class="dog-pick-item ${e.dogIds.includes(d.id) ? 'on' : ''}"><input type="checkbox" data-post-dog="${d.id}" ${e.dogIds.includes(d.id) ? 'checked' : ''}> ${esc(d.name)}</label>`).join('')}</div>
@@ -8374,6 +8403,20 @@ document.addEventListener('click', async (e) => {
   if(a === 'new-post'){ openPostEditor(null); return; }
   if(a === 'edit-post'){ const p = (adminPosts || []).find(x => x.id === id); if(p) openPostEditor(p); return; }
   if(a === 'close-post-overlay' || (a === 'close-post-overlay-bg' && e.target === el)){ postEdit = null; render(); return; }
+  if(a === 'post-ai'){
+    if(!postEdit || !postEdit.id) return;
+    postEditSync(); el.disabled = true; el.textContent = t('post_ai_busy');
+    const frames = postEdit.video_url ? await videoFrames(postEdit.video_url, 6).catch(() => []) : [];
+    const r = await apiPost('/api/instagram-sync?op=story', { op:'story', adminPassword, post_id: postEdit.id, frames });
+    if(r.ok && r.data && r.data.title){
+      postEdit.title = r.data.title; postEdit.body = r.data.body || postEdit.body;
+      (r.data.dog_ids || []).forEach(id => { if(!postEdit.dogIds.includes(id)) postEdit.dogIds.push(id); });
+      dropKeptForms.add('postForm'); render(); toast(t('post_ai_done'));
+    } else {
+      render(); toast(r.data && r.data.code === 'no_key' ? t('post_ai_nokey') : t('ig_error', { msg: (r.data && r.data.error) || r.status }));
+    }
+    return;
+  }
   if(a === 'post-photo-remove'){ postEditSync(); postEdit.photos[Number(el.getAttribute('data-i'))] = null; render(); return; }
   if(a === 'delete-post'){
     if(!confirm(t('post_delete_confirm'))) return;
@@ -8534,7 +8577,7 @@ document.addEventListener('submit', async (e) => {
     const btns = f.querySelectorAll('button'); btns.forEach(b => b.disabled = true);
     if(publish && photos.some(u => !isOptimized(u))){ toast(t('post_optimizing')); photos = await optimizePostPhotos(photos); }
     const { error } = await sb.rpc('admin_save_post', { p_password: adminPassword, p_id: postEdit.id, p_publish: publish, p_row: {
-      title: postEdit.title.trim(), body: postEdit.body.trim(), photos, dog_ids: postEdit.dogIds, audience: postEdit.audience,
+      title: postEdit.title.trim(), body: (publish ? postEdit.body.split('[Instagram-Text]')[0] : postEdit.body).trim(), photos, dog_ids: postEdit.dogIds, audience: postEdit.audience,
       video_url: postEdit.video_url || '', author: teamName || '' } });
     if(error){ btns.forEach(b => b.disabled = false); toast('Fehler: ' + error.message); return; }
     postEdit = null; feed.loaded = false;
