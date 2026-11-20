@@ -172,25 +172,29 @@ export async function writeStory({ caption, kind, imageUrls = [], frames = [], d
 
 // ---------- speech to text (Whisper via Groq or OpenAI, same API shape) ----------
 function speechApi() {
-  if (process.env.GROQ_API_KEY) return { url: 'https://api.groq.com/openai/v1/audio/transcriptions', key: process.env.GROQ_API_KEY, model: 'whisper-large-v3-turbo' };
+  // Groq fetches the video itself from its public link (no 25 MB upload limit, nothing downloaded here)
+  if (process.env.GROQ_API_KEY) return { url: 'https://api.groq.com/openai/v1/audio/transcriptions', key: process.env.GROQ_API_KEY, model: 'whisper-large-v3-turbo', byUrl: true };
   if (process.env.OPENAI_API_KEY) return { url: 'https://api.openai.com/v1/audio/transcriptions', key: process.env.OPENAI_API_KEY, model: 'gpt-4o-mini-transcribe' };
   return null;
 }
 const speechOn = () => !!speechApi();
 export async function transcribe(videoUrl) {
   if (!speechOn() || !videoUrl) return null;
-  const r = await fetch(videoUrl);
-  if (!r.ok) throw new Error(`Video laden ${r.status}`);
-  const buf = Buffer.from(await r.arrayBuffer());
-  if (buf.length > MAX_TRANSCRIBE_BYTES) return null;
-  const form = new FormData();
-  form.append('file', new Blob([buf], { type: 'video/mp4' }), 'video.mp4');
   const api = speechApi();
+  const form = new FormData();
+  if (api.byUrl) form.append('url', videoUrl);
+  else {
+    const r = await fetch(videoUrl);
+    if (!r.ok) throw new Error(`Video laden ${r.status}`);
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.length > MAX_TRANSCRIBE_BYTES) return null;
+    form.append('file', new Blob([buf], { type: 'video/mp4' }), 'video.mp4');
+  }
   form.append('model', process.env.TRANSCRIBE_MODEL || api.model);
   form.append('response_format', 'json');
   const t = await (transcribe.fetch || fetch)(api.url, {
     method: 'POST', headers: { Authorization: `Bearer ${api.key}` }, body: form,
-    signal: AbortSignal.timeout(15000) });
+    signal: AbortSignal.timeout(25000) });
   const j = await t.json().catch(() => ({}));
   if (!t.ok) throw new Error(`Transkript: ${(j.error && j.error.message) || t.status}`);
   return String(j.text || '').trim();
@@ -258,20 +262,40 @@ export async function backfillVideos(items) {
   return n;
 }
 
+// original caption of one Instagram item (same token handling as the sync; stories vanish after 24 h)
+async function igCaption(externalId) {
+  const token = (process.env.IG_ACCESS_TOKEN || '').replace(/\s+/g, '').replace(/^["']|["']$/g, '');
+  if (!token) return null;
+  const state = (await rpc('server_integration_get', { p_key: 'instagram' }).catch(() => null)) || {};
+  const fb = state.api ? state.api === 'facebook' : isUnified(token);
+  GRAPH_BASE = fb ? `https://graph.facebook.com/${process.env.IG_GRAPH_VERSION || 'v26.0'}` : 'https://graph.instagram.com';
+  const j = await ig(`/${encodeURIComponent(externalId)}`, fb ? token : (state.token || token), { fields: 'caption' });
+  return String(j.caption || '');
+}
+
 // op=story: admin button, returns a new story for one post (nothing saved here)
 async function storyForPost(req, res) {
   const { adminPassword, post_id, frames } = req.body || {};
   await requireAdmin(adminPassword);
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'ANTHROPIC_API_KEY fehlt in Vercel', code: 'no_key' });
-  const rows = await rest(`posts?select=id,event,body,photos,video_url&id=eq.${encodeURIComponent(String(post_id || ''))}`, { headers: { Prefer: '' } });
+  const rows = await rest(`posts?select=id,event,body,photos,video_url,external_id&id=eq.${encodeURIComponent(String(post_id || ''))}`, { headers: { Prefer: '' } });
   const p = rows && rows[0];
   if (!p) return res.status(404).json({ error: 'Beitrag nicht gefunden' });
-  const { caption, transcript: had } = splitBody(p.body);
-  let transcript = had;
-  if (!transcript && p.video_url && speechOn()) transcript = await transcribe(p.video_url);
-  const s = await writeStory({ caption, transcript, kind: p.event, frames: Array.isArray(frames) ? frames : [],
+  let { caption, transcript } = splitBody(p.body);
+  // published posts no longer hold the Instagram text (cut off on publish): fetch the original caption again,
+  // otherwise Claude would only rewrite its own earlier text
+  if (!String(p.body || '').includes('[Instagram-Text]') && p.external_id) {
+    const c = await igCaption(p.external_id).catch(() => null);
+    if (c !== null) caption = c;
+  }
+  let mark = null;
+  if (!transcript && p.video_url) {
+    if (!speechOn()) mark = '(kein Transkript: GROQ_API_KEY fehlt in Vercel)';
+    else { transcript = await transcribe(p.video_url); if (transcript === null) mark = TOO_BIG; }
+  }
+  const s = await writeStory({ caption, transcript: transcript || '', kind: p.event, frames: Array.isArray(frames) ? frames : [],
     imageUrls: (p.photos || []).filter(u => /^https:\/\//.test(u)), dogs: await loadDogs() });
-  const body = draftBody(s.body, caption, p.video_url && transcript !== null ? transcript : null);
+  const body = draftBody(s.body, caption, p.video_url ? (mark || transcript || '') : null);
   return res.status(200).json({ ok: true, title: s.title, body, dog_ids: s.dog_ids, transcript: transcript || null });
 }
 
