@@ -33,7 +33,7 @@ const isUnified = token => {
 };
 let GRAPH_BASE = 'https://graph.instagram.com';
 const GRAPH = () => process.env.IG_GRAPH_BASE || GRAPH_BASE;
-const BUCKET = 'dog-photos', VIDEO_BUCKET = 'happy-tails-media';
+const BUCKET = 'dog-photos', VIDEO_BUCKETS = ['instagram-videos', 'dog-photos'];   // instagram-videos: SQL 17, MP4 up to 50 MB
 const MAX_VIDEO_BYTES = 45 * 1024 * 1024;  // bigger reels: poster photo + link to Instagram. Videos play only on tap (preload=none)
 const MAX_TRANSCRIBE_BYTES = 25 * 1024 * 1024;  // Groq free plan / OpenAI upload limit
 const VIDEO_BACKFILL_PER_RUN = 2;
@@ -63,12 +63,15 @@ async function copy(url, path, maxBytes) {
   if (maxBytes && buf.length > maxBytes) { if (isVideo) videoProblem(`zu groß (${Math.round(buf.length / 1048576)} MB)`); return null; }
   const type = isVideo ? 'video/mp4' : (r.headers.get('content-type') || 'image/jpeg');
   if (!isVideo) return storageUpload(BUCKET, path, buf, type);
-  // videos: photo bucket first; if it refuses videos (type or size limit), the Happy-End video bucket
-  try { return await storageUpload(BUCKET, path, buf, type); }
-  catch (e) {
-    try { return await storageUpload(VIDEO_BUCKET, path, buf, type); }
-    catch (e2) { videoProblem(`Speichern: ${String(e2.message).slice(0, 120)}`); throw e2; }
+  // videos: own bucket (SQL 17); if it does not exist yet, the photo bucket (takes only small videos)
+  let err;
+  for (const b of VIDEO_BUCKETS) {
+    try { return await storageUpload(b, path, buf, type); } catch (e) { err = err || e; }
   }
+  const m = String(err.message);
+  videoProblem(/Bucket not found/i.test(m) ? 'Video-Speicher fehlt (SQL 17 in Supabase ausführen)'
+    : /too large|maximum allowed size/i.test(m) ? `Video zu groß für den Speicher (${Math.round(buf.length / 1048576)} MB)` : `Speichern: ${m.slice(0, 120)}`);
+  throw err;
 }
 
 // one Instagram item -> { photos, video_url }
