@@ -1025,11 +1025,12 @@
   .how-prog i{position:absolute;inset:0;background:var(--clay);transform-origin:left;transform:scaleX(0.04);transition:transform .2s;}
   @media (max-width:860px){.how-head{flex-direction:column;align-items:flex-start;}.how-step h3{font-size:1.5rem;}.how-b{padding:18px 20px 22px;}.how-ctrl button{width:44px;height:44px;}.how-track{padding-left:16px;padding-right:16px;scroll-padding-left:16px;gap:16px;}}
   /* start page: Amra's photo next to "News aus Bosnien", 20 Nov 2026 */
-  .support-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:56px;align-items:center;}
+  .support-grid{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,6fr);gap:56px;align-items:center;}
+  .support-photos{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   .support-photo{margin:0;position:relative;}
   .support-photo img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 30%;border-radius:6px;}
-  .support-photo figcaption{margin-top:12px;font-size:0.82rem;color:rgba(243,241,236,0.6);}
-  @media (max-width:860px){.support-grid{grid-template-columns:minmax(0,1fr);gap:28px;}.support-photo{max-width:420px;}}
+  .support-photo figcaption{margin-top:10px;font-size:0.8rem;line-height:1.4;color:rgba(243,241,236,0.6);}
+  @media (max-width:860px){.support-grid{grid-template-columns:minmax(0,1fr);gap:28px;}.support-photos{max-width:520px;}}
   /* phone: swipe through ALL dogs (the desktop fan only shows 3 at a time), 20 Nov 2026 */
   .hero-strip{display:none;}
   @media (max-width:640px){
@@ -7733,7 +7734,7 @@ Object.assign(I18N.de, {
   nav_feed:'News aus Bosnien', nav_my_area:'Mein Bereich',
   sup_home_title:'Sie können keinen Hund adoptieren? Sie können trotzdem einen retten.',
   sup_home_text:'Als Teamer, Pate oder Patin oder einfach als Leser:in begleiten Sie unsere Hunde aus Bihać bis zum Happy End. Folgen Sie einzelnen Hunden, lesen Sie die Neuigkeiten aus dem Tierheim und bekommen Sie einmal im Monat den Herzensbrief.',
-  sup_become:'Unterstützer:in werden', sup_read_feed:'News aus Bosnien', sup_amra_caption:'Amra, Mitgründerin von Ein Herz für Hunde',
+  sup_become:'Unterstützer:in werden', sup_read_feed:'News aus Bosnien', sup_amra_caption:'Amra, Gründerin von Ein Herz für Hunde', sup_michael_caption:'Michael, Gründer von Ein Herz für Hunde',
   impact_dogs_adopted:'Hunde über das Portal vermittelt', impact_dogs_waiting:'warten gerade auf ein Zuhause', impact_happy_ends:'Happy Ends',
   impact_transports:'Transporte', impact_supporters:'Unterstützer:innen in der App', impact_paten:'Paten in der App',
   signup_title:'Unterstützer:in werden', signup_lede:'Ein Konto für alles: Hunden folgen, Neuigkeiten aus Bihać lesen, Patenschaften im Blick behalten. Kostenlos, ohne Selbstauskunft.',
@@ -7799,7 +7800,7 @@ Object.assign(I18N.en, {
   nav_feed:'News from Bosnia', nav_my_area:'My area',
   sup_home_title:'You can’t adopt a dog? You can still save one.',
   sup_home_text:'As a Teamer, sponsor or simply a reader, you can follow our dogs from Bihać all the way to their happy end. Follow single dogs, read the news from the shelter and get the Herzensbrief once a month.',
-  sup_become:'Become a supporter', sup_read_feed:'News from Bosnia', sup_amra_caption:'Amra, co-founder of Ein Herz für Hunde',
+  sup_become:'Become a supporter', sup_read_feed:'News from Bosnia', sup_amra_caption:'Amra, founder of Ein Herz für Hunde', sup_michael_caption:'Michael, founder of Ein Herz für Hunde',
   impact_dogs_adopted:'dogs placed through the portal', impact_dogs_waiting:'waiting for a home right now', impact_happy_ends:'happy ends',
   impact_transports:'transports', impact_supporters:'supporters in the app', impact_paten:'sponsors in the app',
   signup_title:'Become a supporter', signup_lede:'One account for everything: follow dogs, read the news from Bihać, keep an eye on your sponsorships. Free, no application form.',
@@ -7940,7 +7941,10 @@ function supporterHomeSectionHTML(){
   <section class="support-section">
     <div class="wrap">
       <div class="support-grid">
-      <figure class="support-photo"><img src="brand/amra.webp" alt="${esc(t('sup_amra_caption'))}" loading="lazy" decoding="async" width="640" height="853"><figcaption>${t('sup_amra_caption')}</figcaption></figure>
+      <div class="support-photos">
+        <figure class="support-photo"><img src="brand/amra.webp" alt="${esc(t('sup_amra_caption'))}" loading="lazy" decoding="async" width="640" height="853"><figcaption>${t('sup_amra_caption')}</figcaption></figure>
+        <figure class="support-photo"><img src="brand/michael.webp" alt="${esc(t('sup_michael_caption'))}" loading="lazy" decoding="async" width="640" height="853"><figcaption>${t('sup_michael_caption')}</figcaption></figure>
+      </div>
       <div class="support-inner">
         <div class="support-eyebrow">${ic2.heart}<span>${t('nav_feed')}</span></div>
         <h2 class="steps-title" style="margin-bottom:12px;">${accentLast(t('sup_home_title'))}</h2>
