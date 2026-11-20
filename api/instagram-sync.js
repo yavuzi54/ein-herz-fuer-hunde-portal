@@ -33,8 +33,8 @@ const isUnified = token => {
 };
 let GRAPH_BASE = 'https://graph.instagram.com';
 const GRAPH = () => process.env.IG_GRAPH_BASE || GRAPH_BASE;
-const BUCKET = 'dog-photos', VIDEO_BUCKETS = ['instagram-videos', 'dog-photos'];   // instagram-videos: SQL 17, MP4 up to 50 MB
-const MAX_VIDEO_BYTES = 45 * 1024 * 1024;  // bigger reels: poster photo + link to Instagram. Videos play only on tap (preload=none)
+const BUCKET = 'dog-photos', VIDEO_BUCKETS = ['instagram-videos', 'dog-photos'];   // instagram-videos: SQL 17/18, MP4 up to 150 MB
+const MAX_VIDEO_BYTES = 150 * 1024 * 1024;  // SQL 18 + Supabase upload limit 150 MB. Bigger reels: poster photo + link to Instagram. Videos play only on tap (preload=none)
 const MAX_TRANSCRIBE_BYTES = 25 * 1024 * 1024;  // Groq free plan / OpenAI upload limit
 const VIDEO_BACKFILL_PER_RUN = 2;
 const MAX_PER_RUN = 10;
@@ -295,7 +295,7 @@ async function fillStories(deadline) {
     try {
       const { caption, transcript: had } = splitBody(p.body);
       let transcript = had;
-      let mark = null;
+      let mark = had === '' && String(p.body).includes(TOO_BIG) ? TOO_BIG : null;
       if (transcript === null && p.video_url && speechOn()) {
         transcript = await transcribe(p.video_url);
         if (transcript === null) { transcript = ''; mark = TOO_BIG; }   // marked, so it is not tried again every hour
@@ -303,7 +303,7 @@ async function fillStories(deadline) {
       const s = await writeStory({ caption, transcript, kind: p.event, imageUrls: (p.photos || []).filter(u => /^https:\/\//.test(u)), dogs });
       if (!s.title || !s.body) return;
       await rest(`posts?id=eq.${encodeURIComponent(p.id)}&published_at=is.null`, { method: 'PATCH',
-        body: JSON.stringify({ title: s.title, body: draftBody(s.body, caption, p.video_url && speechOn() ? (mark || transcript) : null), dog_ids: s.dog_ids }) });
+        body: JSON.stringify({ title: s.title, body: draftBody(s.body, caption, had !== null || (p.video_url && speechOn()) ? (mark || transcript) : null), dog_ids: s.dog_ids }) });
       done++;
     } catch (e) { errors.push(e.message); }
   }));
@@ -329,14 +329,13 @@ export async function backfillVideos(items) {
 }
 
 // original caption of one Instagram item (same token handling as the sync; stories vanish after 24 h)
-async function igCaption(externalId) {
+async function igInfo(externalId) {
   const token = (process.env.IG_ACCESS_TOKEN || '').replace(/\s+/g, '').replace(/^["']|["']$/g, '');
   if (!token) return null;
   const state = (await rpc('server_integration_get', { p_key: 'instagram' }).catch(() => null)) || {};
   const fb = state.api ? state.api === 'facebook' : isUnified(token);
   GRAPH_BASE = fb ? `https://graph.facebook.com/${process.env.IG_GRAPH_VERSION || 'v26.0'}` : 'https://graph.instagram.com';
-  const j = await ig(`/${encodeURIComponent(externalId)}`, fb ? token : (state.token || token), { fields: 'caption' });
-  return String(j.caption || '');
+  return ig(`/${encodeURIComponent(externalId)}`, fb ? token : (state.token || token), { fields: 'caption,media_type,media_url' });
 }
 
 // op=story: admin button, returns a new story for one post (nothing saved here)
@@ -350,18 +349,19 @@ async function storyForPost(req, res) {
   let { caption, transcript } = splitBody(p.body);
   // published posts no longer hold the Instagram text (cut off on publish): fetch the original caption again,
   // otherwise Claude would only rewrite its own earlier text
-  if (!String(p.body || '').includes('[Instagram-Text]') && p.external_id) {
-    const c = await igCaption(p.external_id).catch(() => null);
-    if (c !== null) caption = c;
-  }
+  // big videos are not stored (only the picture): the sound is then taken from Instagram's own video link
+  const needCaption = !String(p.body || '').includes('[Instagram-Text]');
+  const info = p.external_id && (needCaption || (!transcript && !p.video_url)) ? await igInfo(p.external_id).catch(() => null) : null;
+  if (needCaption && info) caption = String(info.caption || '');
+  const videoSrc = p.video_url || (info && info.media_type === 'VIDEO' && info.media_url) || null;
   let mark = null;
-  if (!transcript && p.video_url) {
+  if (!transcript && videoSrc) {
     if (!speechOn()) mark = '(kein Transkript: GROQ_API_KEY fehlt in Vercel)';
-    else { transcript = await transcribe(p.video_url); if (transcript === null) mark = TOO_BIG; }
+    else { transcript = await transcribe(videoSrc); if (transcript === null) mark = TOO_BIG; }
   }
   const s = await writeStory({ caption, transcript: transcript || '', kind: p.event, frames: Array.isArray(frames) ? frames : [],
     imageUrls: (p.photos || []).filter(u => /^https:\/\//.test(u)), dogs: await loadDogs() });
-  const body = draftBody(s.body, caption, p.video_url ? (mark || transcript || '') : null);
+  const body = draftBody(s.body, caption, videoSrc || transcript ? (mark || transcript || '') : null);
   return res.status(200).json({ ok: true, title: s.title, body, dog_ids: s.dog_ids, transcript: transcript || null });
 }
 
@@ -434,8 +434,14 @@ export async function runSync() {
   for (const item of todo) {
     const { photos, video_url } = await copyMedia(item);
     if (!photos.length && !video_url && !item.caption) continue;
+    let body = item.caption || '';
+    // video too big to keep: still transcribe it now from Instagram's link (it expires, so it cannot wait)
+    if (item.media_type === 'VIDEO' && item.media_url && !video_url && speechOn() && storiesOn() && Date.now() < started + 25000) {
+      const tr = await transcribe(item.media_url).catch(() => undefined);
+      if (tr !== undefined) body = draftBody('', item.caption || '', tr === null ? TOO_BIG : tr);
+    }
     const id = await rpc('server_ig_save_post', { p_row: {
-      external_id: String(item.id), event: item.kind, body: item.caption || '', photos, video_url,
+      external_id: String(item.id), event: item.kind, body, photos, video_url,
       permalink: item.kind === 'story' ? '' : (item.permalink || ''), taken_at: item.timestamp } });
     if (id) imported++;
   }
