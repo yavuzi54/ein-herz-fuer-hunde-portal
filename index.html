@@ -1871,7 +1871,6 @@ const PHILO_IMG = 'data:image/webp;base64,UklGRl6LAABXRUJQVlA4WAoAAAAQAAAA9wIAHA
 // Adopted dogs are only shown in the admin panel
 function shownDogs(){ return state.dogs.filter(d => d.status !== 'vermittelt'); }
 function viewHome(){
-  if(impact === null && !viewHome.askedImpact){ viewHome.askedImpact = true; loadImpact().then(() => { if(impact && route.view === 'home') render(); }); }
   const availableCount = state.dogs.filter(d=>d.status==='verfuegbar').length;
   return `
   <section class="hero">
@@ -7838,6 +7837,7 @@ async function loadFeed(reset){
 }
 
 /* ---------- small building blocks ---------- */
+// Counter block removed from the pages on 19 Nov 2026 (Yavuz). Kept so it can come back in one line.
 function impactHTML(){
   if(!impact) return '';
   const items = [['dogs_adopted','impact_dogs_adopted'], ['dogs_waiting','impact_dogs_waiting'], ['happy_ends','impact_happy_ends'],
@@ -7854,7 +7854,6 @@ function supporterHomeSectionHTML(){
         <div class="support-eyebrow">${ic2.heart}<span>${t('nav_feed')}</span></div>
         <h2 class="steps-title" style="margin-bottom:12px;">${accentLast(t('sup_home_title'))}</h2>
         <p class="support-text">${t('sup_home_text')}</p>
-        ${impactHTML()}
         <div class="hero-actions" style="margin-top:20px;">
           ${session.applicantId ? `<button class="btn-primary" data-nav="mein-bereich">${t('nav_my_area')}</button>` : `<button class="btn-primary" data-nav="unterstuetzen">${t('sup_become')}</button>`}
           <button class="btn-secondary" data-nav="aus-bihac">${t('sup_read_feed')}</button>
@@ -7912,8 +7911,12 @@ function postAudienceTag(p){
   if(p.audience === 'supporters') return `<span class="badge">${t('feed_supporters_only')}</span>`;
   return '';
 }
+// Instagram videos: the feed shows the playable video, not its cover picture as a photo (the cover stays the poster)
+function igVideoCover(p){ return p.video_url && p.source === 'instagram' ? String(p.video_url).replace(/\.mp4$/, '.jpg') : null; }
+function postPhotos(p){ const c = igVideoCover(p); return (p.photos || []).filter(u => u && u !== c); }
 function postCardHTML(p, opts = {}){
-  const photos = (p.photos || []).filter(Boolean);
+  const allPhotos = (p.photos || []).filter(Boolean), photos = postPhotos(p), cover = igVideoCover(p);
+  const poster = cover && allPhotos.includes(cover) ? cover : allPhotos[0];
   const dogs = (p.dog_ids || []).map(dogById).filter(Boolean);
   const body = String(p.body || '');
   const key = 'post-' + p.id, open = expandedDescriptions.has(key), long = body.length > 420;
@@ -7925,7 +7928,7 @@ function postCardHTML(p, opts = {}){
         <img src="${esc(thumbUrl(u))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
         ${i === 3 && photos.length > 4 ? `<span class="more">+${photos.length - 4}</span>` : ''}
       </button>`).join('')}</div>` : ''}
-    ${p.video_url ? `<div class="story-video"><video controls playsinline preload="none" ${photos[0] ? `poster="${esc(thumbUrl(photos[0]))}"` : ''} src="${esc(p.video_url)}"></video></div>` : ''}
+    ${p.video_url ? `<div class="story-video"><video controls playsinline preload="none" ${poster ? `poster="${esc(thumbUrl(poster))}"` : ''} src="${esc(p.video_url)}"></video></div>` : ''}
     <div class="post-body">
       <div class="post-meta">${fmtLongDate(p.published_at || p.created_at)}${p.source === 'instagram' ? ` · ${ic2.insta} Instagram` : ''} ${postAudienceTag(p)}</div>
       ${p.title ? `<h3 class="post-title">${esc(p.title)}</h3>` : ''}
@@ -7939,14 +7942,13 @@ function postCardHTML(p, opts = {}){
 
 /* ---------- views ---------- */
 function viewFeed(){
-  if(!feed.loaded && !feed.loading){ loadFeed(true).then(render); if(!impact) loadImpact().then(render); }
+  if(!feed.loaded && !feed.loading){ loadFeed(true).then(render); }
   const loggedIn = !!session.token;
   return `
   <section class="section">
     <div class="wrap feed-wrap">
       <h1 class="page-title">${accentLast(t('feed_title'))}</h1>
       <p class="page-lede">${t('feed_lede')}</p>
-      ${impactHTML()}
       ${loggedIn ? `<div class="stage-tabs" style="margin:18px 0 6px;">
         <button type="button" class="chip ${!feed.mine ? 'on' : ''}" data-action="feed-mine" data-mine="0">${t('feed_all')}</button>
         <button type="button" class="chip ${feed.mine ? 'on' : ''}" data-action="feed-mine" data-mine="1">${ic2.heart} ${t('feed_mine')}</button>
@@ -8395,7 +8397,7 @@ document.addEventListener('click', async (e) => {
   if(a === 'feed-more'){ await loadFeed(false); render(); return; }
   if(a === 'post-photo'){
     const p = feed.posts.find(x => x.id === id); if(!p) return;
-    openLightbox((p.photos || []).filter(Boolean), Number(el.getAttribute('data-i')) || 0, p.title || ''); return;
+    openLightbox(postPhotos(p), Number(el.getAttribute('data-i')) || 0, p.title || ''); return;
   }
   if(a === 'cert-pdf'){ downloadCertificatePdf(id, el); return; }
   // admin
