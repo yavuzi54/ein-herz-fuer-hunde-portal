@@ -730,6 +730,16 @@
   .post-videos{display:grid;gap:10px;}
   .post-video-item{position:relative;}
   .post-video-item .slot-x{position:absolute;top:6px;right:6px;z-index:2;}
+  .jerry-row{cursor:default;display:block;min-width:0;overflow-wrap:anywhere;}
+  .jerry-filter{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px;}
+  .jerry-row.st-erledigt{opacity:.6;}
+  .jerry-q{white-space:pre-wrap;margin:6px 0 8px;}
+  .jerry-chat{white-space:pre-wrap;font-size:.85rem;color:var(--ink-soft);max-height:260px;overflow:auto;margin-top:6px;}
+  .jerry-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;}
+  .jerry-note-row{display:flex;gap:8px;margin-top:10px;}
+  .jerry-note-row input{flex:1;min-width:0;}
+  .jerry-badge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--line);margin-left:6px;vertical-align:middle;}
+  .jerry-badge.neu{background:var(--honey);border-color:var(--honey);color:var(--ink-black);}
   .vid-nav{display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 0 2px;font-size:.9rem;color:var(--ink-soft);}
   .vid-nav button{width:36px;height:36px;border:1px solid var(--line);background:var(--paper-card);color:var(--ink);font-size:1.1rem;line-height:1;cursor:pointer;}
   .vid-nav button:disabled{opacity:.35;cursor:default;}
@@ -5305,10 +5315,13 @@ function viewAdmin(){
       <button class="admin-tab ${adminTab==='unterstuetzer'?'active':''}" data-action="admin-tab" data-tab="unterstuetzer">
         <span>${t('admin_tab_supporters')}</span>${adminSupporters && (adminSupporters.requests || []).length ? `<span class="count">${adminSupporters.requests.length}</span>` : ''}
       </button>
+      <button class="admin-tab ${adminTab==='jerry'?'active':''}" data-action="admin-tab" data-tab="jerry">
+        <span>${t('admin_tab_jerry')}</span>${Array.isArray(adminJerry) && jerryOpenCount() ? `<span class="count">${jerryOpenCount()}</span>` : ''}
+      </button>
       <button class="admin-tab" data-action="admin-logout" style="margin-top:24px;opacity:0.75;">${t('admin_logout')}</button>
     </div>
     <div class="admin-main">
-      ${adminTab==='interessenten' ? adminInteressentenTab() : adminTab==='hunde' ? adminHundeTab() : adminTab==='texte' ? adminTexteTab() : adminTab==='transporte' ? adminTransportsTab() : adminTab==='weihnachten' ? adminXmasTab() : adminTab==='social' ? adminSocialTab() : adminTab==='news' ? adminFeedTab() : adminTab==='unterstuetzer' ? adminSupportersTab() : adminHappyTailsTab()}
+      ${adminTab==='interessenten' ? adminInteressentenTab() : adminTab==='hunde' ? adminHundeTab() : adminTab==='texte' ? adminTexteTab() : adminTab==='transporte' ? adminTransportsTab() : adminTab==='weihnachten' ? adminXmasTab() : adminTab==='social' ? adminSocialTab() : adminTab==='news' ? adminFeedTab() : adminTab==='unterstuetzer' ? adminSupportersTab() : adminTab==='jerry' ? adminJerryTab() : adminHappyTailsTab()}
     </div>
   </div>
   ${adminDetailId ? adminDetailOverlay() : ''}
@@ -6635,6 +6648,7 @@ document.addEventListener('click', async (e) => {
     if(adminTab === 'transporte') refreshAdminArchive().then(render);
     if(adminTab === 'news') refreshAdminPosts().then(render);
     if(adminTab === 'unterstuetzer') refreshAdminSupporters().then(render);
+    if(adminTab === 'jerry') refreshAdminJerry().then(render);
   }
   if(action === 'edit-story'){
     const st = (state.happyTailsAdmin||[]).find(x => x.id === actionEl.getAttribute('data-id'));
@@ -6731,7 +6745,7 @@ document.addEventListener('click', async (e) => {
     applyConfirmDogId = null;
     render();
   }
-  if(action === 'admin-logout'){ appLogoutHook(); session.admin = false; adminPassword = null; state.applicants = []; state.supportersAdmin = []; adminPosts = null; adminSupporters = null; adminIg = null; postEdit = null; navigate('admin'); }
+  if(action === 'admin-logout'){ appLogoutHook(); session.admin = false; adminPassword = null; state.applicants = []; state.supportersAdmin = []; adminPosts = null; adminSupporters = null; adminIg = null; postEdit = null; adminJerry = null; navigate('admin'); }
   if(action === 'open-applicant'){ adminDetailId = actionEl.getAttribute('data-id'); adminDetailTab = 'overview'; adminChat = { applicantId:null, messages:null }; adminNotes = { applicantId:null, notes:null }; render(); }
   if(action === 'close-overlay-bg' && e.target !== actionEl){
     /* click happened inside the panel on an element with no data-action of its own - ignore, don't close */
@@ -7771,7 +7785,7 @@ Object.assign(I18N.de, {
   my_to_portal:'Zu meiner Adoption', my_load_err:'Ihr Bereich konnte nicht geladen werden. Bitte später noch einmal versuchen.',
   cert_title:'Paten-Urkunde', cert_line1:'Mit einer {tier} begleitet', cert_line2:'seit {date} unseren Schützling', cert_thanks:'Danke, dass Sie {name} auf dem Weg in ein neues Leben begleiten.',
   cert_tier_klein:'kleinen Patenschaft', cert_tier_gross:'großen Patenschaft', cert_note:'Diese Urkunde ist keine Spendenbestätigung.',
-  admin_tab_feed:'News aus Bosnien', admin_tab_supporters:'Unterstützer',
+  admin_tab_feed:'News aus Bosnien', admin_tab_supporters:'Unterstützer', admin_tab_jerry:'🐶 Jerry-Fragen', jerry_title:'Fragen an Jerry', jerry_lede:'Fragen aus dem Chat auf der Website. Anfragen: Besucher:innen möchten eine Antwort per E-Mail. Unbeantwortet: Jerry wusste keine Antwort, gute Ideen für die FAQ.', jerry_requests:'Anfragen', jerry_unanswered:'Unbeantwortet (Ideen für die FAQ)', jerry_all:'Alle', jerry_st_neu:'Neu', jerry_st_beantwortet:'Beantwortet', jerry_st_erledigt:'Erledigt', jerry_empty:'Keine Anfragen.', jerry_unanswered_empty:'Jerry konnte bisher alles beantworten.', jerry_chat:'Ganzer Chat', jerry_note:'Notiz fürs Team', jerry_note_ph:'z. B. Amra ruft am Montag an', jerry_note_save:'Notiz speichern', jerry_reply:'✉️ Per E-Mail antworten', jerry_delete:'Löschen', jerry_delete_confirm:'Diese Frage wirklich löschen?', jerry_sent_to:'gesendet an {to}', jerry_mail_subject:'Deine Frage an Ein Herz für Hunde', jerry_mail_hello:'Hallo {name},', jerry_mail_hello_anon:'Hallo,', jerry_mail_quote:'Deine Frage:', jerry_needs_sql:'Für diesen Bereich fehlt noch das Datenbank-Update (SQL 20). Bitte zuerst in Supabase ausführen.', jerry_lang:'Sprache',
   feed_admin_title:'News aus Bosnien: Beiträge', feed_admin_new:'Neuer Beitrag', feed_admin_drafts:'Entwürfe', feed_admin_published:'Veröffentlicht',
   feed_admin_empty:'Noch keine Beiträge.', feed_src_team:'Team', feed_src_auto:'Automatisch', feed_src_instagram:'Instagram',
   ev_new_dog:'Neuer Hund', ev_reserved:'Reserviert', ev_adopted:'Vermittelt', ev_post:'Post', ev_reel:'Reel', ev_story:'Story',
@@ -7837,7 +7851,7 @@ Object.assign(I18N.en, {
   my_to_portal:'To my adoption', my_load_err:'Your area could not be loaded. Please try again later.',
   cert_title:'Sponsorship certificate', cert_line1:'With a {tier}', cert_line2:'has been sponsoring since {date}', cert_thanks:'Thank you for walking with {name} on the way to a new life.',
   cert_tier_klein:'small sponsorship', cert_tier_gross:'large sponsorship', cert_note:'This certificate is not a donation receipt.',
-  admin_tab_feed:'News from Bosnia', admin_tab_supporters:'Supporters',
+  admin_tab_feed:'News from Bosnia', admin_tab_supporters:'Supporters', admin_tab_jerry:'🐶 Jerry questions', jerry_title:'Questions for Jerry', jerry_lede:'Questions from the chat on the website. Requests: visitors want an answer by email. Unanswered: Jerry did not know the answer, good ideas for the FAQ.', jerry_requests:'Requests', jerry_unanswered:'Unanswered (ideas for the FAQ)', jerry_all:'All', jerry_st_neu:'New', jerry_st_beantwortet:'Answered', jerry_st_erledigt:'Done', jerry_empty:'No requests.', jerry_unanswered_empty:'Jerry could answer everything so far.', jerry_chat:'Whole chat', jerry_note:'Note for the team', jerry_note_ph:'e.g. Amra calls on Monday', jerry_note_save:'Save note', jerry_reply:'✉️ Reply by email', jerry_delete:'Delete', jerry_delete_confirm:'Really delete this question?', jerry_sent_to:'sent to {to}', jerry_mail_subject:'Your question to Ein Herz für Hunde', jerry_mail_hello:'Hi {name},', jerry_mail_hello_anon:'Hi,', jerry_mail_quote:'Your question:', jerry_needs_sql:'This area needs the database update (SQL 20) first. Please run it in Supabase.', jerry_lang:'Language',
   feed_admin_title:'News from Bosnia: posts', feed_admin_new:'New post', feed_admin_drafts:'Drafts', feed_admin_published:'Published',
   feed_admin_empty:'No posts yet.', feed_src_team:'Team', feed_src_auto:'Automatic', feed_src_instagram:'Instagram',
   ev_new_dog:'New dog', ev_reserved:'Reserved', ev_adopted:'Adopted', ev_post:'Post', ev_reel:'Reel', ev_story:'Story',
@@ -8420,6 +8434,54 @@ async function refreshAdminSupporters(){
   if(adminPosts === null) await refreshAdminPosts();
 }
 function personById(id){ return state.applicants.find(a => a.id === id) || (state.supportersAdmin || []).find(a => a.id === id); }
+/* ---------- admin: "Jerry-Fragen" tab (SQL 20: questions from the website chatbot) ---------- */
+let adminJerry = null, jerryFilter = 'neu';
+async function refreshAdminJerry(){
+  if(!adminPassword) return;
+  const { data, error } = await sb.rpc('admin_list_jerry_questions', { p_password: adminPassword });
+  adminJerry = error ? { error: error.message } : (Array.isArray(data) ? data : []);
+}
+function jerryOpenCount(){ return Array.isArray(adminJerry) ? adminJerry.filter(q => q.kind === 'anfrage' && q.status === 'neu').length : 0; }
+function jerryMailto(q){
+  const L = (k, v) => (q.lang === 'en' ? I18N.en : I18N.de)[k].replace(/\{(\w+)\}/g, (_, x) => (v || {})[x] || '');
+  const body = `${q.name ? L('jerry_mail_hello', { name: q.name }) : L('jerry_mail_hello_anon')}\n\n\n\n${L('jerry_mail_quote')}\n> ${String(q.question || '').split('\n').join('\n> ')}`;
+  return `mailto:${encodeURIComponent(q.email)}?subject=${encodeURIComponent(L('jerry_mail_subject'))}&body=${encodeURIComponent(body)}`;
+}
+function jerryRowHTML(q){
+  const st = ['neu', 'beantwortet', 'erledigt'];
+  const isReq = q.kind === 'anfrage';
+  return `
+  <div class="list-row jerry-row st-${esc(q.status)}" id="jerry-${q.id}">
+    <div class="meta">${fmtDateTime(q.created_at)}${q.lang ? ` · ${t('jerry_lang')}: ${esc(String(q.lang).toUpperCase())}` : ''}${q.sent_to ? ` · ${t('jerry_sent_to', { to: esc(q.sent_to) })}` : ''}
+      <span class="jerry-badge ${esc(q.status)}">${t('jerry_st_' + q.status)}</span></div>
+    ${isReq && (q.name || q.email) ? `<div class="who">${esc(q.name || '')}${q.name && q.email ? ' · ' : ''}${q.email ? `<a href="mailto:${esc(q.email)}">${esc(q.email)}</a>` : ''}</div>` : ''}
+    <div class="jerry-q">${esc(q.question)}</div>
+    ${q.transcript ? `<details><summary>${t('jerry_chat')}</summary><div class="jerry-chat">${esc(q.transcript)}</div></details>` : ''}
+    ${isReq ? `<div class="jerry-note-row"><input type="text" maxlength="2000" data-jerry-note="${q.id}" placeholder="${t('jerry_note_ph')}" aria-label="${t('jerry_note')}" value="${esc(q.note || '')}">
+      <button type="button" class="btn-secondary btn-small" data-action="jerry-note" data-id="${q.id}">${t('jerry_note_save')}</button></div>` : ''}
+    <div class="jerry-actions">
+      ${st.map(x => `<button type="button" class="chip ${q.status === x ? 'on' : ''}" data-action="jerry-status" data-id="${q.id}" data-status="${x}">${t('jerry_st_' + x)}</button>`).join('')}
+      ${isReq && q.email ? `<a class="btn-primary btn-small" href="${esc(jerryMailto(q))}" data-action="jerry-reply" data-id="${q.id}">${t('jerry_reply')}</a>` : ''}
+      <button type="button" class="btn-ghost btn-small" data-action="jerry-delete" data-id="${q.id}" style="margin-left:auto;">${t('jerry_delete')}</button>
+    </div>
+  </div>`;
+}
+function adminJerryTab(){
+  const head = `<div class="admin-header"><h1 class="page-title" style="font-size:1.6rem;">${t('jerry_title')}</h1></div>`;
+  if(adminJerry === null){ refreshAdminJerry().then(render); return head + `<p class="hint">${t('working')}</p>`; }
+  if(adminJerry.error) return head + `<p class="error-text" style="display:block;">${/function|schema cache|jerry_questions/i.test(adminJerry.error) ? t('jerry_needs_sql') : esc(adminJerry.error)}</p>`;
+  const req = adminJerry.filter(q => q.kind === 'anfrage'), un = adminJerry.filter(q => q.kind === 'unbeantwortet');
+  const shown = jerryFilter === 'all' ? req : req.filter(q => q.status === jerryFilter);
+  const n = x => x === 'all' ? req.length : req.filter(q => q.status === x).length;
+  return head + `
+  <p class="hint">${t('jerry_lede')}</p>
+  <h3 class="admin-sub">${t('jerry_requests')} <span class="chip-n">${req.length}</span></h3>
+  <div class="jerry-filter">${['neu', 'beantwortet', 'erledigt', 'all'].map(x => `<button type="button" class="chip ${jerryFilter === x ? 'on' : ''}" data-action="jerry-filter" data-f="${x}">${x === 'all' ? t('jerry_all') : t('jerry_st_' + x)} (${n(x)})</button>`).join('')}</div>
+  ${shown.length ? shown.map(jerryRowHTML).join('') : `<p class="hint">${t('jerry_empty')}</p>`}
+  <h3 class="admin-sub">${t('jerry_unanswered')} <span class="chip-n">${un.filter(q => q.status !== 'erledigt').length}</span></h3>
+  ${un.length ? un.map(jerryRowHTML).join('') : `<p class="hint">${t('jerry_unanswered_empty')}</p>`}`;
+}
+
 function adminSupportersTab(){
   if(adminSupporters === null){ refreshAdminSupporters().then(render); return `<p class="hint">${t('working')}</p>`; }
   if(adminSupporters.error) return `<div class="admin-header"><h1 class="page-title" style="font-size:1.6rem;">${t('sup_admin_title')}</h1></div><p class="error-text" style="display:block;">${/function|schema cache/i.test(adminSupporters.error) ? t('sup_needs_update') : esc(adminSupporters.error)}</p>`;
@@ -8660,6 +8722,24 @@ document.addEventListener('click', async (e) => {
     if(r.ok){ toast(t('ig_sync_done', { n: (r.data && r.data.imported) || 0 })); }
     else toast(t('ig_error', { msg: (r.data && r.data.error) || r.status }));
     await refreshAdminPosts(); render(); return;
+  }
+  if(a === 'jerry-filter'){ jerryFilter = el.getAttribute('data-f'); render(); return; }
+  if(a === 'jerry-status' || a === 'jerry-note' || a === 'jerry-reply'){
+    // jerry-reply: the mailto link opens as usual; a new request is marked 'beantwortet'
+    const q = Array.isArray(adminJerry) && adminJerry.find(x => x.id === id); if(!q) return;
+    const status = a === 'jerry-status' ? el.getAttribute('data-status') : a === 'jerry-reply' ? (q.status === 'neu' ? 'beantwortet' : null) : null;
+    const inp = document.querySelector(`[data-jerry-note="${id}"]`), note = inp ? inp.value.trim() : null;
+    if(a === 'jerry-reply' && !status) return;
+    const { error } = await sb.rpc('admin_update_jerry_question', { p_password: adminPassword, p_id: id, p_status: status, p_note: a === 'jerry-note' ? note : null });
+    if(error){ toast('Fehler: ' + error.message); return; }
+    if(status) q.status = status; if(a === 'jerry-note') q.note = note;
+    render(); toast(t('toast_saved')); return;
+  }
+  if(a === 'jerry-delete'){
+    if(!confirm(t('jerry_delete_confirm'))) return;
+    const { error } = await sb.rpc('admin_delete_jerry_question', { p_password: adminPassword, p_id: id });
+    if(error){ toast('Fehler: ' + error.message); return; }
+    adminJerry = adminJerry.filter(x => x.id !== id); render(); toast(t('toast_saved')); return;
   }
   if(a === 'sponsor-from-request'){
     const r = (adminSupporters.requests || []).find(x => x.id === id); if(!r) return;
