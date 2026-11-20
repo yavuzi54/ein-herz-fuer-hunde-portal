@@ -722,6 +722,15 @@
   .admin-sub{font-size:1.1rem;margin:26px 0 10px;display:flex;align-items:center;gap:8px;}
   .admin-sub svg{width:18px;height:18px;}
   .post-row{display:flex;align-items:center;gap:12px;}
+  .post-pick{display:flex;align-items:center;padding:6px;margin:-6px 0 -6px -6px;}
+  .post-pick input{width:20px;height:20px;cursor:pointer;}
+  .post-row.picked{outline:2px solid var(--clay);outline-offset:-2px;}
+  .combine-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 10px;padding:10px 12px;border-radius:12px;background:var(--paper);}
+  .combine-bar b{margin-right:auto;}
+  .post-videos{display:grid;gap:10px;}
+  .post-video-item{position:relative;}
+  .post-video-item .slot-x{position:absolute;top:6px;right:6px;z-index:2;}
+  .post-card .story-video + .story-video{margin-top:8px;}
   .post-row-thumb{width:48px;height:48px;flex-shrink:0;border-radius:8px;overflow:hidden;background:var(--paper);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);}
   .post-row-thumb img{width:100%;height:100%;object-fit:cover;}
   .post-row-thumb svg{width:22px;height:22px;}
@@ -7767,7 +7776,7 @@ Object.assign(I18N.de, {
   post_save_draft:'Als Entwurf speichern', post_publish:'Veröffentlichen', post_unpublish:'Zurück zu Entwurf', post_delete:'Löschen', post_delete_confirm:'Diesen Beitrag wirklich löschen?',
   post_need_text:'Bitte eine Überschrift, einen Text oder ein Foto angeben.', post_published_toast:'Veröffentlicht.', post_optimizing:'Fotos werden verkleinert…',
   post_video:'Video', post_ig_link:'Original auf Instagram', post_dog_search:'Hund suchen…',
-  post_ai:'✨ Mit Claude neu schreiben', post_ai_video:'✨ Video ansehen und neu schreiben', post_ai_busy:'Claude schreibt…', post_ai_done:'Neuer Text eingesetzt. Bitte prüfen und speichern.', post_ai_hint:'Der Instagram-Text unter [Instagram-Text] wird beim Veröffentlichen entfernt.', post_body_news:'Text der Nachricht (genau so wird er veröffentlicht)', post_src_ig:'Original-Text von Instagram', post_src_tr:'Transkript: das wird im Video gesagt', post_src_note:'Nur für euch, wird nicht veröffentlicht. Claude schreibt die Nachricht aus diesen Quellen.', post_src_empty:'(leer)', post_preview:'Vorschau: so sehen die Leute den Beitrag', post_preview_hint:'Die Vorschau ändert sich, während ihr tippt.', post_ai_nokey:'Für Claude fehlt der ANTHROPIC_API_KEY in Vercel.', post_revise_label:'Was soll Claude ändern?', post_revise_ph:'z. B. kürzer, oder: erwähne, dass wir Futterspenden brauchen', post_revise_btn:'✨ Mit Claude ändern', post_revise_hint:'Claude ändert nur das, der Rest bleibt. Kostet ca. 1 Cent.', post_revise_empty:'Bitte zuerst schreiben, was Claude ändern soll.', post_revise_done:'Text geändert. Bitte prüfen und speichern.',
+  post_ai:'✨ Mit Claude neu schreiben', post_ai_video:'✨ Video ansehen und neu schreiben', post_ai_busy:'Claude schreibt…', post_ai_done:'Neuer Text eingesetzt. Bitte prüfen und speichern.', post_ai_hint:'Der Instagram-Text unter [Instagram-Text] wird beim Veröffentlichen entfernt.', post_body_news:'Text der Nachricht (genau so wird er veröffentlicht)', post_src_ig:'Original-Text von Instagram', post_src_tr:'Transkript: das wird im Video gesagt', post_src_note:'Nur für euch, wird nicht veröffentlicht. Claude schreibt die Nachricht aus diesen Quellen.', post_src_empty:'(leer)', post_preview:'Vorschau: so sehen die Leute den Beitrag', post_preview_hint:'Die Vorschau ändert sich, während ihr tippt.', post_ai_nokey:'Für Claude fehlt der ANTHROPIC_API_KEY in Vercel.', post_revise_label:'Was soll Claude ändern?', post_revise_ph:'z. B. kürzer, oder: erwähne, dass wir Futterspenden brauchen', post_revise_btn:'✨ Mit Claude ändern', post_revise_hint:'Claude ändert nur das, der Rest bleibt. Kostet ca. 1 Cent.', post_revise_empty:'Bitte zuerst schreiben, was Claude ändern soll.', post_revise_done:'Text geändert. Bitte prüfen und speichern.', post_pick:'Auswählen zum Zusammenfassen', post_combine_bar:'{n} ausgewählt', post_combine_btn:'✨ Zu einem Beitrag zusammenfassen', post_combine_one:'Wählt mindestens 2 Entwürfe aus, z. B. mehrere Stories hintereinander.', post_combine_clear:'Auswahl aufheben', post_combine_busy:'Claude sieht sich alle an…', post_combine_done:'Ein Text aus {n} Beiträgen. Bitte prüfen und speichern.', post_combine_note:'Zusammengefasst aus {n} Entwürfen. Beim Speichern verschwinden die anderen {m} aus der Liste, ihre Videos und Bilder bleiben in diesem Beitrag.', post_combine_max:'Höchstens 6 Beiträge auf einmal.', post_videos:'Videos ({n})', post_video_remove:'Video entfernen',
   ig_title:'Instagram', ig_not_connected:'Noch nicht verbunden. Token in Vercel (IG_ACCESS_TOKEN) eintragen, dann „Jetzt abrufen“. Anleitung: docs/SUPPORTER-SETUP.md',
   ig_connected:'Verbunden mit @{user}', ig_last_sync:'Zuletzt abgerufen: {date}', ig_imported:'{n} Beiträge übernommen', ig_sync_now:'Jetzt abrufen',
   ig_auto:'Neue Instagram-Beiträge sofort veröffentlichen (sonst als Entwurf)', ig_sync_done:'{n} neue Beiträge von Instagram übernommen.', ig_error:'Fehler beim letzten Abruf: {msg}',
@@ -7833,7 +7842,7 @@ Object.assign(I18N.en, {
   post_save_draft:'Save as draft', post_publish:'Publish', post_unpublish:'Back to draft', post_delete:'Delete', post_delete_confirm:'Really delete this post?',
   post_need_text:'Please add a heading, a text or a photo.', post_published_toast:'Published.', post_optimizing:'Making photos smaller…',
   post_video:'Video', post_ig_link:'Original on Instagram', post_dog_search:'Search dog…',
-  post_ai:'✨ Rewrite with Claude', post_ai_video:'✨ Watch video and rewrite', post_ai_busy:'Claude is writing…', post_ai_done:'New text inserted. Please check and save.', post_ai_hint:'The Instagram text below [Instagram-Text] is removed when publishing.', post_body_news:'Text of the news post (published exactly like this)', post_src_ig:'Original text from Instagram', post_src_tr:'Transcript: what is said in the video', post_src_note:'Only for you, not published. Claude writes the news post from these sources.', post_src_empty:'(empty)', post_preview:'Preview: this is how people see the post', post_preview_hint:'The preview changes while you type.', post_ai_nokey:'ANTHROPIC_API_KEY for Claude is missing in Vercel.', post_revise_label:'What should Claude change?', post_revise_ph:'e.g. shorter, or: mention that we need food donations', post_revise_btn:'✨ Change with Claude', post_revise_hint:'Claude changes only that, the rest stays. Costs about 1 cent.', post_revise_empty:'Please write first what Claude should change.', post_revise_done:'Text changed. Please check and save.',
+  post_ai:'✨ Rewrite with Claude', post_ai_video:'✨ Watch video and rewrite', post_ai_busy:'Claude is writing…', post_ai_done:'New text inserted. Please check and save.', post_ai_hint:'The Instagram text below [Instagram-Text] is removed when publishing.', post_body_news:'Text of the news post (published exactly like this)', post_src_ig:'Original text from Instagram', post_src_tr:'Transcript: what is said in the video', post_src_note:'Only for you, not published. Claude writes the news post from these sources.', post_src_empty:'(empty)', post_preview:'Preview: this is how people see the post', post_preview_hint:'The preview changes while you type.', post_ai_nokey:'ANTHROPIC_API_KEY for Claude is missing in Vercel.', post_revise_label:'What should Claude change?', post_revise_ph:'e.g. shorter, or: mention that we need food donations', post_revise_btn:'✨ Change with Claude', post_revise_hint:'Claude changes only that, the rest stays. Costs about 1 cent.', post_revise_empty:'Please write first what Claude should change.', post_revise_done:'Text changed. Please check and save.', post_pick:'Select to combine', post_combine_bar:'{n} selected', post_combine_btn:'✨ Combine into one post', post_combine_one:'Select at least 2 drafts, e.g. several stories in a row.', post_combine_clear:'Clear selection', post_combine_busy:'Claude is watching all of them…', post_combine_done:'One text from {n} posts. Please check and save.', post_combine_note:'Combined from {n} drafts. When you save, the other {m} disappear from the list; their videos and pictures stay in this post.', post_combine_max:'At most 6 posts at once.', post_videos:'Videos ({n})', post_video_remove:'Remove video',
   ig_title:'Instagram', ig_not_connected:'Not connected yet. Put the token in Vercel (IG_ACCESS_TOKEN), then "Fetch now". Guide: docs/SUPPORTER-SETUP.md',
   ig_connected:'Connected to @{user}', ig_last_sync:'Last fetched: {date}', ig_imported:'{n} posts imported', ig_sync_now:'Fetch now',
   ig_auto:'Publish new Instagram posts at once (otherwise as draft)', ig_sync_done:'{n} new posts from Instagram.', ig_error:'Last fetch failed: {msg}',
@@ -7860,6 +7869,7 @@ let impact = null;                                 // public_impact()
 let feed = { posts: [], loading: false, done: false, mine: false, loaded: false };
 let signupDone = false, hbBoxDone = false;
 let adminPosts = null, adminSupporters = null, adminIg = null;
+let postPicks = new Set();                         // drafts ticked in the list for "Zusammenfassen"
 let postEdit = null;                               // { id, title, body, photos[], loading[], dogIds[], audience, video_url, permalink, published }
 let hb = { month: new Date().toISOString().slice(0, 7), subject_de: '', subject_en: '', intro_de: '', intro_en: '', post_ids: null, busy: '', testTo: '' };
 let sponsorPick = null;                            // admin: request being turned into a sponsorship
@@ -7994,11 +8004,13 @@ function postAudienceTag(p){
   return '';
 }
 // Instagram videos: the feed shows the playable video, not its cover picture as a photo (the cover stays the poster)
-function igVideoCover(p){ const m = p.video_url && p.source === 'instagram' && String(p.video_url).match(/\/(ig\/[^/]+)\.mp4$/); return m ? ((p.photos || []).find(u => u && String(u).endsWith('/' + m[1] + '.jpg')) || null) : null; }
-function postPhotos(p){ const c = igVideoCover(p); return (p.photos || []).filter(u => u && u !== c); }
+// a combined post (SQL 19) holds several videos in p.videos, in order; video_url is the first one
+function postVideos(p){ const v = (p.videos || []).filter(Boolean); return v.length ? v : (p.video_url ? [p.video_url] : []); }
+function igVideoCover(p, url){ url = url || p.video_url; const m = url && p.source === 'instagram' && String(url).match(/\/(ig\/[^/]+)\.mp4$/); return m ? ((p.photos || []).find(u => u && String(u).endsWith('/' + m[1] + '.jpg')) || null) : null; }
+function postPhotos(p){ const c = postVideos(p).map(v => igVideoCover(p, v)).filter(Boolean); return (p.photos || []).filter(u => u && !c.includes(u)); }
 function postCardHTML(p, opts = {}){
-  const allPhotos = (p.photos || []).filter(Boolean), photos = postPhotos(p), cover = igVideoCover(p);
-  const poster = cover && allPhotos.includes(cover) ? cover : allPhotos[0];
+  const allPhotos = (p.photos || []).filter(Boolean), photos = postPhotos(p), videos = postVideos(p);
+  const posterFor = (v, i) => igVideoCover(p, v) || (i === 0 ? allPhotos[0] : null);
   const dogs = (p.dog_ids || []).map(dogById).filter(Boolean);
   const body = String(p.body || '');
   const key = 'post-' + p.id, open = expandedDescriptions.has(key), long = body.length > 420;
@@ -8010,7 +8022,7 @@ function postCardHTML(p, opts = {}){
         <img src="${esc(thumbUrl(u))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
         ${i === 3 && photos.length > 4 ? `<span class="more">+${photos.length - 4}</span>` : ''}
       </button>`).join('')}</div>` : ''}
-    ${p.video_url ? `<div class="story-video"><video controls playsinline preload="none" ${poster ? `poster="${esc(thumbUrl(poster))}"` : ''} src="${esc(p.video_url)}"></video></div>` : ''}
+    ${videos.map((v, i) => { const poster = posterFor(v, i); return `<div class="story-video"><video controls playsinline preload="none" ${poster ? `poster="${esc(thumbUrl(poster))}"` : ''} src="${esc(v)}"></video></div>`; }).join('')}
     <div class="post-body">
       <div class="post-meta">${fmtLongDate(p.published_at || p.created_at)}${p.source === 'instagram' ? ` · ${ic2.insta} Instagram` : ''} ${postAudienceTag(p)}</div>
       ${p.title ? `<h3 class="post-title">${esc(p.title)}</h3>` : ''}
@@ -8227,8 +8239,10 @@ function adminFeedTab(){
   if(adminPosts === null){ refreshAdminPosts().then(render); return `<p class="hint">${t('working')}</p>`; }
   if(adminPosts.error) return `<div class="admin-header"><h1 class="page-title" style="font-size:1.6rem;">${t('feed_admin_title')}</h1></div><p class="error-text" style="display:block;">${/function|schema cache/i.test(adminPosts.error) ? t('sup_needs_update') : esc(adminPosts.error)}</p>`;
   const drafts = adminPosts.filter(p => !p.published_at), pub = adminPosts.filter(p => p.published_at);
+  [...postPicks].forEach(id => { if(!drafts.some(p => p.id === id)) postPicks.delete(id); });
   const row = p => `
-    <div class="list-row post-row" data-action="edit-post" data-id="${p.id}">
+    <div class="list-row post-row ${postPicks.has(p.id) ? 'picked' : ''}" data-action="edit-post" data-id="${p.id}">
+      ${!p.published_at ? `<span class="post-pick"><input type="checkbox" data-action="post-pick" data-id="${p.id}" ${postPicks.has(p.id) ? 'checked' : ''} aria-label="${t('post_pick')}" title="${t('post_pick')}"></span>` : ''}
       <div class="post-row-thumb">${(p.photos || [])[0] ? `<img src="${esc(thumbUrl(p.photos[0]))}" alt="" loading="lazy">` : (p.source === 'instagram' ? ic2.insta : ic.paw)}</div>
       <div style="flex:1;min-width:0;">
         <div class="who">${esc(p.title || String(p.body || '').slice(0, 70) || '…')}</div>
@@ -8241,6 +8255,9 @@ function adminFeedTab(){
     <button class="btn-primary" data-action="new-post">+ ${t('feed_admin_new')}</button></div>
   ${igStatusHTML()}
   <h3 class="admin-sub">${t('feed_admin_drafts')} <span class="chip-n">${drafts.length}</span></h3>
+  ${postPicks.size ? `<div class="combine-bar"><b>${t('post_combine_bar', { n: postPicks.size })}</b>
+    ${postPicks.size >= 2 ? `<button type="button" class="btn-primary btn-small" data-action="post-combine">${t('post_combine_btn')}</button>` : `<span class="hint" style="margin:0;">${t('post_combine_one')}</span>`}
+    <button type="button" class="btn-ghost btn-small" data-action="post-pick-clear">${t('post_combine_clear')}</button></div>` : ''}
   ${drafts.length ? drafts.map(row).join('') : `<p class="hint">–</p>`}
   <h3 class="admin-sub">${t('feed_admin_published')} <span class="chip-n">${pub.length}</span></h3>
   ${pub.length ? pub.map(row).join('') : emptyBlock(t('feed_admin_empty'))}`;
@@ -8293,7 +8310,7 @@ function openPostEditor(p){
   while(photos.length < 8) photos.push(null);
   const parts = splitPostBody(p ? p.body : '');
   postEdit = { id: p ? p.id : null, title: p ? p.title || '' : '', body: parts.news, igText: parts.ig, transcript: parts.tr, photos, loading: Array(8).fill(false),
-    dogIds: p ? (p.dog_ids || []).slice() : [], audience: p ? p.audience : 'public', video_url: p ? p.video_url : null,
+    dogIds: p ? (p.dog_ids || []).slice() : [], audience: p ? p.audience : 'public', video_url: p ? p.video_url : null, videos: p ? postVideos(p) : [], mergeIds: [],
     permalink: p ? p.permalink : null, published: !!(p && p.published_at), source: p ? p.source : 'team', event: p ? p.event : null, dogQ: '' };
   render();
 }
@@ -8312,7 +8329,7 @@ function joinPostBody(e){
 }
 function postPreviewHTML(){
   const e = postEdit;
-  return postCardHTML({ id: 'preview', title: e.title, body: e.body, photos: e.photos.filter(Boolean), video_url: e.video_url, permalink: e.permalink,
+  return postCardHTML({ id: 'preview', title: e.title, body: e.body, photos: e.photos.filter(Boolean), video_url: e.videos[0] || null, videos: e.videos, permalink: e.permalink,
     source: e.source, dog_ids: e.dogIds, audience: e.audience, created_at: new Date().toISOString() }, { noFollow: true });
 }
 function adminPostOverlay(){
@@ -8340,9 +8357,13 @@ function adminPostOverlay(){
             </div>`).join('')}</div>
           ${photoErrors.post ? `<div class="photo-error" role="alert">${esc(photoErrors.post)}</div>` : ''}
         </div>
-        ${e.video_url ? `<div class="field"><label>${t('post_video')}</label><div class="story-video"><video controls playsinline preload="none" src="${esc(e.video_url)}"></video></div></div>` : ''}
+        ${e.mergeIds.length ? `<p class="hint combine-note">🔗 ${t('post_combine_note', { n: e.mergeIds.length + 1, m: e.mergeIds.length })}</p>` : ''}
+        ${e.videos.length === 1 ? `<div class="field"><label>${t('post_video')}</label><div class="story-video"><video controls playsinline preload="none" src="${esc(e.videos[0])}"></video></div></div>` : ''}
+        ${e.videos.length > 1 ? `<div class="field"><label>${t('post_videos', { n: e.videos.length })}</label><div class="post-videos">${e.videos.map((v, i) => `
+          <div class="post-video-item"><div class="story-video"><video controls playsinline preload="none" src="${esc(v)}"></video></div>
+          <button type="button" class="slot-x" data-action="post-video-remove" data-i="${i}" aria-label="${t('post_video_remove')}" title="${t('post_video_remove')}">✕</button></div>`).join('')}</div></div>` : ''}
         ${e.permalink ? `<p><a href="${esc(e.permalink)}" target="_blank" rel="noopener">${ic2.insta} ${t('post_ig_link')}</a></p>` : ''}
-        ${e.id && e.source === 'instagram' ? `<div class="action-row" style="margin:4px 0 12px;"><button type="button" class="btn-secondary btn-small" data-action="post-ai">${e.video_url ? t('post_ai_video') : t('post_ai')}</button></div>` : ''}
+        ${e.id && e.source === 'instagram' && !e.mergeIds.length && e.videos.length <= 1 ? `<div class="action-row" style="margin:4px 0 12px;"><button type="button" class="btn-secondary btn-small" data-action="post-ai">${e.video_url ? t('post_ai_video') : t('post_ai')}</button></div>` : ''}
         ${e.igText !== null || e.transcript !== null ? `<div class="post-sources">
           <p class="hint">${t('post_src_note')}</p>
           ${e.igText !== null ? `<details class="post-source" open><summary>${ic2.insta} ${t('post_src_ig')}</summary><div class="post-source-text">${esc(e.igText) || t('post_src_empty')}</div></details>` : ''}
@@ -8554,6 +8575,38 @@ document.addEventListener('click', async (e) => {
     return;
   }
   if(a === 'post-photo-remove'){ postEditSync(); postEdit.photos[Number(el.getAttribute('data-i'))] = null; render(); return; }
+  if(a === 'post-video-remove'){ postEditSync(); postEdit.videos.splice(Number(el.getAttribute('data-i')), 1); postEdit.video_url = postEdit.videos[0] || null; render(); return; }
+  if(a === 'post-pick'){
+    e.stopPropagation();
+    if(postPicks.has(id)) postPicks.delete(id); else if(postPicks.size >= 6){ toast(t('post_combine_max')); } else postPicks.add(id);
+    render(); return;
+  }
+  if(a === 'post-pick-clear'){ postPicks.clear(); render(); return; }
+  if(a === 'post-combine'){
+    // several drafts (e.g. 3 stories in a row) -> one news post: Claude reads all captions + transcripts
+    // and screenshots of every video; the editor opens on the oldest, the others are hidden when saving
+    const list = (adminPosts || []).filter(p => postPicks.has(p.id) && !p.published_at)
+      .sort((x, y) => Date.parse(x.created_at) - Date.parse(y.created_at));
+    if(list.length < 2) return;
+    el.disabled = true; el.textContent = t('post_combine_busy');
+    const vids = list.flatMap(postVideos), per = Math.max(2, Math.floor(20 / Math.max(1, vids.length)));
+    const frames = [];
+    for(const v of vids){ frames.push(...(await videoFrames(v, Math.min(per, 20 - frames.length)).catch(() => []))); if(frames.length >= 20) break; }
+    const r = await apiPost('/api/instagram-sync?op=combine', { op:'combine', adminPassword, post_ids: list.map(p => p.id), frames: frames.slice(0, 20) });
+    if(!(r.ok && r.data && (r.data.title || r.data.body))){
+      render(); toast(r.data && r.data.code === 'no_key' ? t('post_ai_nokey') : t('ig_error', { msg: (r.data && r.data.error) || r.status })); return;
+    }
+    const first = list[0];
+    openPostEditor(first);
+    const photos = [...new Set(list.flatMap(p => (p.photos || []).filter(Boolean)))].slice(0, 8);
+    while(photos.length < 8) photos.push(null);
+    Object.assign(postEdit, { title: r.data.title || '', body: r.data.body || '', igText: r.data.caption || '', transcript: r.data.transcript || '',
+      photos, videos: [...new Set(vids)], mergeIds: list.slice(1).map(p => p.id),
+      dogIds: [...new Set([...list.flatMap(p => p.dog_ids || []), ...(r.data.dog_ids || [])])] });
+    postEdit.video_url = postEdit.videos[0] || null;
+    postPicks.clear(); dropKeptForms.add('postForm'); render(); toast(t('post_combine_done', { n: list.length }));
+    return;
+  }
   if(a === 'delete-post'){
     if(!confirm(t('post_delete_confirm'))) return;
     const { error } = await sb.rpc('admin_delete_post', { p_password: adminPassword, p_id: postEdit.id });
@@ -8720,9 +8773,16 @@ document.addEventListener('submit', async (e) => {
     if(postEdit.loading.some(Boolean)){ toast(t('story_wait_upload')); return; }
     const btns = f.querySelectorAll('button'); btns.forEach(b => b.disabled = true);
     if(publish && photos.some(u => !isOptimized(u))){ toast(t('post_optimizing')); photos = await optimizePostPhotos(photos); }
-    const { error } = await sb.rpc('admin_save_post', { p_password: adminPassword, p_id: postEdit.id, p_publish: publish, p_row: {
-      title: postEdit.title.trim(), body: publish ? postEdit.body.split('[Instagram-Text]')[0].trim() : joinPostBody(postEdit), photos, dog_ids: postEdit.dogIds, audience: postEdit.audience,
-      video_url: postEdit.video_url || '', author: teamName || '' } });
+    // combined post: hide the other drafts first (SQL 19), so nothing is saved half
+    if(postEdit.mergeIds.length){
+      const m = await sb.rpc('admin_merge_posts', { p_password: adminPassword, p_target: postEdit.id, p_ids: postEdit.mergeIds });
+      if(m.error){ btns.forEach(b => b.disabled = false); toast(/function|schema cache/i.test(m.error.message) ? t('sup_needs_update') : 'Fehler: ' + m.error.message); return; }
+    }
+    const row = { title: postEdit.title.trim(), body: publish ? postEdit.body.split('[Instagram-Text]')[0].trim() : joinPostBody(postEdit), photos, dog_ids: postEdit.dogIds, audience: postEdit.audience,
+      video_url: postEdit.videos[0] || postEdit.video_url || '', author: teamName || '' };
+    const hadMany = (adminPosts || []).some(p => p.id === postEdit.id && (p.videos || []).length > 1);
+    if(postEdit.videos.length > 1 || postEdit.mergeIds.length || hadMany) row.videos = postEdit.videos;
+    const { error } = await sb.rpc('admin_save_post', { p_password: adminPassword, p_id: postEdit.id, p_publish: publish, p_row: row });
     if(error){ btns.forEach(b => b.disabled = false); toast('Fehler: ' + error.message); return; }
     postEdit = null; feed.loaded = false;
     await refreshAdminPosts(); render(); toast(publish ? t('post_published_toast') : t('toast_saved'));
