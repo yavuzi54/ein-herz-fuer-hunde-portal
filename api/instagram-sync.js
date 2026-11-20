@@ -33,7 +33,7 @@ const isUnified = token => {
 };
 let GRAPH_BASE = 'https://graph.instagram.com';
 const GRAPH = () => process.env.IG_GRAPH_BASE || GRAPH_BASE;
-const BUCKET = 'dog-photos';
+const BUCKET = 'dog-photos', VIDEO_BUCKET = 'happy-tails-media';
 const MAX_VIDEO_BYTES = 45 * 1024 * 1024;  // bigger reels: poster photo + link to Instagram. Videos play only on tap (preload=none)
 const MAX_TRANSCRIBE_BYTES = 25 * 1024 * 1024;  // Groq free plan / OpenAI upload limit
 const VIDEO_BACKFILL_PER_RUN = 2;
@@ -49,15 +49,26 @@ async function ig(path, token, params = {}) {
   return j;
 }
 
+// problems with videos in this run, shown in the admin box (a video that silently becomes a picture is hard to debug)
+let videoProblems = [];
+const videoProblem = msg => { if (videoProblems.length < 3) videoProblems.push(msg); };
+
 async function copy(url, path, maxBytes) {
   const r = await fetch(url);
   if (!r.ok) throw new Error(`download ${r.status}`);
   const len = Number(r.headers.get('content-length') || 0);
-  if (maxBytes && len > maxBytes) return null;
+  const isVideo = path.endsWith('.mp4');
+  if (maxBytes && len > maxBytes) { if (isVideo) videoProblem(`zu groß (${Math.round(len / 1048576)} MB)`); return null; }
   const buf = Buffer.from(await r.arrayBuffer());
-  if (maxBytes && buf.length > maxBytes) return null;
-  const type = r.headers.get('content-type') || (path.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg');
-  return storageUpload(BUCKET, path, buf, type);
+  if (maxBytes && buf.length > maxBytes) { if (isVideo) videoProblem(`zu groß (${Math.round(buf.length / 1048576)} MB)`); return null; }
+  const type = isVideo ? 'video/mp4' : (r.headers.get('content-type') || 'image/jpeg');
+  if (!isVideo) return storageUpload(BUCKET, path, buf, type);
+  // videos: photo bucket first; if it refuses videos (type or size limit), the Happy-End video bucket
+  try { return await storageUpload(BUCKET, path, buf, type); }
+  catch (e) {
+    try { return await storageUpload(VIDEO_BUCKET, path, buf, type); }
+    catch (e2) { videoProblem(`Speichern: ${String(e2.message).slice(0, 120)}`); throw e2; }
+  }
 }
 
 // one Instagram item -> { photos, video_url }
@@ -68,6 +79,7 @@ async function copyMedia(item) {
   for (const p of parts) {
     n++;
     if (p.media_type === 'VIDEO') {
+      if (!p.media_url) videoProblem('Instagram liefert keinen Video-Link (oft bei Reels mit Musik)');
       if (!video_url && p.media_url) video_url = await copy(p.media_url, `ig/${item.id}-${n}.mp4`, MAX_VIDEO_BYTES).catch(() => null);
       if (p.thumbnail_url) { const u = await copy(p.thumbnail_url, `ig/${item.id}-${n}.jpg`).catch(() => null); if (u) photos.push(u); }
     } else if (p.media_url) {
@@ -228,6 +240,7 @@ async function fillStories(deadline) {
 // videos that were too big for the old 8 MB limit: copy them now if Instagram still lists them
 export async function backfillVideos(items) {
   const vids = items.filter(i => i.media_type === 'VIDEO' && i.media_url);
+  if (items.some(i => i.media_type === 'VIDEO' && !i.media_url)) videoProblem('Instagram liefert keinen Video-Link (oft bei Reels mit Musik)');
   if (!vids.length) return 0;
   const ids = vids.map(i => String(i.id));
   const rows = await rest(`posts?select=id,external_id&source=eq.instagram&video_url=is.null&external_id=in.(${ids.map(encodeURIComponent).join(',')})`, { headers: { Prefer: '' } }).catch(() => []);
@@ -261,6 +274,7 @@ async function storyForPost(req, res) {
 
 export async function runSync() {
   const started = Date.now();
+  videoProblems = [];
   const state = (await rpc('server_integration_get', { p_key: 'instagram' })) || {};
   // tolerate copy/paste leftovers (spaces, line breaks, quotes) around the token
   const envToken = (process.env.IG_ACCESS_TOKEN || '').replace(/\s+/g, '').replace(/^["']|["']$/g, '') || null;
@@ -337,9 +351,10 @@ export async function runSync() {
   // (Vercel stops at 60 s: speech 15 s + Claude 25 s must still fit, otherwise the next run does it)
   const st = await fillStories(started + (speechOn() ? 15000 : 25000)).catch(e => ({ stories: 0, story_error: e.message }));
   patch.last_sync = new Date().toISOString();
-  patch.last_error = storiesError ? `Stories: ${storiesError}` : (st.story_error ? `Claude: ${st.story_error}`.slice(0, 300) : null);
+  const errs = [storiesError && `Stories: ${storiesError}`, st.story_error && `Claude: ${st.story_error}`, videoProblems.length && `Video: ${[...new Set(videoProblems)].join(' · ')}`].filter(Boolean);
+  patch.last_error = errs.length ? errs.join(' | ').slice(0, 300) : null;
   await rpc('server_integration_set', { p_key: 'instagram', p_value: patch });
-  return { imported, waiting: Math.max(0, fresh.length - known.size - todo.length), stories: !storiesError, news_written: st.stories, videos_added };
+  return { imported, waiting: Math.max(0, fresh.length - known.size - todo.length), stories: !storiesError, news_written: st.stories, videos_added, video_problems: [...new Set(videoProblems)] };
 }
 
 export default async function handler(req, res) {
