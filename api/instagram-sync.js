@@ -172,24 +172,90 @@ export async function writeStory({ caption, kind, imageUrls = [], frames = [], d
 
 // ---------- speech to text (Whisper via Groq or OpenAI, same API shape) ----------
 function speechApi() {
-  // Groq fetches the video itself from its public link (no 25 MB upload limit, nothing downloaded here)
-  if (process.env.GROQ_API_KEY) return { url: 'https://api.groq.com/openai/v1/audio/transcriptions', key: process.env.GROQ_API_KEY, model: 'whisper-large-v3-turbo', byUrl: true };
+  if (process.env.GROQ_API_KEY) return { url: 'https://api.groq.com/openai/v1/audio/transcriptions', key: process.env.GROQ_API_KEY, model: 'whisper-large-v3-turbo' };
   if (process.env.OPENAI_API_KEY) return { url: 'https://api.openai.com/v1/audio/transcriptions', key: process.env.OPENAI_API_KEY, model: 'gpt-4o-mini-transcribe' };
   return null;
 }
 const speechOn = () => !!speechApi();
+
+// Cuts the sound track out of an MP4 into a small .m4a (no re-encoding, no extra package). A 40 MB reel
+// gives about 1-3 MB of audio, so the 25 MB limit of the free Groq plan is no problem any more.
+const CONTAINERS = new Set(['moov', 'trak', 'mdia', 'minf', 'stbl', 'edts', 'dinf']);
+function parseBoxes(buf, start, end) {
+  const out = [];
+  let i = start;
+  while (i + 8 <= end) {
+    let size = buf.readUInt32BE(i), head = 8;
+    const type = buf.toString('latin1', i + 4, i + 8);
+    if (size === 1) { size = Number(buf.readBigUInt64BE(i + 8)); head = 16; }
+    else if (size === 0) size = end - i;
+    if (size < head || i + size > end) break;
+    out.push(CONTAINERS.has(type)
+      ? { type, kids: parseBoxes(buf, i + head, i + size) }
+      : { type, data: buf.subarray(i + head, i + size) });
+    i += size;
+  }
+  return out;
+}
+const kid = (box, type) => box && box.kids && box.kids.find(b => b.type === type);
+function writeBox(b) {
+  const body = b.kids ? Buffer.concat(b.kids.map(writeBox)) : b.data;
+  const head = Buffer.alloc(8);
+  head.writeUInt32BE(body.length + 8); head.write(b.type, 4, 'latin1');
+  return Buffer.concat([head, body]);
+}
+export function extractAudio(buf) {
+  const top = parseBoxes(buf, 0, buf.length);
+  const moov = top.find(b => b.type === 'moov');
+  const mvhd = kid(moov, 'mvhd');
+  const trak = moov && moov.kids.find(t => {
+    const h = kid(kid(t, 'mdia'), 'hdlr');
+    return h && h.data.toString('latin1', 8, 12) === 'soun';
+  });
+  const stbl = kid(kid(kid(trak, 'mdia'), 'minf'), 'stbl');
+  if (!mvhd || !stbl) return null;  // no sound track (or a fragmented file)
+  const stsz = kid(stbl, 'stsz').data, stsc = kid(stbl, 'stsc').data;
+  const co = kid(stbl, 'stco') || kid(stbl, 'co64');
+  const nChunks = co.data.readUInt32BE(4);
+  const offs = [];
+  for (let c = 0; c < nChunks; c++)
+    offs.push(co.type === 'co64' ? Number(co.data.readBigUInt64BE(8 + c * 8)) : co.data.readUInt32BE(8 + c * 4));
+  const fixed = stsz.readUInt32BE(4), nSamples = stsz.readUInt32BE(8);
+  const sampleSize = k => fixed || stsz.readUInt32BE(12 + k * 4);
+  const runs = [];
+  for (let r = 0, n = stsc.readUInt32BE(4); r < n; r++) runs.push([stsc.readUInt32BE(8 + r * 12), stsc.readUInt32BE(12 + r * 12)]);
+  const pieces = []; let sample = 0;
+  for (let c = 0; c < nChunks; c++) {
+    let per = 0;
+    for (const [first, count] of runs) if (first <= c + 1) per = count;
+    let len = 0;
+    for (let k = 0; k < per && sample < nSamples; k++) len += sampleSize(sample++);
+    if (offs[c] + len > buf.length) return null;
+    pieces.push(buf.subarray(offs[c], offs[c] + len));
+  }
+  // new chunk table (32-bit), filled once the size of everything before the sound data is known
+  const stco = { type: 'stco', data: Buffer.alloc(8 + nChunks * 4) };
+  stco.data.writeUInt32BE(nChunks, 4);
+  stbl.kids = stbl.kids.map(b => (b.type === 'stco' || b.type === 'co64') ? stco : b);
+  const ftyp = writeBox({ type: 'ftyp', data: Buffer.from('M4A \0\0\0\0M4A mp42isom', 'latin1') });
+  const newMoov = { type: 'moov', kids: [mvhd, trak] };
+  let pos = ftyp.length + writeBox(newMoov).length + 8;
+  pieces.forEach((p, c) => { stco.data.writeUInt32BE(pos, 8 + c * 4); pos += p.length; });
+  return Buffer.concat([ftyp, writeBox(newMoov), writeBox({ type: 'mdat', data: Buffer.concat(pieces) })]);
+}
+
 export async function transcribe(videoUrl) {
   if (!speechOn() || !videoUrl) return null;
   const api = speechApi();
+  const r = await fetch(videoUrl);
+  if (!r.ok) throw new Error(`Video laden ${r.status}`);
+  const video = Buffer.from(await r.arrayBuffer());
+  let audio = null;
+  try { audio = extractAudio(video); } catch (e) { audio = null; }
   const form = new FormData();
-  if (api.byUrl) form.append('url', videoUrl);
-  else {
-    const r = await fetch(videoUrl);
-    if (!r.ok) throw new Error(`Video laden ${r.status}`);
-    const buf = Buffer.from(await r.arrayBuffer());
-    if (buf.length > MAX_TRANSCRIBE_BYTES) return null;
-    form.append('file', new Blob([buf], { type: 'video/mp4' }), 'video.mp4');
-  }
+  if (audio && audio.length <= MAX_TRANSCRIBE_BYTES) form.append('file', new Blob([audio], { type: 'audio/mp4' }), 'audio.m4a');
+  else if (video.length <= MAX_TRANSCRIBE_BYTES) form.append('file', new Blob([video], { type: 'video/mp4' }), 'video.mp4');
+  else return null;
   form.append('model', process.env.TRANSCRIBE_MODEL || api.model);
   form.append('response_format', 'json');
   const t = await (transcribe.fetch || fetch)(api.url, {
