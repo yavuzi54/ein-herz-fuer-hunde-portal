@@ -123,6 +123,7 @@ const STORY_SCHEMA = {
 };
 const STORY_SYSTEM = `You write short news posts for the website and app of "Ein Herz für Hunde", an Austrian association that rescues street dogs in Bihać (Bosnia) and places them in homes in Austria and Germany. Each post is based on one of the association's own Instagram posts, reels or stories.
 You get the original caption (may be empty), pictures (photos, the video cover, or frames cut from the video in time order) and, for videos, a transcript of what is said (may be empty, may be German, Bosnian or English, may contain small speech-recognition errors).
+Text written on the video itself (titles, captions or quotes burned into the frames, e.g. "Unser Husky Opi kämpft um sein Leben") is a main source too, as important as the caption: read it in every frame and use it. Ignore watermarks and the account name.
 When there is a transcript, it is the main source: the post must tell what the speaker says (what happened, what is needed, what is planned), summarised in your own words. You may quote one short sentence word for word from the transcript. Pictures only add context. Write in German, in the association's own voice ("wir", talking to supporters with "ihr"), like a short update from the team on the ground:
 - title: short, warm and concrete, max 70 characters, no emojis, no hashtags. It says what happened, e.g. "Futter für die Welpen an der Deponie".
 - body: tell what happened and why it matters, as a short news update. With a transcript or a real caption: 50 to 150 words. With neither (only pictures): only 2 or 3 sentences (20 to 50 words).
@@ -131,10 +132,51 @@ Style rules:
 - No mention of Instagram, stories, reels or posts.
 - Do not list visual details (colours, bowls, sacks, boards). Keep only what matters to a supporter.
 Strict rules:
-- Only facts from the transcript, the caption or clearly visible in the pictures. Never invent names, ages, diagnoses, numbers, places, dates, amounts or quotes. If unsure, leave it out.
+- Only facts from the transcript, the caption, text written on the video or clearly visible in the pictures. Never invent names, ages, diagnoses, numbers, places, dates, amounts or quotes. If unsure, leave it out.
 - If the caption asks for help (donations, adoption, sponsors), you may repeat that request, but no bank data and no amounts that are not in the caption.
 - No hashtags, no @mentions, no emojis in the title, at most one emoji in the body, no long dashes.
-- dog_ids: ids from the given dog list whose name clearly appears in the caption or transcript (exact name, any case). Empty if none.`;
+- dog_ids: ids from the given dog list whose name clearly appears in the caption, the transcript or text written on the video (exact name, any case). Empty if none.`;
+
+// op=revise: the team asks Claude to change something in a written news post ("kürzer", "erwähne ...").
+const REVISE_SYSTEM = `You revise a short German news post for the website and app of "Ein Herz für Hunde", an Austrian association that rescues street dogs in Bihać (Bosnia).
+You get the current post (title + body), the team's change request, and the sources (original Instagram caption and, for videos, a transcript of what is said).
+- Apply exactly the requested change. Keep everything else as it is (wording, facts, length), unless the request says otherwise.
+- Facts may only come from the current post, the sources or the change request itself (the team may add or correct facts there). Never invent names, numbers, dates, amounts or quotes.
+- Same style as before: German, the team's own voice ("wir"), no hashtags, no @mentions, no emojis in the title, at most one emoji in the body, no long dashes, title max 70 characters.
+- dog_ids: ids from the given dog list whose name clearly appears in the new title or body (exact name, any case). Empty if none.`;
+
+export async function reviseStory({ title, body, request, caption = '', transcript = '', dogs = [] }) {
+  const client = writeStory.client || new Anthropic({ timeout: 25000, maxRetries: 0 });
+  const response = await client.beta.messages.create({
+    model: STORY_MODEL(), max_tokens: 4000,
+    betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
+    system: REVISE_SYSTEM,
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: STORY_SCHEMA } },
+    messages: [{ role: 'user', content: JSON.stringify({
+      current_post: { title: String(title || '').slice(0, 200), body: String(body || '').slice(0, 8000) },
+      change_request: String(request || '').slice(0, 1000),
+      sources: { caption: String(caption || '').slice(0, 2200), transcript: String(transcript || '').slice(0, 6000) },
+      dogs: dogs.map(d => ({ id: d.id, name: d.name })) }) }]
+  });
+  if (response.stop_reason === 'refusal') throw new Error('Claude hat abgelehnt');
+  if (response.stop_reason === 'max_tokens') throw new Error('Antwort abgeschnitten');
+  const out = JSON.parse(response.content.filter(b => b.type === 'text').map(b => b.text).join(''));
+  const known = new Set(dogs.map(d => String(d.id)));
+  return {
+    title: String(out.title || '').replace(/[\u2013\u2014]/g, '-').slice(0, 200),
+    body: String(out.body || '').replace(/[\u2013\u2014]/g, '-').slice(0, 8000),
+    dog_ids: [...new Set((out.dog_ids || []).map(String))].filter(id => known.has(id))
+  };
+}
+
+async function revisePost(req, res) {
+  const { adminPassword, title, body, request, caption, transcript } = req.body || {};
+  await requireAdmin(adminPassword);
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'ANTHROPIC_API_KEY fehlt in Vercel', code: 'no_key' });
+  if (!String(request || '').trim() || !String(body || title || '').trim()) return res.status(400).json({ error: 'Text und Änderungswunsch fehlen' });
+  const s = await reviseStory({ title, body, request, caption, transcript, dogs: await loadDogs() });
+  return res.status(200).json({ ok: true, ...s });
+}
 
 async function rest(path, opt = {}) {
   const r = await fetch(`${process.env.SUPABASE_URL}/rest/v1/${path}`, { ...opt, headers: {
@@ -144,9 +186,24 @@ async function rest(path, opt = {}) {
   const t = await r.text(); return t ? JSON.parse(t) : null;
 }
 
+// photo posts: Michael's own words are used as they are, only cleaned up (no hashtags, no "Link in Bio",
+// no @mentions at the end). Claude only writes where it hears something new: videos and stories.
+export function cleanCaption(caption, dogs = []) {
+  let text = String(caption || '')
+    .replace(/(^|\s)#[\p{L}\p{N}_]+/gu, ' ')                              // hashtags
+    .split('\n').filter(l => !/link\s*(in|im)\s*(der\s*)?bio/i.test(l)).join('\n')
+    .replace(/(\s@[\w.]+)+\s*$/g, '')                                       // trailing @mentions
+    .replace(/[ \t]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  const first = (text.split(/\n|(?<=[.!?])\s/)[0] || '').replace(/[\p{Extended_Pictographic}\uFE0F]/gu, '').trim();
+  const title = first.length > 90 ? first.slice(0, 87).replace(/\s+\S*$/, '') + ' …' : first;
+  const low = text.toLowerCase();
+  const dog_ids = dogs.filter(d => d.name && new RegExp(`(^|[^\\p{L}])${d.name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\p{L}]|$)`, 'u').test(low)).map(d => String(d.id));
+  return { title, body: text, dog_ids };
+}
+
 export async function writeStory({ caption, kind, imageUrls = [], frames = [], dogs = [], transcript = '' }) {
   const content = [];
-  frames.slice(0, 8).forEach(d => content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: String(d).replace(/^data:image\/\w+;base64,/, '') } }));
+  frames.slice(0, 20).forEach(d => content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: String(d).replace(/^data:image\/\w+;base64,/, '') } }));
   if (!frames.length) imageUrls.slice(0, 4).forEach(u => content.push({ type: 'image', source: { type: 'url', url: u } }));
   content.push({ type: 'text', text: JSON.stringify({
     kind: kind || 'post', pictures: frames.length ? 'frames from the video, in time order' : 'photos / video cover',
@@ -300,7 +357,9 @@ async function fillStories(deadline) {
         transcript = await transcribe(p.video_url);
         if (transcript === null) { transcript = ''; mark = TOO_BIG; }   // marked, so it is not tried again every hour
       }
-      const s = await writeStory({ caption, transcript, kind: p.event, imageUrls: (p.photos || []).filter(u => /^https:\/\//.test(u)), dogs });
+      const s = !p.video_url && transcript === null && p.event !== 'story' && caption
+        ? cleanCaption(caption, dogs)
+        : await writeStory({ caption, transcript, kind: p.event, imageUrls: (p.photos || []).filter(u => /^https:\/\//.test(u)), dogs });
       if (!s.title || !s.body) return;
       await rest(`posts?id=eq.${encodeURIComponent(p.id)}&published_at=is.null`, { method: 'PATCH',
         body: JSON.stringify({ title: s.title, body: draftBody(s.body, caption, had !== null || (p.video_url && speechOn()) ? (mark || transcript) : null), dog_ids: s.dog_ids }) });
@@ -461,7 +520,12 @@ export default async function handler(req, res) {
   const auth = (req.headers && req.headers.authorization) || '';
   const secret = process.env.CRON_SECRET;
   try {
-    if ((req.query && req.query.op) === 'story' || (req.body && req.body.op) === 'story') {
+    const op = (req.query && req.query.op) || (req.body && req.body.op);
+    if (op === 'revise') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+      return await revisePost(req, res);
+    }
+    if (op === 'story') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
       return await storyForPost(req, res);
     }
