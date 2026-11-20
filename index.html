@@ -7912,7 +7912,7 @@ function postAudienceTag(p){
   return '';
 }
 // Instagram videos: the feed shows the playable video, not its cover picture as a photo (the cover stays the poster)
-function igVideoCover(p){ return p.video_url && p.source === 'instagram' ? String(p.video_url).replace(/\.mp4$/, '.jpg') : null; }
+function igVideoCover(p){ const m = p.video_url && p.source === 'instagram' && String(p.video_url).match(/\/(ig\/[^/]+)\.mp4$/); return m ? ((p.photos || []).find(u => u && String(u).endsWith('/' + m[1] + '.jpg')) || null) : null; }
 function postPhotos(p){ const c = igVideoCover(p); return (p.photos || []).filter(u => u && u !== c); }
 function postCardHTML(p, opts = {}){
   const allPhotos = (p.photos || []).filter(Boolean), photos = postPhotos(p), cover = igVideoCover(p);
