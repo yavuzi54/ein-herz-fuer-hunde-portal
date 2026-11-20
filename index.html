@@ -730,7 +730,10 @@
   .post-videos{display:grid;gap:10px;}
   .post-video-item{position:relative;}
   .post-video-item .slot-x{position:absolute;top:6px;right:6px;z-index:2;}
-  .post-card .story-video + .story-video{margin-top:8px;}
+  .vid-nav{display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 0 2px;font-size:.9rem;color:var(--ink-soft);}
+  .vid-nav button{width:36px;height:36px;border:1px solid var(--line);background:var(--paper-card);color:var(--ink);font-size:1.1rem;line-height:1;cursor:pointer;}
+  .vid-nav button:disabled{opacity:.35;cursor:default;}
+  .vid-count{position:absolute;top:8px;left:8px;z-index:2;background:rgba(0,0,0,.65);color:#fff;font-size:.8rem;font-weight:600;padding:3px 8px;border-radius:999px;pointer-events:none;}
   .post-row-thumb{width:48px;height:48px;flex-shrink:0;border-radius:8px;overflow:hidden;background:var(--paper);display:flex;align-items:center;justify-content:center;color:var(--ink-soft);}
   .post-row-thumb img{width:100%;height:100%;object-fit:cover;}
   .post-row-thumb svg{width:22px;height:22px;}
@@ -1395,16 +1398,16 @@ Object.assign(I18N.de, {
   hero_lede:'Damit jede Vermittlung passt, prüfen wir jede Anfrage persönlich. Füllen Sie zunächst eine kurze Selbstauskunft aus. Nach Freigabe erhalten Sie Zugang zu den Hunden, die zu Ihrer Situation passen.',
   hero_cta_apply:'Selbstauskunft starten', hero_cta_login:'Ich habe schon Zugang', hero_mini_cta:'Profil ansehen',
   steps_eyebrow:'So funktioniert\'s', steps_title:'Von der Straße auf die Couch.', steps_count:'Schritt {n} von {total}', steps_prev:'Zurück', steps_next:'Weiter',
-  steps_end_eyebrow:'Jetzt sind Sie dran', steps_end_t:'Vom Leben auf der Straße bis in die Arme einer liebevollen Familie.', steps_end_btn:'Jetzt Hunde kennenlernen →',
+  steps_end_eyebrow:'Jetzt bist du dran', steps_end_t:'Vom Leben auf der Straße bis in die Arme einer liebevollen Familie.', steps_end_btn:'Jetzt Hunde kennenlernen →',
   step1_t:'Auf der Straße', step1_d:'Unsere Arbeit beginnt auf den Straßen und einer Mülldeponie in Bosnien. Wir retten Hunde in Not, bringen sie in Sicherheit und geben ihnen die Chance auf ein besseres Leben.',
-  step2_t:'Hund finden', step2_d:'Lernen Sie unsere geretteten Hunde kennen. Mit Fotos, Videos und persönlichen Beschreibungen helfen wir Ihnen, den Hund zu finden, der zu Ihnen und Ihrem Leben passt.',
-  step3_t:'Selbstauskunft', step3_d:'Sie haben sich verliebt? Dann erzählen Sie uns etwas über sich, Ihr Zuhause und Ihren Alltag. So können wir gemeinsam herausfinden, ob Sie und Ihr Wunschhund zusammenpassen.',
-  step4_t:'Persönliches Kennenlernen', step4_d:'Wir nehmen persönlich Kontakt mit Ihnen auf, besprechen Ihre Bewerbung und beantworten offene Fragen. Denn uns ist wichtig, dass Mensch und Hund wirklich zueinander passen.',
-  step5_t:'Vorkontrolle', step5_d:'Bei einem persönlichen Besuch lernen wir Sie und das zukünftige Zuhause Ihres Hundes kennen. Dabei geht es nicht um Perfektion, sondern darum, gemeinsam die besten Voraussetzungen zu schaffen.',
-  step6_t:'Schutzvertrag', step6_d:'Wenn alles passt und einer Adoption nichts mehr im Weg steht, können Sie den Schutzvertrag ganz bequem online in unserem Vermittlungsportal unterschreiben.',
-  step7_t:'Die Reise', step7_d:'Jetzt beginnt die Reise ins Glück! Mit allen notwendigen Impfungen, Chip und Reisedokumenten macht sich Ihr Hund auf den Weg zu seiner neuen Familie.',
-  step8_t:'Abholung', step8_d:'Endlich ist der große Moment gekommen! In unserer Partnereinrichtung, der Tierpension Schandl in Draßmarkt, dürfen Sie Ihren neuen Begleiter zum ersten Mal in die Arme schließen.',
-  step9_t:'Endlich Zuhause', step9_d:'Aus einem Straßenhund wird ein geliebtes Familienmitglied. Ein neues Leben voller Liebe und Geborgenheit beginnt. Und auch nach der Adoption sind wir jederzeit gerne für Sie da.',
+  step2_t:'Hund finden', step2_d:'Lerne unsere geretteten Hunde kennen. Mit Fotos, Videos und persönlichen Beschreibungen helfen wir dir, den Hund zu finden, der zu dir und deinem Leben passt.',
+  step3_t:'Selbstauskunft', step3_d:'Du hast dich verliebt? Dann erzähl uns etwas über dich, dein Zuhause und deinen Alltag. So können wir gemeinsam herausfinden, ob du und dein Wunschhund zusammenpassen.',
+  step4_t:'Persönliches Kennenlernen', step4_d:'Wir nehmen persönlich Kontakt mit dir auf, besprechen deine Bewerbung und beantworten offene Fragen. Denn uns ist wichtig, dass Mensch und Hund wirklich zueinander passen.',
+  step5_t:'Vorkontrolle', step5_d:'Bei einem persönlichen Besuch lernen wir dich und das zukünftige Zuhause deines Hundes kennen. Dabei geht es nicht um Perfektion, sondern darum, gemeinsam die besten Voraussetzungen zu schaffen.',
+  step6_t:'Schutzvertrag', step6_d:'Wenn alles passt und einer Adoption nichts mehr im Weg steht, kannst du den Schutzvertrag ganz bequem online in unserem Vermittlungsportal unterschreiben.',
+  step7_t:'Die Reise', step7_d:'Jetzt beginnt die Reise ins Glück! Mit allen notwendigen Impfungen, Chip und Reisedokumenten macht sich dein Hund auf den Weg zu seiner neuen Familie.',
+  step8_t:'Abholung', step8_d:'Endlich ist der große Moment gekommen! In unserer Partnereinrichtung, der Tierpension Schandl in Draßmarkt, darfst du deinen neuen Begleiter zum ersten Mal in die Arme schließen.',
+  step9_t:'Endlich Zuhause', step9_d:'Aus einem Straßenhund wird ein geliebtes Familienmitglied. Ein neues Leben voller Liebe und Geborgenheit beginnt. Und auch nach der Adoption sind wir jederzeit gerne für dich da.',
   privacy_text:'<b>{count} Hunde</b> warten aktuell auf ein Zuhause. Aus Rücksicht auf Tier und Interessent:innen zeigen wir Details erst nach persönlicher Prüfung. Ihre Daten werden dabei ausschließlich zur Vermittlung verarbeitet und DSGVO-konform gespeichert.',
   bewerbung_title:'Selbstauskunft', bewerbung_lede:'Bitte beantworten Sie die folgenden Fragen ehrlich und vollständig. Alle Angaben werden vertraulich behandelt und dienen ausschließlich der Prüfung Ihrer Anfrage.',
   sec_contact:'Kontaktdaten', label_name:'Vollständiger Name *', label_email:'E-Mail *', label_email_plain:'E-Mail', label_phone:'Telefon', label_address:'Wohnort',
@@ -7777,7 +7780,7 @@ Object.assign(I18N.de, {
   post_save_draft:'Als Entwurf speichern', post_publish:'Veröffentlichen', post_unpublish:'Zurück zu Entwurf', post_delete:'Löschen', post_delete_confirm:'Diesen Beitrag wirklich löschen?',
   post_need_text:'Bitte eine Überschrift, einen Text oder ein Foto angeben.', post_published_toast:'Veröffentlicht.', post_optimizing:'Fotos werden verkleinert…',
   post_video:'Video', post_ig_link:'Original auf Instagram', post_dog_search:'Hund suchen…',
-  post_ai:'✨ Mit Claude neu schreiben', post_ai_video:'✨ Video ansehen und neu schreiben', post_ai_busy:'Claude schreibt…', post_ai_done:'Neuer Text eingesetzt. Bitte prüfen und speichern.', post_ai_hint:'Der Instagram-Text unter [Instagram-Text] wird beim Veröffentlichen entfernt.', post_body_news:'Text der Nachricht (genau so wird er veröffentlicht)', post_src_ig:'Original-Text von Instagram', post_src_tr:'Transkript: das wird im Video gesagt', post_src_note:'Nur für euch, wird nicht veröffentlicht. Claude schreibt die Nachricht aus diesen Quellen.', post_src_empty:'(leer)', post_preview:'Vorschau: so sehen die Leute den Beitrag', post_preview_hint:'Die Vorschau ändert sich, während ihr tippt.', post_ai_nokey:'Für Claude fehlt der ANTHROPIC_API_KEY in Vercel.', post_revise_label:'Was soll Claude ändern?', post_revise_ph:'z. B. kürzer, oder: erwähne, dass wir Futterspenden brauchen', post_revise_btn:'✨ Mit Claude ändern', post_revise_hint:'Claude ändert nur das, der Rest bleibt. Kostet ca. 1 Cent.', post_revise_empty:'Bitte zuerst schreiben, was Claude ändern soll.', post_revise_done:'Text geändert. Bitte prüfen und speichern.', post_pick:'Auswählen zum Zusammenfassen', post_combine_bar:'{n} ausgewählt', post_combine_btn:'✨ Zu einem Beitrag zusammenfassen', post_combine_one:'Wählt mindestens 2 Entwürfe aus, z. B. mehrere Stories hintereinander.', post_combine_clear:'Auswahl aufheben', post_combine_busy:'Claude sieht sich alle an…', post_combine_done:'Ein Text aus {n} Beiträgen. Bitte prüfen und speichern.', post_combine_note:'Zusammengefasst aus {n} Entwürfen. Beim Speichern verschwinden die anderen {m} aus der Liste, ihre Videos und Bilder bleiben in diesem Beitrag.', post_combine_max:'Höchstens 6 Beiträge auf einmal.', post_videos:'Videos ({n})', post_video_remove:'Video entfernen',
+  post_ai:'✨ Mit Claude neu schreiben', post_ai_video:'✨ Video ansehen und neu schreiben', post_ai_busy:'Claude schreibt…', post_ai_done:'Neuer Text eingesetzt. Bitte prüfen und speichern.', post_ai_hint:'Der Instagram-Text unter [Instagram-Text] wird beim Veröffentlichen entfernt.', post_body_news:'Text der Nachricht (genau so wird er veröffentlicht)', post_src_ig:'Original-Text von Instagram', post_src_tr:'Transkript: das wird im Video gesagt', post_src_note:'Nur für euch, wird nicht veröffentlicht. Claude schreibt die Nachricht aus diesen Quellen.', post_src_empty:'(leer)', post_preview:'Vorschau: so sehen die Leute den Beitrag', post_preview_hint:'Die Vorschau ändert sich, während ihr tippt.', post_ai_nokey:'Für Claude fehlt der ANTHROPIC_API_KEY in Vercel.', post_revise_label:'Was soll Claude ändern?', post_revise_ph:'z. B. kürzer, oder: erwähne, dass wir Futterspenden brauchen', post_revise_btn:'✨ Mit Claude ändern', post_revise_hint:'Claude ändert nur das, der Rest bleibt. Kostet ca. 1 Cent.', post_revise_empty:'Bitte zuerst schreiben, was Claude ändern soll.', post_revise_done:'Text geändert. Bitte prüfen und speichern.', post_pick:'Auswählen zum Zusammenfassen', post_combine_bar:'{n} ausgewählt', post_combine_btn:'✨ Zu einem Beitrag zusammenfassen', post_combine_one:'Wählt mindestens 2 Entwürfe aus, z. B. mehrere Stories hintereinander.', post_combine_clear:'Auswahl aufheben', post_combine_busy:'Claude sieht sich alle an…', post_combine_done:'Ein Text aus {n} Beiträgen. Bitte prüfen und speichern.', post_combine_note:'Zusammengefasst aus {n} Entwürfen. Beim Speichern verschwinden die anderen {m} aus der Liste, ihre Videos und Bilder bleiben in diesem Beitrag.', post_combine_max:'Höchstens 6 Beiträge auf einmal.', post_videos:'Videos ({n})', post_video_remove:'Video entfernen', vid_of:'Video {i} von {n}', vid_prev:'Voriges Video', vid_next:'Nächstes Video', post_combine_mixed:'Bitte nur Videos oder nur Bilder zusammenfassen, nicht gemischt.',
   ig_title:'Instagram', ig_not_connected:'Noch nicht verbunden. Token in Vercel (IG_ACCESS_TOKEN) eintragen, dann „Jetzt abrufen“. Anleitung: docs/SUPPORTER-SETUP.md',
   ig_connected:'Verbunden mit @{user}', ig_last_sync:'Zuletzt abgerufen: {date}', ig_imported:'{n} Beiträge übernommen', ig_sync_now:'Jetzt abrufen',
   ig_auto:'Neue Instagram-Beiträge sofort veröffentlichen (sonst als Entwurf)', ig_sync_done:'{n} neue Beiträge von Instagram übernommen.', ig_error:'Fehler beim letzten Abruf: {msg}',
@@ -7843,7 +7846,7 @@ Object.assign(I18N.en, {
   post_save_draft:'Save as draft', post_publish:'Publish', post_unpublish:'Back to draft', post_delete:'Delete', post_delete_confirm:'Really delete this post?',
   post_need_text:'Please add a heading, a text or a photo.', post_published_toast:'Published.', post_optimizing:'Making photos smaller…',
   post_video:'Video', post_ig_link:'Original on Instagram', post_dog_search:'Search dog…',
-  post_ai:'✨ Rewrite with Claude', post_ai_video:'✨ Watch video and rewrite', post_ai_busy:'Claude is writing…', post_ai_done:'New text inserted. Please check and save.', post_ai_hint:'The Instagram text below [Instagram-Text] is removed when publishing.', post_body_news:'Text of the news post (published exactly like this)', post_src_ig:'Original text from Instagram', post_src_tr:'Transcript: what is said in the video', post_src_note:'Only for you, not published. Claude writes the news post from these sources.', post_src_empty:'(empty)', post_preview:'Preview: this is how people see the post', post_preview_hint:'The preview changes while you type.', post_ai_nokey:'ANTHROPIC_API_KEY for Claude is missing in Vercel.', post_revise_label:'What should Claude change?', post_revise_ph:'e.g. shorter, or: mention that we need food donations', post_revise_btn:'✨ Change with Claude', post_revise_hint:'Claude changes only that, the rest stays. Costs about 1 cent.', post_revise_empty:'Please write first what Claude should change.', post_revise_done:'Text changed. Please check and save.', post_pick:'Select to combine', post_combine_bar:'{n} selected', post_combine_btn:'✨ Combine into one post', post_combine_one:'Select at least 2 drafts, e.g. several stories in a row.', post_combine_clear:'Clear selection', post_combine_busy:'Claude is watching all of them…', post_combine_done:'One text from {n} posts. Please check and save.', post_combine_note:'Combined from {n} drafts. When you save, the other {m} disappear from the list; their videos and pictures stay in this post.', post_combine_max:'At most 6 posts at once.', post_videos:'Videos ({n})', post_video_remove:'Remove video',
+  post_ai:'✨ Rewrite with Claude', post_ai_video:'✨ Watch video and rewrite', post_ai_busy:'Claude is writing…', post_ai_done:'New text inserted. Please check and save.', post_ai_hint:'The Instagram text below [Instagram-Text] is removed when publishing.', post_body_news:'Text of the news post (published exactly like this)', post_src_ig:'Original text from Instagram', post_src_tr:'Transcript: what is said in the video', post_src_note:'Only for you, not published. Claude writes the news post from these sources.', post_src_empty:'(empty)', post_preview:'Preview: this is how people see the post', post_preview_hint:'The preview changes while you type.', post_ai_nokey:'ANTHROPIC_API_KEY for Claude is missing in Vercel.', post_revise_label:'What should Claude change?', post_revise_ph:'e.g. shorter, or: mention that we need food donations', post_revise_btn:'✨ Change with Claude', post_revise_hint:'Claude changes only that, the rest stays. Costs about 1 cent.', post_revise_empty:'Please write first what Claude should change.', post_revise_done:'Text changed. Please check and save.', post_pick:'Select to combine', post_combine_bar:'{n} selected', post_combine_btn:'✨ Combine into one post', post_combine_one:'Select at least 2 drafts, e.g. several stories in a row.', post_combine_clear:'Clear selection', post_combine_busy:'Claude is watching all of them…', post_combine_done:'One text from {n} posts. Please check and save.', post_combine_note:'Combined from {n} drafts. When you save, the other {m} disappear from the list; their videos and pictures stay in this post.', post_combine_max:'At most 6 posts at once.', post_videos:'Videos ({n})', post_video_remove:'Remove video', vid_of:'Video {i} of {n}', vid_prev:'Previous video', vid_next:'Next video', post_combine_mixed:'Please combine only videos or only pictures, not both.',
   ig_title:'Instagram', ig_not_connected:'Not connected yet. Put the token in Vercel (IG_ACCESS_TOKEN), then "Fetch now". Guide: docs/SUPPORTER-SETUP.md',
   ig_connected:'Connected to @{user}', ig_last_sync:'Last fetched: {date}', ig_imported:'{n} posts imported', ig_sync_now:'Fetch now',
   ig_auto:'Publish new Instagram posts at once (otherwise as draft)', ig_sync_done:'{n} new posts from Instagram.', ig_error:'Last fetch failed: {msg}',
@@ -8013,8 +8016,10 @@ function postVideos(p){ const v = (p.videos || []).filter(Boolean); return v.len
 function igVideoCover(p, url){ url = url || p.video_url; const m = url && p.source === 'instagram' && String(url).match(/\/(ig\/[^/]+)\.mp4$/); return m ? ((p.photos || []).find(u => u && String(u).endsWith('/' + m[1] + '.jpg')) || null) : null; }
 function postPhotos(p){ const c = postVideos(p).map(v => igVideoCover(p, v)).filter(Boolean); return (p.photos || []).filter(u => u && !c.includes(u)); }
 function postCardHTML(p, opts = {}){
-  const allPhotos = (p.photos || []).filter(Boolean), photos = postPhotos(p), videos = postVideos(p);
-  const posterFor = (v, i) => igVideoCover(p, v) || (i === 0 ? allPhotos[0] : null);
+  // Michael: "Video just video, picture just picture": a post with video shows no photo grid (the photos are the
+  // video covers). Several videos (combined stories) = one player; play runs through all, arrows switch.
+  const allPhotos = (p.photos || []).filter(Boolean), videos = postVideos(p), photos = videos.length ? [] : postPhotos(p);
+  const posterFor = (v, i) => igVideoCover(p, v) || allPhotos[i] || allPhotos[0] || '';
   const dogs = (p.dog_ids || []).map(dogById).filter(Boolean);
   const body = String(p.body || '');
   const key = 'post-' + p.id, open = expandedDescriptions.has(key), long = body.length > 420;
@@ -8026,7 +8031,12 @@ function postCardHTML(p, opts = {}){
         <img src="${esc(thumbUrl(u))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
         ${i === 3 && photos.length > 4 ? `<span class="more">+${photos.length - 4}</span>` : ''}
       </button>`).join('')}</div>` : ''}
-    ${videos.map((v, i) => { const poster = posterFor(v, i); return `<div class="story-video"><video controls playsinline preload="none" ${poster ? `poster="${esc(thumbUrl(poster))}"` : ''} src="${esc(v)}"></video></div>`; }).join('')}
+    ${videos.length === 1 ? `<div class="story-video"><video controls playsinline preload="none" ${posterFor(videos[0], 0) ? `poster="${esc(thumbUrl(posterFor(videos[0], 0)))}"` : ''} src="${esc(videos[0])}"></video></div>` : ''}
+    ${videos.length > 1 ? `<div class="story-video multi-video" data-i="0" data-videos="${esc(JSON.stringify(videos))}" data-posters="${esc(JSON.stringify(videos.map((v, i) => posterFor(v, i) ? thumbUrl(posterFor(v, i)) : '')))}">
+      <span class="vid-count">▶ ${videos.length}</span>
+      <video controls playsinline preload="none" ${posterFor(videos[0], 0) ? `poster="${esc(thumbUrl(posterFor(videos[0], 0)))}"` : ''} src="${esc(videos[0])}"></video>
+      <div class="vid-nav"><button type="button" data-action="vid-nav" data-dir="-1" aria-label="${t('vid_prev')}" disabled>‹</button><span class="vid-label">${t('vid_of', { i: 1, n: videos.length })}</span><button type="button" data-action="vid-nav" data-dir="1" aria-label="${t('vid_next')}">›</button></div>
+    </div>` : ''}
     <div class="post-body">
       <div class="post-meta">${fmtLongDate(p.published_at || p.created_at)}${p.source === 'instagram' ? ` · ${ic2.insta} Instagram` : ''} ${postAudienceTag(p)}</div>
       ${p.title ? `<h3 class="post-title">${esc(p.title)}</h3>` : ''}
@@ -8511,11 +8521,36 @@ function hbReadForm(){
 }
 function hbLetter(){ return { subject_de: hb.subject_de, subject_en: hb.subject_en, intro_de: hb.intro_de, intro_en: hb.intro_en, post_ids: hb.post_ids || hbMonthPosts().map(p => p.id).slice(-6) }; }
 
+// combined posts: one player, switch videos in place; at the end of one video the next starts
+function multiVideoGo(box, i, play){
+  const list = JSON.parse(box.getAttribute('data-videos') || '[]'), posters = JSON.parse(box.getAttribute('data-posters') || '[]');
+  if(i < 0 || i >= list.length) return;
+  const v = box.querySelector('video');
+  box.setAttribute('data-i', String(i));
+  if(posters[i]) v.setAttribute('poster', posters[i]); else v.removeAttribute('poster');
+  v.src = list[i];
+  if(play){ v.preload = 'auto'; const pr = v.play(); if(pr && pr.catch) pr.catch(() => {}); }
+  box.querySelector('.vid-label').textContent = t('vid_of', { i: i + 1, n: list.length });
+  const [prev, next] = box.querySelectorAll('[data-action=vid-nav]');
+  prev.disabled = i === 0; next.disabled = i === list.length - 1;
+}
+document.addEventListener('ended', e => {
+  const box = e.target && e.target.closest && e.target.closest('.multi-video');
+  if(box) multiVideoGo(box, Number(box.getAttribute('data-i')) + 1, true);
+}, true);
+
 /* ---------- events ---------- */
 document.addEventListener('click', async (e) => {
   const el = e.target.closest('[data-action]');
   if(!el) return;
   const a = el.getAttribute('data-action'), id = el.getAttribute('data-id');
+  if(a === 'vid-nav'){
+    e.preventDefault(); e.stopPropagation();
+    const box = el.closest('.multi-video'); if(!box) return;
+    const v = box.querySelector('video'), playing = v && !v.paused;
+    multiVideoGo(box, Number(box.getAttribute('data-i')) + Number(el.getAttribute('data-dir')), playing);
+    return;
+  }
   if(a === 'toggle-follow'){
     e.preventDefault(); e.stopPropagation();
     const d = dogById(id); if(!d) return;
@@ -8592,6 +8627,8 @@ document.addEventListener('click', async (e) => {
     const list = (adminPosts || []).filter(p => postPicks.has(p.id) && !p.published_at)
       .sort((x, y) => Date.parse(x.created_at) - Date.parse(y.created_at));
     if(list.length < 2) return;
+    const withVideo = list.filter(p => postVideos(p).length).length;
+    if(withVideo && withVideo < list.length){ toast(t('post_combine_mixed')); return; }
     el.disabled = true; el.textContent = t('post_combine_busy');
     const vids = list.flatMap(postVideos), per = Math.max(2, Math.floor(20 / Math.max(1, vids.length)));
     const frames = [];
