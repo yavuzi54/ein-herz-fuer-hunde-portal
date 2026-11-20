@@ -201,18 +201,24 @@ export function cleanCaption(caption, dogs = []) {
   return { title, body: text, dog_ids };
 }
 
-export async function writeStory({ caption, kind, imageUrls = [], frames = [], dogs = [], transcript = '' }) {
+// op=combine: several stories (e.g. 3 short clips posted in a row) become one news post
+const COMBINE_NOTE = `
+Combined post: this time you get several Instagram items that belong together (usually stories posted one after the other). "parts" lists them in order (Story 1, 2, 3 ...), each with its own caption and transcript; the pictures are frames from all of them, in the same order. Write ONE news post that tells the whole story from start to end. Do not split it into parts, do not repeat what several clips say twice, and do not mention that it was several clips. With transcripts or captions: 80 to 200 words.`;
+
+export async function writeStory({ caption, kind, imageUrls = [], frames = [], dogs = [], transcript = '', parts = null }) {
   const content = [];
   frames.slice(0, 20).forEach(d => content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: String(d).replace(/^data:image\/\w+;base64,/, '') } }));
   if (!frames.length) imageUrls.slice(0, 4).forEach(u => content.push({ type: 'image', source: { type: 'url', url: u } }));
   content.push({ type: 'text', text: JSON.stringify({
     kind: kind || 'post', pictures: frames.length ? 'frames from the video, in time order' : 'photos / video cover',
-    caption: String(caption || '').slice(0, 2200), transcript: String(transcript || '').slice(0, 6000), dogs: dogs.map(d => ({ id: d.id, name: d.name })) }) });
+    ...(parts ? { parts: parts.map((x, i) => ({ part: `Story ${i + 1}`, caption: String(x.caption || '').slice(0, 1500), transcript: String(x.transcript || '').slice(0, 3000) })) }
+      : { caption: String(caption || '').slice(0, 2200), transcript: String(transcript || '').slice(0, 6000) }),
+    dogs: dogs.map(d => ({ id: d.id, name: d.name })) }) });
   const client = writeStory.client || new Anthropic({ timeout: 25000, maxRetries: 0 });
   const response = await client.beta.messages.create({
     model: STORY_MODEL(), max_tokens: 4000,
     betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default',
-    system: STORY_SYSTEM,
+    system: parts ? STORY_SYSTEM + COMBINE_NOTE : STORY_SYSTEM,
     output_config: { effort: 'low', format: { type: 'json_schema', schema: STORY_SCHEMA } },
     messages: [{ role: 'user', content }]
   });
@@ -424,6 +430,39 @@ async function storyForPost(req, res) {
   return res.status(200).json({ ok: true, title: s.title, body, dog_ids: s.dog_ids, transcript: transcript || null });
 }
 
+// op=combine: admin picks 2 to 6 drafts, gets one news text for all of them (nothing saved here;
+// the browser saves the first post with all videos and hides the others with admin_merge_posts)
+async function combinePosts(req, res) {
+  const { adminPassword, post_ids, frames } = req.body || {};
+  await requireAdmin(adminPassword);
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: 'ANTHROPIC_API_KEY fehlt in Vercel', code: 'no_key' });
+  const ids = [...new Set((Array.isArray(post_ids) ? post_ids : []).map(String))];
+  if (ids.length < 2 || ids.length > 6 || ids.some(id => !/^[0-9a-f-]{36}$/i.test(id))) return res.status(400).json({ error: '2 bis 6 Beiträge auswählen' });
+  const rows = (await rest(`posts?select=id,event,body,photos,video_url,external_id&id=in.(${ids.join(',')})`, { headers: { Prefer: '' } })) || [];
+  const byId = new Map(rows.map(r => [String(r.id), r]));
+  const list = ids.map(id => byId.get(id)).filter(Boolean);
+  if (list.length !== ids.length) return res.status(404).json({ error: 'Beitrag nicht gefunden' });
+  const parts = await Promise.all(list.map(async p => {
+    let { caption, transcript } = splitBody(p.body);
+    const needCaption = !String(p.body || '').includes('[Instagram-Text]');
+    const info = p.external_id && (needCaption || (transcript === null && !p.video_url)) ? await igInfo(p.external_id).catch(() => null) : null;
+    if (needCaption && info) caption = String(info.caption || '');
+    const videoSrc = p.video_url || (info && info.media_type === 'VIDEO' && info.media_url) || null;
+    let mark = null;
+    if (!transcript && videoSrc) {
+      if (!speechOn()) mark = '(kein Transkript: GROQ_API_KEY fehlt in Vercel)';
+      else { transcript = await transcribe(videoSrc).catch(() => null); if (transcript === null) mark = TOO_BIG; }
+    }
+    return { caption: caption || '', transcript: transcript || '', mark, video: !!videoSrc };
+  }));
+  const s = await writeStory({ parts, kind: 'story', frames: Array.isArray(frames) ? frames : [], dogs: await loadDogs(),
+    imageUrls: list.flatMap(p => (p.photos || []).filter(u => /^https:\/\//.test(u))).slice(0, 4) });
+  const join = key => parts.map((x, i) => x[key] ? `Story ${i + 1}: ${x[key]}` : '').filter(Boolean).join('\n\n');
+  parts.forEach(x => { if (!x.transcript && x.mark) x.shown = x.mark; else x.shown = x.transcript; });
+  const caption = join('caption'), transcript = join('shown');
+  return res.status(200).json({ ok: true, title: s.title, body: s.body, dog_ids: s.dog_ids, caption, transcript });
+}
+
 export async function runSync() {
   const started = Date.now();
   videoProblems = [];
@@ -524,6 +563,10 @@ export default async function handler(req, res) {
     if (op === 'revise') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
       return await revisePost(req, res);
+    }
+    if (op === 'combine') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+      return await combinePosts(req, res);
     }
     if (op === 'story') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
