@@ -670,6 +670,11 @@
   .post-photo img{width:100%;height:100%;object-fit:cover;display:block;}
   .post-photo .more{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(36,50,43,0.45);color:#fff;font-size:1.5rem;font-weight:700;}
   .post-card .story-video{margin:0;}
+  .post-sources{margin:4px 0 14px;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;background:rgba(0,0,0,.02);}
+  .post-source{margin-top:8px;}
+  .post-source summary{cursor:pointer;font-weight:600;}
+  .post-source-text{white-space:pre-wrap;font-size:.92em;margin-top:6px;max-height:220px;overflow:auto;color:var(--ink-soft, inherit);}
+  .post-preview-box #postPreview{max-width:520px;pointer-events:auto;}
   .post-body{padding:16px 20px 18px;}
   .post-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:0.78rem;color:var(--ink-soft);margin-bottom:6px;}
   .post-meta svg{width:13px;height:13px;vertical-align:-2px;}
@@ -7688,7 +7693,7 @@ Object.assign(I18N.de, {
   post_save_draft:'Als Entwurf speichern', post_publish:'Veröffentlichen', post_unpublish:'Zurück zu Entwurf', post_delete:'Löschen', post_delete_confirm:'Diesen Beitrag wirklich löschen?',
   post_need_text:'Bitte eine Überschrift, einen Text oder ein Foto angeben.', post_published_toast:'Veröffentlicht.', post_optimizing:'Fotos werden verkleinert…',
   post_video:'Video', post_ig_link:'Original auf Instagram', post_dog_search:'Hund suchen…',
-  post_ai:'✨ Mit Claude neu schreiben', post_ai_video:'✨ Video ansehen und neu schreiben', post_ai_busy:'Claude schreibt…', post_ai_done:'Neuer Text eingesetzt. Bitte prüfen und speichern.', post_ai_hint:'Der Instagram-Text unter [Instagram-Text] wird beim Veröffentlichen entfernt.', post_ai_nokey:'Für Claude fehlt der ANTHROPIC_API_KEY in Vercel.',
+  post_ai:'✨ Mit Claude neu schreiben', post_ai_video:'✨ Video ansehen und neu schreiben', post_ai_busy:'Claude schreibt…', post_ai_done:'Neuer Text eingesetzt. Bitte prüfen und speichern.', post_ai_hint:'Der Instagram-Text unter [Instagram-Text] wird beim Veröffentlichen entfernt.', post_body_news:'Text der Nachricht (genau so wird er veröffentlicht)', post_src_ig:'Original-Text von Instagram', post_src_tr:'Transkript: das wird im Video gesagt', post_src_note:'Nur für euch, wird nicht veröffentlicht. Claude schreibt die Nachricht aus diesen Quellen.', post_src_empty:'(leer)', post_preview:'Vorschau: so sehen die Leute den Beitrag', post_preview_hint:'Die Vorschau ändert sich, während ihr tippt.', post_ai_nokey:'Für Claude fehlt der ANTHROPIC_API_KEY in Vercel.',
   ig_title:'Instagram', ig_not_connected:'Noch nicht verbunden. Token in Vercel (IG_ACCESS_TOKEN) eintragen, dann „Jetzt abrufen“. Anleitung: docs/SUPPORTER-SETUP.md',
   ig_connected:'Verbunden mit @{user}', ig_last_sync:'Zuletzt abgerufen: {date}', ig_imported:'{n} Beiträge übernommen', ig_sync_now:'Jetzt abrufen',
   ig_auto:'Neue Instagram-Beiträge sofort veröffentlichen (sonst als Entwurf)', ig_sync_done:'{n} neue Beiträge von Instagram übernommen.', ig_error:'Fehler beim letzten Abruf: {msg}',
@@ -7754,7 +7759,7 @@ Object.assign(I18N.en, {
   post_save_draft:'Save as draft', post_publish:'Publish', post_unpublish:'Back to draft', post_delete:'Delete', post_delete_confirm:'Really delete this post?',
   post_need_text:'Please add a heading, a text or a photo.', post_published_toast:'Published.', post_optimizing:'Making photos smaller…',
   post_video:'Video', post_ig_link:'Original on Instagram', post_dog_search:'Search dog…',
-  post_ai:'✨ Rewrite with Claude', post_ai_video:'✨ Watch video and rewrite', post_ai_busy:'Claude is writing…', post_ai_done:'New text inserted. Please check and save.', post_ai_hint:'The Instagram text below [Instagram-Text] is removed when publishing.', post_ai_nokey:'ANTHROPIC_API_KEY for Claude is missing in Vercel.',
+  post_ai:'✨ Rewrite with Claude', post_ai_video:'✨ Watch video and rewrite', post_ai_busy:'Claude is writing…', post_ai_done:'New text inserted. Please check and save.', post_ai_hint:'The Instagram text below [Instagram-Text] is removed when publishing.', post_body_news:'Text of the news post (published exactly like this)', post_src_ig:'Original text from Instagram', post_src_tr:'Transcript: what is said in the video', post_src_note:'Only for you, not published. Claude writes the news post from these sources.', post_src_empty:'(empty)', post_preview:'Preview: this is how people see the post', post_preview_hint:'The preview changes while you type.', post_ai_nokey:'ANTHROPIC_API_KEY for Claude is missing in Vercel.',
   ig_title:'Instagram', ig_not_connected:'Not connected yet. Put the token in Vercel (IG_ACCESS_TOKEN), then "Fetch now". Guide: docs/SUPPORTER-SETUP.md',
   ig_connected:'Connected to @{user}', ig_last_sync:'Last fetched: {date}', ig_imported:'{n} posts imported', ig_sync_now:'Fetch now',
   ig_auto:'Publish new Instagram posts at once (otherwise as draft)', ig_sync_done:'{n} new posts from Instagram.', ig_error:'Last fetch failed: {msg}',
@@ -8206,10 +8211,29 @@ function openPostEditor(p){
   photoErrors.post = '';
   const photos = (p && p.photos ? p.photos.slice(0, 8) : []);
   while(photos.length < 8) photos.push(null);
-  postEdit = { id: p ? p.id : null, title: p ? p.title || '' : '', body: p ? p.body || '' : '', photos, loading: Array(8).fill(false),
+  const parts = splitPostBody(p ? p.body : '');
+  postEdit = { id: p ? p.id : null, title: p ? p.title || '' : '', body: parts.news, igText: parts.ig, transcript: parts.tr, photos, loading: Array(8).fill(false),
     dogIds: p ? (p.dog_ids || []).slice() : [], audience: p ? p.audience : 'public', video_url: p ? p.video_url : null,
     permalink: p ? p.permalink : null, published: !!(p && p.published_at), source: p ? p.source : 'team', event: p ? p.event : null, dogQ: '' };
   render();
+}
+// Instagram drafts keep their sources in the body: "news\n\n[Instagram-Text]\ncaption\n\n[Transkript]\ntranscript".
+// The editor shows them in separate boxes; only the news text is published.
+function splitPostBody(b){
+  b = String(b || '');
+  const i = b.indexOf('[Instagram-Text]');
+  if(i < 0) return { news: b.trim(), ig: null, tr: null };
+  const rest = b.slice(i + '[Instagram-Text]'.length), j = rest.indexOf('[Transkript]');
+  return { news: b.slice(0, i).trim(), ig: (j < 0 ? rest : rest.slice(0, j)).trim(), tr: j < 0 ? null : rest.slice(j + '[Transkript]'.length).trim() };
+}
+function joinPostBody(e){
+  if(e.igText === null && e.transcript === null) return e.body.trim();
+  return `${e.body.trim()}\n\n[Instagram-Text]\n${e.igText || ''}` + (e.transcript === null ? '' : `\n\n[Transkript]\n${e.transcript}`);
+}
+function postPreviewHTML(){
+  const e = postEdit;
+  return postCardHTML({ id: 'preview', title: e.title, body: e.body, photos: e.photos.filter(Boolean), video_url: e.video_url, permalink: e.permalink,
+    source: e.source, dog_ids: e.dogIds, audience: e.audience, created_at: new Date().toISOString() }, { noFollow: true });
 }
 function adminPostOverlay(){
   const e = postEdit;
@@ -8223,7 +8247,7 @@ function adminPostOverlay(){
       <p class="hint">${postSourceLabel(e)}${e.published ? ' · ' + t('feed_admin_published') : ' · ' + t('feed_admin_drafts')}</p>
       <form id="postForm" novalidate>
         <div class="field"><label>${t('post_title')}</label><input type="text" name="title" maxlength="200" value="${esc(e.title)}"></div>
-        <div class="field"><label>${t('post_body')}</label><textarea name="body" rows="6" maxlength="8000">${esc(e.body)}</textarea></div>
+        <div class="field"><label>${e.source === 'instagram' ? t('post_body_news') : t('post_body')}</label><textarea name="body" rows="8" maxlength="8000">${esc(e.body)}</textarea></div>
         <div class="field"><label>${t('post_photos')}</label>
           <div class="post-slots">${e.photos.map((u, i) => `
             <div class="post-slot">
@@ -8234,8 +8258,13 @@ function adminPostOverlay(){
         </div>
         ${e.video_url ? `<div class="field"><label>${t('post_video')}</label><div class="story-video"><video controls playsinline preload="none" src="${esc(e.video_url)}"></video></div></div>` : ''}
         ${e.permalink ? `<p><a href="${esc(e.permalink)}" target="_blank" rel="noopener">${ic2.insta} ${t('post_ig_link')}</a></p>` : ''}
-        ${e.id && e.source === 'instagram' ? `<div class="action-row" style="margin:4px 0 12px;"><button type="button" class="btn-secondary btn-small" data-action="post-ai">${e.video_url ? t('post_ai_video') : t('post_ai')}</button>
-          ${/\[Instagram-Text\]/.test(e.body) ? `<span class="hint">${t('post_ai_hint')}</span>` : ''}</div>` : ''}
+        ${e.id && e.source === 'instagram' ? `<div class="action-row" style="margin:4px 0 12px;"><button type="button" class="btn-secondary btn-small" data-action="post-ai">${e.video_url ? t('post_ai_video') : t('post_ai')}</button></div>` : ''}
+        ${e.igText !== null || e.transcript !== null ? `<div class="post-sources">
+          <p class="hint">${t('post_src_note')}</p>
+          ${e.igText !== null ? `<details class="post-source" open><summary>${ic2.insta} ${t('post_src_ig')}</summary><div class="post-source-text">${esc(e.igText) || t('post_src_empty')}</div></details>` : ''}
+          ${e.transcript !== null ? `<details class="post-source" open><summary>🎙️ ${t('post_src_tr')}</summary><div class="post-source-text">${esc(e.transcript) || t('post_src_empty')}</div></details>` : ''}
+        </div>` : ''}
+        <div class="field post-preview-box"><label>👀 ${t('post_preview')}</label><p class="hint">${t('post_preview_hint')}</p><div id="postPreview">${postPreviewHTML()}</div></div>
         <div class="field"><label>${t('post_dogs')}</label>
           <input type="search" id="postDogSearch" class="filter-search" placeholder="${t('post_dog_search')}" value="${esc(e.dogQ)}">
           <div class="dog-pick">${dogs.map(d => `<label class="dog-pick-item ${e.dogIds.includes(d.id) ? 'on' : ''}"><input type="checkbox" data-post-dog="${d.id}" ${e.dogIds.includes(d.id) ? 'checked' : ''}> ${esc(d.name)}</label>`).join('')}</div>
@@ -8411,7 +8440,9 @@ document.addEventListener('click', async (e) => {
     const frames = postEdit.video_url ? await videoFrames(postEdit.video_url, 6).catch(() => []) : [];
     const r = await apiPost('/api/instagram-sync?op=story', { op:'story', adminPassword, post_id: postEdit.id, frames });
     if(r.ok && r.data && r.data.title){
-      postEdit.title = r.data.title; postEdit.body = r.data.body || postEdit.body;
+      postEdit.title = r.data.title;
+      if(r.data.body){ const parts = splitPostBody(r.data.body); postEdit.body = parts.news;
+        if(parts.ig !== null) postEdit.igText = parts.ig; if(parts.tr !== null) postEdit.transcript = parts.tr; }
       (r.data.dog_ids || []).forEach(id => { if(!postEdit.dogIds.includes(id)) postEdit.dogIds.push(id); });
       dropKeptForms.add('postForm'); render(); toast(t('post_ai_done'));
     } else {
@@ -8488,6 +8519,9 @@ function postEditSync(){
   postEdit.title = String(fd.get('title') || ''); postEdit.body = String(fd.get('body') || ''); postEdit.audience = String(fd.get('audience') || 'public');
 }
 document.addEventListener('input', e => {
+  if(postEdit && e.target.closest && e.target.closest('#postForm') && (e.target.name === 'title' || e.target.name === 'body')){
+    postEditSync(); const box = document.getElementById('postPreview'); if(box) box.innerHTML = postPreviewHTML();
+  }
   if(e.target.id === 'postDogSearch' && postEdit){
     postEditSync(); postEdit.dogQ = e.target.value; render();
     const s = document.getElementById('postDogSearch'); if(s){ s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
@@ -8579,7 +8613,7 @@ document.addEventListener('submit', async (e) => {
     const btns = f.querySelectorAll('button'); btns.forEach(b => b.disabled = true);
     if(publish && photos.some(u => !isOptimized(u))){ toast(t('post_optimizing')); photos = await optimizePostPhotos(photos); }
     const { error } = await sb.rpc('admin_save_post', { p_password: adminPassword, p_id: postEdit.id, p_publish: publish, p_row: {
-      title: postEdit.title.trim(), body: (publish ? postEdit.body.split('[Instagram-Text]')[0] : postEdit.body).trim(), photos, dog_ids: postEdit.dogIds, audience: postEdit.audience,
+      title: postEdit.title.trim(), body: publish ? postEdit.body.split('[Instagram-Text]')[0].trim() : joinPostBody(postEdit), photos, dog_ids: postEdit.dogIds, audience: postEdit.audience,
       video_url: postEdit.video_url || '', author: teamName || '' } });
     if(error){ btns.forEach(b => b.disabled = false); toast('Fehler: ' + error.message); return; }
     postEdit = null; feed.loaded = false;
