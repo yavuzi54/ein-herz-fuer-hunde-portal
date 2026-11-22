@@ -1911,6 +1911,7 @@ function renderNav(){
     html += `<button class="nav-btn ${route.view==='mein-bereich'?'active':''}" data-nav="mein-bereich">${t('nav_my_area')}</button>`;
     html += `<button class="nav-btn ${route.view==='aus-bihac'?'active':''}" data-nav="aus-bihac">${t('nav_feed')}</button>`;
     html += `<button class="nav-btn ${route.view==='alle-hunde'?'active':''}" data-nav="alle-hunde">${t('nav_all_dogs')}</button>`;
+    html += `<button class="nav-btn ${route.view==='teilen'?'active':''}" data-nav="teilen">${t('nav_share_maker')}</button>`;
     html += `<button class="nav-btn ${route.view==='submit-happytail'?'active':''}" data-nav="submit-happytail">${t('nav_submit_happytail')}</button>`;
     html += `<button class="btn-secondary btn-small" data-action="logout-applicant">${t('nav_logout')}</button>`;
     html += `<button class="lang-inline" data-action="toggle-lang">${lang==='de' ? 'EN' : 'DE'}</button>`;
@@ -2879,7 +2880,7 @@ let lastParentQuery = null;
 function notifyParentRoute(){
   let inFrame = false; try{ inFrame = window.self !== window.top; }catch(_){ inFrame = true; }
   if(!inFrame) return;
-  const publicViews = { home:'', 'alle-hunde':'?view=hunde', 'happy-tails':'?view=happy-ends', bewerbung:'?view=selbstauskunft', login:'?view=zugang', 'submit-happytail':'?view=happy-end-einreichen' };
+  const publicViews = { home:'', 'alle-hunde':'?view=hunde', 'happy-tails':'?view=happy-ends', bewerbung:'?view=selbstauskunft', login:'?view=zugang', 'submit-happytail':'?view=happy-end-einreichen', teilen:'?view=teilen' };
   let q;
   if(route.view === 'profil'){
     const d = state.dogs.find(x => x.id === route.dogId);
@@ -2971,6 +2972,7 @@ function viewDogProfile(){
       <p style="color:var(--ink-soft);font-size:0.88rem;margin-bottom:14px;">${t('locked_desc')}</p>
       <div class="hero-actions">
         <button class="btn-secondary share-btn" data-action="share-dog" data-id="${d.id}">${ic.share} ${t('share_dog')}</button>
+        <button class="btn-secondary share-btn" data-action="soc-open" data-id="${d.id}">${t('pub_soc_open')}</button>
         ${session.applicantId && !isSupporterAccount(sessionApplicant())
           ? (state.applicants.find(a => a.id === session.applicantId && a.chosenDogId === d.id && stageOf(a) !== 'rejected')
               ? `<div class="applied-note">${ic.check}<span>${t('apply_requested')}</span></div>`
@@ -3989,6 +3991,8 @@ async function xmasExport(dogs){
 // One picture per dog for Instagram / Facebook: 4 formats, 4 designs, colour themes, background patterns.
 // Everything is drawn in the browser (canvas). Settings and short texts are kept in this browser only.
 Object.assign(I18N.de, {
+  pub_soc_title:'Teilen hilft', pub_soc_intro:'Machen Sie mit wenigen Klicks ein Bild oder Video für Instagram, Facebook oder WhatsApp: Hund auswählen, Format und Design wählen, herunterladen und teilen. Jedes geteilte Bild kann für einen Hund den Unterschied machen.',
+  pub_soc_locked:'Texte und Link auf dem Bild kommen immer von uns, damit niemand falsche Angaben in unserem Namen verbreitet.', pub_soc_open:'Bild zum Teilen erstellen', nav_share_maker:'Bilder zum Teilen',
   admin_tab_social:'📣 Social Media', soc_fmt_a5:'A5 Flyer', soc_fmt_a5_sub:'14,8 × 21 cm · PDF', soc_fmt_a6:'A6 Flyer', soc_fmt_a6_sub:'10,5 × 14,8 cm · PDF', soc_print_hint:'Flyer werden als druckfertiges PDF (300 dpi) erstellt, immer mit QR-Code zum Hundeprofil.', soc_pdf_one:'PDF herunterladen', soc_pdf_selected:'PDF mit {n} Flyern', soc_pdf_done:'PDF mit {n} Flyern erstellt', soc_video:'Video mit Musik', soc_video_hint:'Diashow aus den Fotos des Hundes mit Abspann. Wird live aufgenommen und dauert so lange wie das Video. Bitte diesen Tab währenddessen offen lassen.', soc_music:'Musik', soc_music_none:'Keine Musik', soc_music_sonnig:'Sonnig · fröhlich', soc_music_ruhig:'Ruhig · sanft', soc_music_verspielt:'Verspielt · flott', soc_listen:'▶ Anhören', soc_secs:'Sekunden pro Foto', soc_volume:'Lautstärke', soc_video_make:'🎬 Video erstellen', soc_video_recording:'Video wird aufgenommen … {s} s', soc_video_ready:'Dein Video ist fertig', soc_video_download:'Video herunterladen', soc_video_error:'Das Video konnte in diesem Browser nicht erstellt werden.', soc_video_print:'Videos gibt es nur für die Social-Media-Formate.', soc_outro:'Mehr auf', soc_outro_line:'Vielleicht beginnt mein Happy End bei dir.', soc_video_pick:'Fotos fürs Video in Reihenfolge antippen (bis zu 8). Nichts gewählt = alle Fotos.', soc_video_pick_reset:'Auswahl zurücksetzen', soc_scenes:'Vorschau der Szenen', soc_scene:'Szene', soc_scene_end:'Abspann · 3 s', soc_scenes_wait:'Vorschau wird erstellt …', soc_music_note:'🎵 = lizenzfreie Musik (Pixabay), automatisch auf die Videolänge gekürzt und ausgeblendet. Die anderen Melodien werden im Browser erzeugt.', soc_title:'Social-Media-Bilder',
   soc_intro:'Fertige Bilder für Instagram und Facebook: Format, Design, Farbe und Muster wählen, Hunde auswählen, herunterladen. Den passenden Bildtext mit Hashtags gibt es zum Kopieren dazu.',
   soc_format:'Format', soc_fmt_story:'Story', soc_fmt_story_sub:'9:16 · Reel', soc_fmt_post:'Post', soc_fmt_post_sub:'4:5 · Hochformat', soc_fmt_square:'Quadrat', soc_fmt_square_sub:'1:1', soc_fmt_wide:'Link', soc_fmt_wide_sub:'1.91:1 · Facebook',
@@ -4000,7 +4004,7 @@ Object.assign(I18N.de, {
   soc_qr:'QR-Code zum Hundeprofil statt Button (gut für Stories und Ausdrucke)', soc_fee:'Schutzgebühr zeigen', soc_fee_label:'Schutzgebühr', soc_fee_amount:'Betrag (€)',
   soc_hashtags:'Hashtags für den Bildtext', soc_hashtags_default:'#einherzfuerhunde #tierschutz #adoptdontshop #hundeausbosnien #hundsuchtzuhause #tiervermittlung #adoptierenstattkaufen #rescuedog #österreich',
   soc_note_ph:'Kurztext (optional), z. B. „Verschmust, verträgt sich mit Katzen, liebt lange Spaziergänge.“', soc_note_label:'Kurztext',
-  soc_preview:'Vorschau', soc_download:'Bild', soc_download_one:'Bild herunterladen', soc_download_all_formats:'Alle 4 Formate (ZIP)', soc_zip_selected:'{n} Bilder herunterladen (ZIP)', soc_none:'Bitte zuerst Hunde auswählen.',
+  soc_preview:'Vorschau', soc_download:'Bild', soc_download_one:'Bild herunterladen', soc_share:'📲 Teilen (Instagram …)', soc_share_video:'📲 Video teilen (Instagram …)', soc_share_ready:'Bild ist fertig. Bitte noch einmal auf Teilen tippen.', soc_share_caption:'Text kopiert. In Instagram einfach einfügen.', soc_share_hint:'Am Handy öffnet „Teilen“ das Teilen-Menü des Handys. Dort Instagram wählen (Story oder Beitrag) und den kopierten Text einfügen.', soc_download_all_formats:'Alle 4 Formate (ZIP)', soc_zip_selected:'{n} Bilder herunterladen (ZIP)', soc_none:'Bitte zuerst Hunde auswählen.',
   soc_working:'Bild {i} von {n} …', soc_done:'{n} Bilder heruntergeladen', soc_done_one:'Bild heruntergeladen', soc_error:'Das Bild konnte nicht erstellt werden.',
   soc_preview_hint:'Bei einem Hund auf „Vorschau“ klicken.', soc_formats_strip:'Alle Formate (antippen zum Wechseln)', soc_photo_pick:'Foto wählen', soc_photo_pick3:'Fotos für die Collage wählen (bis zu 3, in Reihenfolge antippen: 1 = großes Foto)',
   soc_caption:'Bildtext', soc_profile_link:'Link zum Hundeprofil (z. B. für den Instagram-Link-Sticker)', soc_copy_link:'🔗 Link kopieren', soc_link_copied:'Link kopiert', soc_video_layout:'Design für das Video', soc_copy_caption:'Bildtext kopieren', soc_caption_copied:'Bildtext kopiert',
@@ -4010,6 +4014,8 @@ Object.assign(I18N.de, {
   soc_cap_head:'🐾 {name} sucht ein Zuhause!', soc_cap_head_reserved:'🐾 {name} ist reserviert.', soc_cap_link:'Alle Infos und Bewerbung:'
 });
 Object.assign(I18N.en, {
+  pub_soc_title:'Sharing helps', pub_soc_intro:'Make a picture or video for Instagram, Facebook or WhatsApp in a few clicks: pick a dog, choose format and design, download and share. Every shared picture can make the difference for a dog.',
+  pub_soc_locked:'Texts and the link on the picture always come from us, so nobody can spread false information in our name.', pub_soc_open:'Make a picture to share', nav_share_maker:'Pictures to share',
   admin_tab_social:'📣 Social media', soc_fmt_a5:'A5 flyer', soc_fmt_a5_sub:'14.8 × 21 cm · PDF', soc_fmt_a6:'A6 flyer', soc_fmt_a6_sub:'10.5 × 14.8 cm · PDF', soc_print_hint:'Flyers are made as a print-ready PDF (300 dpi), always with a QR code to the dog profile.', soc_pdf_one:'Download PDF', soc_pdf_selected:'PDF with {n} flyers', soc_pdf_done:'PDF with {n} flyers created', soc_video:'Video with music', soc_video_hint:'Slideshow of the dog’s photos with an end card. It is recorded live, so it takes as long as the video. Please keep this tab open while it records.', soc_music:'Music', soc_music_none:'No music', soc_music_sonnig:'Sunny · cheerful', soc_music_ruhig:'Calm · gentle', soc_music_verspielt:'Playful · upbeat', soc_listen:'▶ Listen', soc_secs:'Seconds per photo', soc_volume:'Volume', soc_video_make:'🎬 Create video', soc_video_recording:'Recording video … {s} s', soc_video_ready:'Your video is ready', soc_video_download:'Download video', soc_video_error:'The video could not be made in this browser.', soc_video_print:'Videos are only available for the social media formats.', soc_outro:'More at', soc_outro_line:'Maybe my happy end starts with you.', soc_video_pick:'Tap the photos for the video in order (up to 8). None chosen = all photos.', soc_video_pick_reset:'Reset selection', soc_scenes:'Scene preview', soc_scene:'Scene', soc_scene_end:'End card · 3 s', soc_scenes_wait:'Making preview …', soc_music_note:'🎵 = royalty-free music (Pixabay), cut to the video length and faded out automatically. The other tunes are generated in the browser.', soc_title:'Social media pictures',
   soc_intro:'Ready-made pictures for Instagram and Facebook: pick format, design, colours and pattern, select dogs, download. A matching caption with hashtags comes with it to copy.',
   soc_format:'Format', soc_fmt_story:'Story', soc_fmt_story_sub:'9:16 · Reel', soc_fmt_post:'Post', soc_fmt_post_sub:'4:5 · portrait', soc_fmt_square:'Square', soc_fmt_square_sub:'1:1', soc_fmt_wide:'Link', soc_fmt_wide_sub:'1.91:1 · Facebook',
@@ -4021,7 +4027,7 @@ Object.assign(I18N.en, {
   soc_qr:'QR code to the dog profile instead of the button (good for stories and prints)', soc_fee:'Show adoption fee', soc_fee_label:'Schutzgebühr', soc_fee_amount:'Amount (€)',
   soc_hashtags:'Hashtags for the caption', soc_hashtags_default:'#einherzfuerhunde #tierschutz #adoptdontshop #hundeausbosnien #hundsuchtzuhause #tiervermittlung #adoptierenstattkaufen #rescuedog #österreich',
   soc_note_ph:'Short text (optional), e.g. “Cuddly, fine with cats, loves long walks.”', soc_note_label:'Short text',
-  soc_preview:'Preview', soc_download:'Picture', soc_download_one:'Download picture', soc_download_all_formats:'All 4 formats (ZIP)', soc_zip_selected:'Download {n} pictures (ZIP)', soc_none:'Please select dogs first.',
+  soc_preview:'Preview', soc_download:'Picture', soc_download_one:'Download picture', soc_share:'📲 Share (Instagram …)', soc_share_video:'📲 Share video (Instagram …)', soc_share_ready:'Picture is ready. Please tap Share once more.', soc_share_caption:'Text copied. Just paste it in Instagram.', soc_share_hint:'On a phone, Share opens your phone menu. Pick Instagram there (story or post) and paste the copied text.', soc_download_all_formats:'All 4 formats (ZIP)', soc_zip_selected:'Download {n} pictures (ZIP)', soc_none:'Please select dogs first.',
   soc_working:'Picture {i} of {n} …', soc_done:'{n} pictures downloaded', soc_done_one:'Picture downloaded', soc_error:'The picture could not be created.',
   soc_preview_hint:'Click “Preview” on a dog.', soc_formats_strip:'All formats (tap to switch)', soc_photo_pick:'Choose photo', soc_photo_pick3:'Choose the collage photos (up to 3, tap in order: 1 = big photo)',
   soc_caption:'Caption', soc_profile_link:'Link to the dog profile (e.g. for the Instagram link sticker)', soc_copy_link:'🔗 Copy link', soc_link_copied:'Link copied', soc_video_layout:'Design for the video', soc_copy_caption:'Copy caption', soc_caption_copied:'Caption copied',
@@ -4077,10 +4083,15 @@ function socSelectedDogs(){
   return state.dogs.filter(d => d.status !== 'vermittelt' && ids.has(d.id))
     .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'de'));
 }
-function socTag(d){ return soc.tag ? soc.tag : d.status === 'reserviert' ? t('soc_tag_reserved') : t('soc_tag_default'); }
+// public maker (?view=teilen): same tool for everyone, but texts, link and hashtags are locked to ours
+function socPub(){ return route.view === 'teilen'; }
+function socOn(){ return socPub() || adminTab === 'social'; }
+function socNote(d){ return socPub() ? '' : (soc.notes[d.id] || '').trim(); }
+function socTagCustom(){ return socPub() ? '' : (soc.tag || ''); }
+function socTag(d){ return socTagCustom() ? socTagCustom() : d.status === 'reserviert' ? t('soc_tag_reserved') : t('soc_tag_default'); }
 function socCta(){ return soc.cta == null ? t('soc_cta_default') : soc.cta; }
-function socUrl(){ return soc.url == null ? t('soc_url_default') : soc.url; }
-function socHashtags(){ return soc.hashtags == null ? t('soc_hashtags_default') : soc.hashtags; }
+function socUrl(){ return socPub() || soc.url == null ? t('soc_url_default') : soc.url; }
+function socHashtags(){ return socPub() || soc.hashtags == null ? t('soc_hashtags_default') : soc.hashtags; }
 function socDetails(d){ return [d.breed, sexLabel(d), ageLabel(d)].filter(Boolean).join(' · '); }
 function socPlace(d){ const c = countryLabel(d.location) || d.city || ''; return c ? '📍 ' + c : ''; }
 function socFee(){ const n = String(soc.feeAmount || '').trim(); return n ? `${n} €` : ''; }
@@ -4117,7 +4128,7 @@ async function socVideoSlides(d, fmt, scale){
   return slides;
 }
 let socVPrev = { key: '', urls: [], busy: false };
-function socVPrevKey(d){ return JSON.stringify([d.id, soc.format, soc.layout, soc.theme, soc.pattern, soc.tag, socVPickList(d), soc.crop[d.id] || null, soc.notes[d.id] || '', soc.pick[d.id] || null, soc.photo[d.id] || 0, lang]); }
+function socVPrevKey(d){ return JSON.stringify([d.id, soc.format, soc.layout, soc.theme, soc.pattern, socTagCustom(), socVPickList(d), soc.crop[d.id] || null, socNote(d), soc.pick[d.id] || null, soc.photo[d.id] || 0, lang]); }
 async function socVPrevBuild(d){
   const key = socVPrevKey(d);
   if(socVPrev.busy || socVPrev.key === key) return;
@@ -4127,7 +4138,7 @@ async function socVPrevBuild(d){
     const sm = c => { const k = document.createElement('canvas'), f = 240 / c.width; k.width = 240; k.height = Math.round(c.height * f); k.getContext('2d').drawImage(c, 0, 0, k.width, k.height); return k.toDataURL('image/jpeg', 0.8); };
     socVPrev = { key, urls: [...slides.map(sm), sm(outro)], busy: false };
   }catch(err){ console.error('video preview', err); socVPrev = { key, urls: [], busy: false }; }
-  if(adminTab === 'social' && socPreview.id === d.id){ const el = document.getElementById('socScenes'); if(el) el.outerHTML = socScenesHtml(d); else render(); }
+  if(socOn() && socPreview.id === d.id){ const el = document.getElementById('socScenes'); if(el) el.outerHTML = socScenesHtml(d); else render(); }
 }
 function socScenesHtml(d){
   const ok = socVPrev.key === socVPrevKey(d) && socVPrev.urls.length;
@@ -4142,18 +4153,18 @@ function socCaption(d){
   const parts = [t(d.status === 'reserviert' ? 'soc_cap_head_reserved' : 'soc_cap_head', { name: d.name })];
   const info = [socDetails(d), socPlace(d)].filter(Boolean).join('\n');
   if(info) parts.push(info);
-  if((soc.notes[d.id] || '').trim()) parts.push(soc.notes[d.id].trim());
+  if(socNote(d)) parts.push(socNote(d));
   parts.push(`${t('soc_cap_link')}\n${dogShareUrl(d)}`);
   if(socHashtags().trim()) parts.push(socHashtags().trim());
   return parts.join('\n\n');
 }
 function socOpts(d, scale, format){
   return { format: format || soc.format, layout: soc.layout, theme: soc.theme, pattern: soc.pattern, scale: scale || 1,
-    tag: socTag(d), badge: soc.tag || (d.status === 'reserviert' ? t('soc_tag_reserved') : ''), cta: '', url: socUrl(), qr: !!SOC_FORMATS[format || soc.format].mm, fee: '', note: (soc.notes[d.id] || '').trim(),
+    tag: socTag(d), badge: socTagCustom() || (d.status === 'reserviert' ? t('soc_tag_reserved') : ''), cta: '', url: socUrl(), qr: !!SOC_FORMATS[format || soc.format].mm, fee: '', note: socNote(d),
     crop: soc.crop[d.id] || null, photos: socPhotoList(d) };
 }
 
-function adminSocialTab(){
+function adminSocialTab(pub){
   const dogs = socDogs();
   const sel = new Set(soc.selected);
   const nSel = socSelectedDogs().length;
@@ -4163,14 +4174,15 @@ function adminSocialTab(){
   const seg = (key, values, label) => `<div class="soc-seg">${values.map(v => `<button type="button" class="soc-opt ${soc[key] === v ? 'on' : ''}" data-action="soc-set" data-key="${key}" data-val="${v}">${label(v)}</button>`).join('')}</div>`;
   const photos = pd ? (pd.photos || []).filter(Boolean) : [];
   return `
-  <div class="admin-header">
+  ${pub ? `<h1 class="page-title">${accentLast(t('pub_soc_title'))}</h1>
+  <p class="page-lede" style="margin-bottom:18px;">${t('pub_soc_intro')}</p>` : `<div class="admin-header">
     <h1 class="page-title" style="font-size:1.6rem;">${t('soc_title')}</h1>
     <div class="action-row" style="margin:0;">
       <button type="button" class="btn-secondary" data-action="soc-gallery" ${nSel ? '' : 'disabled'}>${t('soc_gallery_btn', { n: nSel })}</button>
       <button type="button" class="btn-primary" data-action="soc-zip" ${socBusy ? 'disabled' : ''}>${socBusy ? esc(socBusy) : t(socIsPrint(soc.format) ? 'soc_pdf_selected' : 'soc_zip_selected', { n: nSel })}</button>
     </div>
   </div>
-  <p class="page-lede" style="margin-bottom:18px;">${t('soc_intro')}</p>
+  <p class="page-lede" style="margin-bottom:18px;">${t('soc_intro')}</p>`}
   <div class="xmas-layout">
     <div>
       <div class="card xmas-settings">
@@ -4184,26 +4196,26 @@ function adminSocialTab(){
               <span class="soc-sw" style="background:linear-gradient(135deg, ${th.bg} 0 55%, ${th.accent} 55% 100%);"></span><small>${t('soc_th_' + k)}</small></button>`; }).join('')}</div></div>
         <div class="field"><label>${t('soc_pattern')}</label>
           ${seg('pattern', SOC_PATTERNS, k => `<b>${t('soc_pat_' + k)}</b>`)}</div>
-        <div class="form-grid">
+        ${pub ? `<p class="hint" style="margin:8px 0 0;">${t('pub_soc_locked')}</p>` : `<div class="form-grid">
           <div class="field"><label>${t('soc_tag_label')}</label><input type="text" id="socTag" maxlength="32" value="${esc(soc.tag || '')}" placeholder="${esc(t('soc_tag_ph'))}"></div>
           <div class="field"><label>${t('soc_url_label')}</label><input type="text" id="socUrl" maxlength="48" value="${esc(socUrl())}"></div>
         </div>
         <div class="field" style="margin-top:12px;"><label>${t('soc_hashtags')}</label><textarea id="socHashtags" rows="2" maxlength="600">${esc(socHashtags())}</textarea></div>
-        <p class="hint" style="margin:8px 0 0;">${t('soc_saved_hint')}</p>
+        <p class="hint" style="margin:8px 0 0;">${t('soc_saved_hint')}</p>`}
       </div>
       <div class="stage-tabs" style="margin-top:20px;">${groups.map(([k, l]) => `<button type="button" class="chip ${soc.group === k ? 'on' : ''}" data-action="soc-group" data-group="${k}">${l} <span class="chip-n">${count(k)}</span></button>`).join('')}
-        <button type="button" class="link-btn" data-action="soc-select" data-all="1" style="margin-left:8px;">${t('xmas_select_all')}</button>
-        <button type="button" class="link-btn" data-action="soc-select" data-all="0">${t('xmas_select_none')}</button>
+        ${pub ? '' : `<button type="button" class="link-btn" data-action="soc-select" data-all="1" style="margin-left:8px;">${t('xmas_select_all')}</button>
+        <button type="button" class="link-btn" data-action="soc-select" data-all="0">${t('xmas_select_none')}</button>`}
       </div>
       ${dogs.length ? `<div class="xmas-list">${dogs.map(d => {
         const photo = mainPhoto(d);
         return `
         <div class="xmas-row soc-row ${sel.has(d.id) ? 'on' : ''} ${socPreview.id === d.id ? 'previewing' : ''}" data-id="${d.id}">
-          <label class="xmas-pick"><input type="checkbox" data-soc-pick="${d.id}" ${sel.has(d.id) ? 'checked' : ''}>
+          <label class="xmas-pick">${pub ? '' : `<input type="checkbox" data-soc-pick="${d.id}" ${sel.has(d.id) ? 'checked' : ''}>`}
             <span class="xmas-thumb">${photo ? `<img src="${esc(thumbUrl(photo))}" alt="" loading="lazy" style="object-position:${focusPos(d)}">` : `<small>${t('xmas_no_photo')}</small>`}</span>
             <span><b>${esc(d.name)}</b><br><span class="badge status-${d.status}">${statusLabel[d.status]}</span>${soc.crop[d.id] ? `<br><small class="xmas-custom">✓ ${t('xmas_crop_custom')}</small>` : ''}</span>
           </label>
-          <textarea class="xmas-wish" data-soc-note="${d.id}" rows="2" maxlength="180" aria-label="${t('soc_note_label')} ${esc(d.name)}" placeholder="${esc(t('soc_note_ph'))}">${esc(soc.notes[d.id] || '')}</textarea>
+          ${pub ? '' : `<textarea class="xmas-wish" data-soc-note="${d.id}" rows="2" maxlength="180" aria-label="${t('soc_note_label')} ${esc(d.name)}" placeholder="${esc(t('soc_note_ph'))}">${esc(soc.notes[d.id] || '')}</textarea>`}
           <div class="xmas-actions">
             <button type="button" class="btn-secondary btn-small" data-action="soc-preview" data-id="${d.id}">${t('soc_preview')}</button>
             <button type="button" class="btn-secondary btn-small" data-action="soc-dl-one" data-id="${d.id}" ${socBusy ? 'disabled' : ''}>${t('soc_download')}</button>
@@ -4226,7 +4238,9 @@ function adminSocialTab(){
         <div class="action-row" style="margin:12px 0 0;flex-wrap:wrap;">
           <button type="button" class="btn-primary btn-small" data-action="soc-dl-one" data-id="${pd.id}" ${socBusy ? 'disabled' : ''}>${t(socIsPrint(soc.format) ? 'soc_pdf_one' : 'soc_download_one')}</button>
           <button type="button" class="btn-secondary btn-small" data-action="soc-dl-formats" data-id="${pd.id}" ${socBusy ? 'disabled' : ''}>${t('soc_download_all_formats')}</button>
+          ${socCanShareFiles() && !socIsPrint(soc.format) ? `<button type="button" class="btn-primary btn-small soc-share" data-action="soc-share" data-id="${pd.id}" ${socBusy ? 'disabled' : ''}>${t('soc_share')}</button>` : ''}
         </div>
+        ${socCanShareFiles() && !socIsPrint(soc.format) ? `<p class="hint" style="margin:8px 0 0;">${t('soc_share_hint')}</p>` : ''}
         ${socIsPrint(soc.format) ? `<p class="hint" style="margin:10px 0 0;">${t('soc_print_hint')}</p>` : `
         <div class="soc-video">
           <b>${t('soc_video')}</b>
@@ -4241,7 +4255,8 @@ function adminSocialTab(){
           <button type="button" class="btn-primary btn-small" data-action="soc-video" data-id="${pd.id}" ${socVideo.busy ? 'disabled' : ''}>${socVideo.busy ? t('soc_video_recording', { s: socVideo.left }) : t('soc_video_make')}</button>
           ${socVideo.url && socVideo.id === pd.id && !socVideo.busy ? `<p style="margin:12px 0 6px;"><b>${t('soc_video_ready')}</b></p>
             <video class="soc-video-player" src="${socVideo.url}" controls playsinline preload="metadata"></video>
-            <a class="btn-secondary btn-small" href="${socVideo.url}" download="${esc(socVideo.name)}" style="display:inline-block;margin-top:6px;">${t('soc_video_download')}</a>` : ''}
+            <a class="btn-secondary btn-small" href="${socVideo.url}" download="${esc(socVideo.name)}" style="display:inline-block;margin-top:6px;">${t('soc_video_download')}</a>
+            ${socCanShareFiles() && socVideo.blob ? `<button type="button" class="btn-primary btn-small soc-share" data-action="soc-share-video" style="margin-top:6px;">${t('soc_share_video')}</button>` : ''}` : ''}
           <p class="hint" style="margin:8px 0 0;">${t('soc_music_note')}</p>
         </div>`}
         <div class="field" style="margin-top:14px;"><label>${t('soc_caption')}</label><textarea class="soc-caption" rows="8" readonly>${esc(socCaption(pd))}</textarea></div>
@@ -4252,7 +4267,10 @@ function adminSocialTab(){
         : `<div class="xmas-preview-empty">${t('soc_preview_hint')}</div>`}
     </aside>
   </div>
-  ${socGallery ? socGalleryOverlay() : ''}`;
+  ${socGallery && !pub ? socGalleryOverlay() : ''}`;
+}
+function viewSocialMaker(){
+  return `<section class="section"><div class="wrap soc-pub">${adminSocialTab(true)}</div></section>`;
 }
 function socGalleryOverlay(){
   const dogs = socSelectedDogs();
@@ -4923,8 +4941,10 @@ async function socShowPreview(d){
     const c = await socCanvas(d, socOpts(d, 0.5));
     if(socPreview.id !== d.id) return;
     socSetPreview(d, c);
+    // public maker on a phone: the preview sits below the dog list, so bring it into view
+    if(socPub() && window.innerWidth < 900) setTimeout(() => { const b = document.querySelector('.soc-preview-box'); if(b) b.scrollIntoView({ behavior:'smooth', block:'start' }); }, 80);
   }catch(err){ console.error('social preview', err); toast(t('soc_error')); socPreview = { id: null, url: null, photo: null, strip: {} }; }
-  if(adminTab === 'social') render();
+  if(socOn()) render();
   socRenderStrip(d);
 }
 let socPreviewTimer = null, socStripTimer = null;
@@ -4937,7 +4957,7 @@ function socRefreshSoon(delay, keepStrip){
       const c = await socCanvas(d, socOpts(d, 0.5));
       if(socPreview.id !== d.id) return;
       socSetPreview(d, c);
-      const img = document.querySelector('.soc-preview-img'); if(img){ img.src = socPreview.url; if(!socDrag) socLiveEnd(); } else if(adminTab === 'social') render();
+      const img = document.querySelector('.soc-preview-img'); if(img){ img.src = socPreview.url; if(!socDrag) socLiveEnd(); } else if(socOn()) render();
       const cap = document.querySelector('.soc-caption'); if(cap) cap.value = socCaption(d);
     }catch(_){}
     if(!keepStrip){ clearTimeout(socStripTimer); socStripTimer = setTimeout(() => socRenderStrip(d), 300); }
@@ -4956,7 +4976,7 @@ function socPreviewClick(e, imgEl){
   socSetSlot(d.id, i, { fx: Math.max(0, Math.min(1, (cx - p.dx) / p.dw)), fy: Math.max(0, Math.min(1, (cy - p.dy) / p.dh)), z: old.z || 1 });
   socSave();
   socRefreshSoon(0);
-  if(!old.fx && !old.z) setTimeout(() => { if(adminTab === 'social') render(); }, 300);
+  if(!old.fx && !old.z) setTimeout(() => { if(socOn()) render(); }, 300);
 }
 // Collage etc.: every photo slot has its own position + zoom. Slot 0 lives at soc.crop[id], slot i at soc.crop[id]['s'+i].
 let socSlot = 0;
@@ -5014,7 +5034,7 @@ document.addEventListener('pointermove', e => {
 document.addEventListener('pointerup', () => {
   if(!socDrag) return;
   const moved = socDragMoved; socDrag = null;
-  if(moved){ socSave(); socRefreshSoon(0); setTimeout(socLiveEnd, 0); setTimeout(() => { socDragMoved = false; }, 50); setTimeout(() => { if(adminTab === 'social' && !document.querySelector('.soc-row .xmas-custom')) render(); }, 400); }
+  if(moved){ socSave(); socRefreshSoon(0); setTimeout(socLiveEnd, 0); setTimeout(() => { socDragMoved = false; }, 50); setTimeout(() => { if(socOn() && !document.querySelector('.soc-row .xmas-custom')) render(); }, 400); }
 });
 async function socOpenGallery(){
   const dogs = socSelectedDogs();
@@ -5041,6 +5061,36 @@ async function socJpeg(d, fmt){
   const c = await socCanvas(d, socOpts(d, 1, fmt));
   const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
   return new Uint8Array(await blob.arrayBuffer());
+}
+// ---- share straight to the phone's share menu (Instagram, WhatsApp, ...) ----
+function socCanShareFiles(){
+  try{ return !!(navigator.canShare && navigator.share && navigator.canShare({ files: [new File([new Uint8Array(1)], 'a.jpg', { type: 'image/jpeg' })] })); }catch(_){ return false; }
+}
+let socShareCache = { key: '', file: null };
+function socShareKey(d){ return d.id + '|' + soc.format + '|' + JSON.stringify(socOpts(d, 1, soc.format), (k, v) => (v && typeof v === 'object' && !Array.isArray(v) && Object.getPrototypeOf(v) !== Object.prototype) ? undefined : v); }
+async function socShareFile(file, d){
+  // the caption is copied first: Instagram ignores text passed with a shared file
+  if(d) copyText(socCaption(d), t('soc_share_caption'));
+  try{ await navigator.share({ files: [file] }); return true; }
+  catch(err){
+    if(err && err.name === 'AbortError') return true;
+    if(err && err.name === 'NotAllowedError') return false; // tap expired while the picture was drawn
+    console.error('share', err); toast(t('soc_error')); return true;
+  }
+}
+async function socShare(d){
+  if(socBusy) return;
+  let key = '';
+  try{ key = socShareKey(d); }catch(_){ key = d.id + '|' + soc.format + '|' + Date.now(); }
+  if(socShareCache.key === key && socShareCache.file){ await socShareFile(socShareCache.file, d); return; }
+  socBusy = t('working'); render();
+  let file = null;
+  try{ file = new File([await socJpeg(d, soc.format)], socFileName(d, soc.format), { type: 'image/jpeg' }); }
+  catch(err){ console.error('social share', err); toast(t('soc_error')); }
+  socBusy = ''; render();
+  if(!file) return;
+  socShareCache = { key, file };
+  if(!(await socShareFile(file, d))) toast(t('soc_share_ready'));
 }
 function socDownload(blob, name){
   const url = URL.createObjectURL(blob), a = document.createElement('a');
@@ -5279,10 +5329,10 @@ async function socMakeVideo(d){
     rec.stop(); await stopped;
     const type = (rec.mimeType || mime || 'video/webm').split(';')[0];
     const blob = new Blob(chunks, { type });
-    socVideo = { id: d.id, url: URL.createObjectURL(blob), name: socFileName(d, fmt).replace(/\.jpg$/, '_Video.' + (type.includes('mp4') ? 'mp4' : 'webm')), busy: false, left: 0, size: blob.size };
+    socVideo = { id: d.id, blob, url: URL.createObjectURL(blob), name: socFileName(d, fmt).replace(/\.jpg$/, '_Video.' + (type.includes('mp4') ? 'mp4' : 'webm')), busy: false, left: 0, size: blob.size };
   }catch(err){ console.error('social video', err); toast(t('soc_video_error')); socVideo = { id: null, url: null, name: '', busy: false, left: 0 }; }
   if(ac) try{ ac.close(); }catch(_){}
-  if(adminTab === 'social') render();
+  if(socOn()) render();
 }
 
 function viewAdmin(){
@@ -6426,6 +6476,7 @@ function renderInner(){
     case 'profil': html = viewDogProfile(); break;
     case 'datenschutz': html = viewDatenschutz(); break;
     case 'aus-bihac': html = viewFeed(); break;
+    case 'teilen': html = viewSocialMaker(); break;
     case 'unterstuetzen': html = session.applicantId ? viewMyArea() : viewSignup(); break;
     case 'mein-bereich': html = session.applicantId ? viewMyArea() : viewLogin(); break;
     case 'admin': html = viewAdmin(); break;
@@ -6574,6 +6625,7 @@ document.addEventListener('click', async (e) => {
     allDogsShown += 12;
     render();
   }
+  if(action === 'soc-open'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); navigate('teilen'); if(d) socShowPreview(d); return; }
   if(action === 'soc-set'){
     const key = actionEl.getAttribute('data-key'), val = actionEl.getAttribute('data-val');
     if(['format','layout','theme','pattern'].includes(key) && soc[key] !== val){ soc[key] = val; socSave(); render(); socRefreshSoon(0, key === 'format'); }
@@ -6590,6 +6642,8 @@ document.addEventListener('click', async (e) => {
     socSave(); render(); return;
   }
   if(action === 'soc-preview'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d) socShowPreview(d); return; }
+  if(action === 'soc-share'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d) socShare(d); return; }
+  if(action === 'soc-share-video'){ const d = state.dogs.find(x => x.id === socVideo.id); if(socVideo.blob){ const f = new File([socVideo.blob], socVideo.name, { type: socVideo.blob.type || 'video/mp4' }); socShareFile(f, d); } return; }
   if(action === 'soc-dl-one'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d) socExport([{ d, fmt: soc.format }]); return; }
   if(action === 'soc-dl-formats'){ const d = state.dogs.find(x => x.id === actionEl.getAttribute('data-id')); if(d) socExport(SOC_SOCIAL.map(fmt => ({ d, fmt })), socFileName(d, 'post').replace(/_Post_.*$/, '_alle_Formate.zip')); return; }
   if(action === 'soc-zip'){ const dogs = socSelectedDogs(); socExport(dogs.map(d => ({ d, fmt: soc.format })), `Social_Media_${dogs.length}_Hunde_${t('soc_fmt_' + soc.format).replace(/[^A-Za-z]/g, '')}.zip`); return; }
@@ -7031,11 +7085,11 @@ document.addEventListener('input', (e) => {
     xmas.crop[id] = { ...old, z: Number(el.value) / 100 };
     xmasSave(); xmasRefreshPreviewSoon(120); return;
   }
-  if(el.matches && el.matches('[data-soc-note]')){ soc.notes[el.getAttribute('data-soc-note')] = el.value; socSave(); if(socPreview.id === el.getAttribute('data-soc-note')) socRefreshSoon(); return; }
+  if(el.matches && el.matches('[data-soc-note]') && !socPub()){ soc.notes[el.getAttribute('data-soc-note')] = el.value; socSave(); if(socPreview.id === el.getAttribute('data-soc-note')) socRefreshSoon(); return; }
   if(el.id === 'socZoom' && socPreview.id){ const id = socPreview.id; socSetSlot(id, socSlot, { ...(socSlotCrop(soc.crop[id], socSlot) || {}), z: Number(el.value) / 100 }); socSave(); socLiveDraw(); clearTimeout(socZoomEnd); socZoomEnd = setTimeout(() => { socRefreshSoon(0, true); }, 250); return; }
   if(el.id === 'socSecs'){ soc.secs = Number(el.value); socSave(); const v = document.getElementById('socSecsVal'); if(v) v.textContent = soc.secs + ' s'; return; }
   if(el.id === 'socVol'){ soc.vol = Number(el.value) / 100; socSave(); return; }
-  if(['socTag','socCta','socUrl','socFeeAmount','socHashtags'].includes(el.id)){
+  if(['socTag','socCta','socUrl','socFeeAmount','socHashtags'].includes(el.id) && !socPub()){
     const key = { socTag:'tag', socCta:'cta', socUrl:'url', socFeeAmount:'feeAmount', socHashtags:'hashtags' }[el.id];
     soc[key] = el.value; socSave(); socRefreshSoon(); return;
   }
@@ -8952,7 +9006,7 @@ document.addEventListener('submit', async (e) => {
   const viewParam = new URLSearchParams(window.location.search).get('view');
   const deepLinkMap = { hunde:'alle-hunde', 'happy-ends':'happy-tails', selbstauskunft:'bewerbung', zugang:'login', start:'home' };
   const deepLinkMap2 = Object.assign(deepLinkMap, { 'happy-end-einreichen':'submit-happytail', geschichte:'submit-happytail', nachrichten:'nachrichten',
-    'aus-bihac':'aus-bihac', neuigkeiten:'aus-bihac', unterstuetzen:'unterstuetzen', 'unterstuetzer-werden':'unterstuetzen', 'mein-bereich':'mein-bereich' });
+    'aus-bihac':'aus-bihac', neuigkeiten:'aus-bihac', unterstuetzen:'unterstuetzen', 'unterstuetzer-werden':'unterstuetzen', 'mein-bereich':'mein-bereich', teilen:'teilen', 'bilder-teilen':'teilen' });
   if(viewParam && deepLinkMap2[viewParam]){ route = { view: deepLinkMap2[viewParam] }; }
   const statusParam = new URLSearchParams(window.location.search).get('status');
   if(route.view === 'alle-hunde' && ['verfuegbar','reserviert'].includes(statusParam)) publicDogStatus = statusParam;
