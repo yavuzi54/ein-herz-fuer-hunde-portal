@@ -203,14 +203,14 @@ export function cleanCaption(caption, dogs = []) {
 
 // op=combine: several stories (e.g. 3 short clips posted in a row) become one news post
 const COMBINE_NOTE = `
-Combined post: this time you get several Instagram items that belong together (usually stories posted one after the other). "parts" lists them in order (Story 1, 2, 3 ...), each with its own caption and transcript; the pictures are frames from all of them, in the same order. Write ONE news post that tells the whole story from start to end. Do not split it into parts, do not repeat what several clips say twice, and do not mention that it was several clips. With transcripts or captions: 80 to 200 words.`;
+Combined post: this time you get several Instagram items that belong together (usually stories or posts from the same day, videos and photos mixed). "parts" lists them in order (Story 1, 2, 3 ...), each with its own caption and transcript; the pictures are frames from the videos (in order), then the photos of the picture posts. Write ONE news post that tells the whole story from start to end. Do not split it into parts, do not repeat what several clips say twice, and do not mention that it was several clips. With transcripts or captions: 80 to 200 words.`;
 
 export async function writeStory({ caption, kind, imageUrls = [], frames = [], dogs = [], transcript = '', parts = null }) {
   const content = [];
   frames.slice(0, 20).forEach(d => content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: String(d).replace(/^data:image\/\w+;base64,/, '') } }));
-  if (!frames.length) imageUrls.slice(0, 4).forEach(u => content.push({ type: 'image', source: { type: 'url', url: u } }));
+  if (!frames.length || parts) imageUrls.slice(0, 4).forEach(u => content.push({ type: 'image', source: { type: 'url', url: u } }));
   content.push({ type: 'text', text: JSON.stringify({
-    kind: kind || 'post', pictures: frames.length ? 'frames from the video, in time order' : 'photos / video cover',
+    kind: kind || 'post', pictures: parts ? 'frames from the videos in order, then photos of the picture posts' : frames.length ? 'frames from the video, in time order' : 'photos / video cover',
     ...(parts ? { parts: parts.map((x, i) => ({ part: `Story ${i + 1}`, caption: String(x.caption || '').slice(0, 1500), transcript: String(x.transcript || '').slice(0, 3000) })) }
       : { caption: String(caption || '').slice(0, 2200), transcript: String(transcript || '').slice(0, 6000) }),
     dogs: dogs.map(d => ({ id: d.id, name: d.name })) }) });
@@ -453,10 +453,10 @@ async function combinePosts(req, res) {
       if (!speechOn()) mark = '(kein Transkript: GROQ_API_KEY fehlt in Vercel)';
       else { transcript = await transcribe(videoSrc).catch(() => null); if (transcript === null) mark = TOO_BIG; }
     }
-    return { caption: caption || '', transcript: transcript || '', mark, video: !!videoSrc };
+    return { caption: caption || '', transcript: transcript || '', mark, video: !!videoSrc, photos: videoSrc ? [] : (p.photos || []).filter(u => /^https:\/\//.test(u)) };
   }));
   const s = await writeStory({ parts, kind: 'story', frames: Array.isArray(frames) ? frames : [], dogs: await loadDogs(),
-    imageUrls: list.flatMap(p => (p.photos || []).filter(u => /^https:\/\//.test(u))).slice(0, 4) });
+    imageUrls: parts.flatMap(x => x.photos).slice(0, 4) });
   const join = key => parts.map((x, i) => x[key] ? `Story ${i + 1}: ${x[key]}` : '').filter(Boolean).join('\n\n');
   parts.forEach(x => { if (!x.transcript && x.mark) x.shown = x.mark; else x.shown = x.transcript; });
   const caption = join('caption'), transcript = join('shown');
