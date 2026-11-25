@@ -166,6 +166,8 @@
   .stage-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px;}
   /* Christmas cards (admin) */
   .soc-seg{display:flex;flex-wrap:wrap;gap:6px;}
+  .soc-search{display:block;width:100%;margin:14px 0 4px;padding:12px 16px;border:1px solid #ddd;border-radius:999px;font:inherit;font-size:1rem;background:#fff;}
+  .soc-row[hidden],.soc-nohit[hidden]{display:none !important;}
   .soc-opt{display:flex;flex-direction:column;align-items:center;gap:1px;border:1px solid var(--line);border-radius:8px;padding:7px 12px;background:var(--paper);cursor:pointer;font:inherit;font-size:0.88rem;color:var(--ink);min-width:74px;}
   .soc-opt small{font-size:0.72rem;color:var(--ink-soft);}
   .soc-opt.on{border-color:var(--clay);background:var(--paper-card);box-shadow:inset 0 0 0 1px var(--clay);}
@@ -4343,7 +4345,7 @@ Object.assign(I18N.de, {
   soc_preview:'Vorschau', soc_download:'Bild', soc_download_one:'Bild herunterladen', soc_share:'📲 Teilen (Instagram …)', soc_share_video:'📲 Video teilen (Instagram …)', soc_video_save_hint:'Am Handy öffnet sich das Teilen-Menü: dort „Video sichern“ antippen.', soc_share_ready:'Bild ist fertig. Bitte noch einmal auf Teilen tippen.', soc_share_caption:'Text kopiert. In Instagram einfach einfügen.', soc_share_hint:'Am Handy öffnet „Teilen“ das Teilen-Menü des Handys. Dort Instagram wählen (Story oder Beitrag) und den kopierten Text einfügen.', soc_download_all_formats:'Alle 4 Formate (ZIP)', soc_zip_selected:'{n} Bilder herunterladen (ZIP)', soc_none:'Bitte zuerst Hunde auswählen.',
   soc_working:'Bild {i} von {n} …', soc_done:'{n} Bilder heruntergeladen', soc_done_one:'Bild heruntergeladen', soc_error:'Das Bild konnte nicht erstellt werden.',
   soc_preview_hint:'Bei einem Hund auf „Vorschau“ klicken.', soc_formats_strip:'Alle Formate (antippen zum Wechseln)', soc_photo_pick:'Foto wählen', soc_photo_pick3:'Fotos für die Collage wählen (bis zu 3, in Reihenfolge antippen: 1 = großes Foto)',
-  soc_caption:'Bildtext', soc_profile_link:'Link zum Hundeprofil (z. B. für den Instagram-Link-Sticker)', soc_copy_link:'🔗 Link kopieren', soc_link_copied:'Link kopiert', soc_video_layout:'Design für das Video', soc_pub_dunkel:'Dunkel', soc_pub_dunkel_sub:'Foto groß, schwarz-gold', soc_pub_hell:'Hell', soc_pub_hell_sub:'Weiß mit rotem Rahmen', soc_copy_caption:'Bildtext kopieren', soc_caption_copied:'Bildtext kopiert',
+  soc_caption:'Bildtext', soc_profile_link:'Link zum Hundeprofil (z. B. für den Instagram-Link-Sticker)', soc_copy_link:'🔗 Link kopieren', soc_link_copied:'Link kopiert', soc_video_layout:'Design für das Video', soc_search_ph:'🔍 Hund suchen (Name oder Rasse)', soc_search_none:'Kein Hund gefunden.', soc_pub_dunkel:'Dunkel', soc_pub_dunkel_sub:'Foto groß, schwarz-gold', soc_pub_hell:'Hell', soc_pub_hell_sub:'Weiß mit rotem Rahmen', soc_copy_caption:'Bildtext kopieren', soc_caption_copied:'Bildtext kopiert',
   soc_gallery_btn:'Alle {n} ansehen', soc_gallery_title:'Vorschau vor dem Posten', soc_gallery_hint:'So sehen die Bilder aus. Passt ein Foto nicht: Bild antippen und Ausschnitt anpassen.',
   soc_saved_hint:'Einstellungen und Kurztexte werden nur in diesem Browser gespeichert.', soc_profile_title:'Steckbrief', soc_slot_hint:'Regler und Verschieben gelten für Foto {n}. Ein anderes Foto im Bild anklicken, um es anzupassen.', soc_crop_hint:'Foto anpassen: ins Foto klicken oder es mit der Maus / dem Finger verschieben. Mit dem Regler kleiner oder größer machen, bis der Hund gut in die Form (z. B. das Herz) passt.',
   soc_f_age:'Alter', soc_f_breed:'Rasse', soc_f_size:'Größe', soc_f_place:'Ort',
@@ -4366,7 +4368,7 @@ Object.assign(I18N.en, {
   soc_preview:'Preview', soc_download:'Picture', soc_download_one:'Download picture', soc_share:'📲 Share (Instagram …)', soc_share_video:'📲 Share video (Instagram …)', soc_video_save_hint:'On the phone the share menu opens: tap “Save video” there.', soc_share_ready:'Picture is ready. Please tap Share once more.', soc_share_caption:'Text copied. Just paste it in Instagram.', soc_share_hint:'On a phone, Share opens your phone menu. Pick Instagram there (story or post) and paste the copied text.', soc_download_all_formats:'All 4 formats (ZIP)', soc_zip_selected:'Download {n} pictures (ZIP)', soc_none:'Please select dogs first.',
   soc_working:'Picture {i} of {n} …', soc_done:'{n} pictures downloaded', soc_done_one:'Picture downloaded', soc_error:'The picture could not be created.',
   soc_preview_hint:'Click “Preview” on a dog.', soc_formats_strip:'All formats (tap to switch)', soc_photo_pick:'Choose photo', soc_photo_pick3:'Choose the collage photos (up to 3, tap in order: 1 = big photo)',
-  soc_caption:'Caption', soc_profile_link:'Link to the dog profile (e.g. for the Instagram link sticker)', soc_copy_link:'🔗 Copy link', soc_link_copied:'Link copied', soc_video_layout:'Design for the video', soc_pub_dunkel:'Dark', soc_pub_dunkel_sub:'Big photo, black and gold', soc_pub_hell:'Light', soc_pub_hell_sub:'White with red frame', soc_copy_caption:'Copy caption', soc_caption_copied:'Caption copied',
+  soc_caption:'Caption', soc_profile_link:'Link to the dog profile (e.g. for the Instagram link sticker)', soc_copy_link:'🔗 Copy link', soc_link_copied:'Link copied', soc_video_layout:'Design for the video', soc_search_ph:'🔍 Search dog (name or breed)', soc_search_none:'No dog found.', soc_pub_dunkel:'Dark', soc_pub_dunkel_sub:'Big photo, black and gold', soc_pub_hell:'Light', soc_pub_hell_sub:'White with red frame', soc_copy_caption:'Copy caption', soc_caption_copied:'Caption copied',
   soc_gallery_btn:'View all {n}', soc_gallery_title:'Preview before posting', soc_gallery_hint:'This is how the pictures look. If a photo doesn’t fit: tap the picture and adjust the crop.',
   soc_saved_hint:'Settings and short texts are only saved in this browser.', soc_profile_title:'Steckbrief', soc_slot_hint:'The slider and dragging apply to photo {n}. Click another photo in the picture to adjust it.', soc_crop_hint:'Adjust photo: click into the photo or drag it with the mouse or your finger. Use the slider to make it smaller or bigger until the dog fits the shape (e.g. the heart).',
   soc_f_age:'Alter', soc_f_breed:'Rasse', soc_f_size:'Größe', soc_f_place:'Ort',
@@ -4375,6 +4377,9 @@ Object.assign(I18N.en, {
 const SOC_FORMATS = { story:{ w:1080, h:1920 }, post:{ w:1080, h:1350 }, square:{ w:1080, h:1080 }, wide:{ w:1200, h:628 },
   a5:{ w:1080, h:1532, mm:[148, 210] }, a6:{ w:1080, h:1522, mm:[105, 148] } };
 const SOC_SOCIAL = ['story', 'post', 'square', 'wide'];
+const SOC_PUB_FORMATS = ['story', 'post', 'square'];
+let socQ = '';
+function socMatch(d){ const q = socQ.trim().toLowerCase(); return !q || String(d.name || '').toLowerCase().includes(q) || String(d.breed || '').toLowerCase().includes(q); }
 const socIsPrint = f => !!(SOC_FORMATS[f] || {}).mm;
 const SOC_LAYOUTS = ['poster', 'bogen', 'vollbild', 'steckbrief', 'collage', 'herz', 'magazin', 'split', 'minimal'];
 const SOC_PATTERNS = ['pfoten', 'herzen', 'hunde', 'knochen', 'sterne', 'punkte', 'streifen', 'karo', 'wellen', 'konfetti', 'keins'];
@@ -4427,6 +4432,7 @@ function socSelectedDogs(){
 // public maker (?view=teilen): same tool for everyone, but texts, link and hashtags are locked to ours
 function socPub(){ return route.view === 'teilen'; }
 // public maker: only two ready-made looks (dark full photo / light poster); admin keeps every option
+const SOC_PUB_LAYOUTS = ['vollbild', 'poster'], SOC_PUB_THEMES = ['schwarz', 'weiss'];
 const SOC_PUB_STYLES = { dunkel: { layout:'vollbild', theme:'schwarz', pattern:'keins' }, hell: { layout:'poster', theme:'weiss', pattern:'keins' } };
 function socPubStyle(){ return soc.layout === 'poster' && soc.theme === 'weiss' ? 'hell' : 'dunkel'; }
 function socPubApply(k){ const st = SOC_PUB_STYLES[k] || SOC_PUB_STYLES.dunkel; soc.layout = st.layout; soc.theme = st.theme; soc.pattern = st.pattern; }
@@ -4574,7 +4580,8 @@ function socOpts(d, scale, format){
 }
 
 function adminSocialTab(pub){
-  if(pub){ const k = socPubStyle(), st = SOC_PUB_STYLES[k]; if(soc.layout !== st.layout || soc.theme !== st.theme || soc.pattern !== st.pattern) socPubApply(k); }
+  if(pub && !SOC_PUB_FORMATS.includes(soc.format)) soc.format = 'story';
+  if(pub){ if(!SOC_PUB_LAYOUTS.includes(soc.layout)) soc.layout = 'vollbild'; if(!SOC_PUB_THEMES.includes(soc.theme)) soc.theme = 'schwarz'; soc.pattern = 'keins'; }
   const dogs = socDogs();
   const sel = new Set(soc.selected);
   const nSel = socSelectedDogs().length;
@@ -4597,9 +4604,13 @@ function adminSocialTab(pub){
     <div>
       <div class="card xmas-settings">
         <div class="field"><label>${t('soc_format')}</label>
-          ${seg('format', Object.keys(SOC_FORMATS), k => `<b>${t('soc_fmt_' + k)}</b><small>${t('soc_fmt_' + k + '_sub')}</small>`)}</div>
+          ${seg('format', pub ? SOC_PUB_FORMATS : Object.keys(SOC_FORMATS), k => `<b>${t('soc_fmt_' + k)}</b><small>${t('soc_fmt_' + k + '_sub')}</small>`)}</div>
         ${pub ? `<div class="field"><label>${t('soc_layout')}</label>
-          <div class="soc-seg">${Object.keys(SOC_PUB_STYLES).map(k => `<button type="button" class="soc-opt ${socPubStyle() === k ? 'on' : ''}" data-action="soc-set" data-key="pubstyle" data-val="${k}"><b>${t('soc_pub_' + k)}</b><small>${t('soc_pub_' + k + '_sub')}</small></button>`).join('')}</div></div>` : `
+          ${seg('layout', SOC_PUB_LAYOUTS, k => `<b>${t('soc_lay_' + k)}</b>`)}</div>
+        <div class="field"><label>${t('soc_theme')}</label>
+          <div class="soc-swatches">${SOC_PUB_THEMES.map(k => { const th = SOC_THEMES[k]; return `
+            <button type="button" class="soc-swatch ${soc.theme === k ? 'on' : ''}" data-action="soc-set" data-key="theme" data-val="${k}" title="${t('soc_th_' + k)}">
+              <span class="soc-sw" style="background:linear-gradient(135deg, ${th.bg} 0 55%, ${th.accent} 55% 100%);"></span><small>${t('soc_th_' + k)}</small></button>`; }).join('')}</div></div>` : `
         <div class="field"><label>${t('soc_layout')}</label>
           ${seg('layout', SOC_LAYOUTS, k => `<b>${t('soc_lay_' + k)}</b>`)}</div>
         <div class="field"><label>${t('soc_theme')}</label>
@@ -4619,10 +4630,12 @@ function adminSocialTab(pub){
         ${pub ? '' : `<button type="button" class="link-btn" data-action="soc-select" data-all="1" style="margin-left:8px;">${t('xmas_select_all')}</button>
         <button type="button" class="link-btn" data-action="soc-select" data-all="0">${t('xmas_select_none')}</button>`}
       </div>
+      <input type="search" id="socSearch" class="soc-search" value="${esc(socQ)}" placeholder="${esc(t('soc_search_ph'))}" aria-label="${esc(t('soc_search_ph'))}" autocomplete="off">
+      <p class="hint soc-nohit" ${dogs.some(socMatch) ? 'hidden' : ''}>${t('soc_search_none')}</p>
       ${dogs.length ? `<div class="xmas-list">${dogs.map(d => {
         const photo = mainPhoto(d);
         return `
-        <div class="xmas-row soc-row ${sel.has(d.id) ? 'on' : ''} ${socPreview.id === d.id ? 'previewing' : ''}" data-id="${d.id}">
+        <div class="xmas-row soc-row ${sel.has(d.id) ? 'on' : ''} ${socPreview.id === d.id ? 'previewing' : ''}" data-id="${d.id}" ${socMatch(d) ? '' : 'hidden'}>
           <label class="xmas-pick">${pub ? '' : `<input type="checkbox" data-soc-pick="${d.id}" ${sel.has(d.id) ? 'checked' : ''}>`}
             <span class="xmas-thumb">${photo ? `<img src="${esc(thumbUrl(photo))}" alt="" loading="lazy" style="object-position:${focusPos(d)}">` : `<small>${t('xmas_no_photo')}</small>`}</span>
             <span><b>${esc(d.name)}</b><br><span class="badge status-${d.status}">${statusLabel[d.status]}</span>${soc.crop[d.id] ? `<br><small class="xmas-custom">✓ ${t('xmas_crop_custom')}</small>` : ''}</span>
@@ -4644,12 +4657,12 @@ function adminSocialTab(pub){
           ${photos.length > 1 ? (soc.layout === 'collage' ? (() => { const pk = socPickList(pd, photos); return `<div class="soc-photos"><small>${t('soc_photo_pick3')}</small><div>${photos.map((u, i) => { const k = pk.indexOf(i); return `<button type="button" class="soc-photo ${k >= 0 ? 'on' : ''}" data-action="soc-pick3" data-idx="${i}" aria-pressed="${k >= 0}"><img src="${esc(thumbUrl(u))}" alt="" loading="lazy">${k >= 0 ? `<span class="soc-photo-n">${k + 1}</span>` : ''}</button>`; }).join('')}</div></div>`; })()
             : `<div class="soc-photos"><small>${t('soc_photo_pick')}</small><div>${photos.map((u, i) => `<button type="button" class="soc-photo ${(Number(soc.photo[pd.id]) || 0) === i ? 'on' : ''}" data-action="soc-photo" data-idx="${i}"><img src="${esc(thumbUrl(u))}" alt="" loading="lazy"></button>`).join('')}</div></div>`) : ''}
         </div>` : ''}
-        <div class="soc-strip"><small>${t('soc_formats_strip')}</small><div>${Object.keys(SOC_FORMATS).map(k => `
+        ${pub ? '' : `<div class="soc-strip"><small>${t('soc_formats_strip')}</small><div>${Object.keys(SOC_FORMATS).map(k => `
           <button type="button" class="soc-strip-item ${soc.format === k ? 'on' : ''}" data-action="soc-set" data-key="format" data-val="${k}" title="${t('soc_fmt_' + k)}">
-            ${socPreview.strip[k] ? `<img src="${socPreview.strip[k]}" alt="${t('soc_fmt_' + k)}">` : `<span class="soc-strip-wait" style="aspect-ratio:${SOC_FORMATS[k].w}/${SOC_FORMATS[k].h}"></span>`}<small>${t('soc_fmt_' + k)}</small></button>`).join('')}</div></div>
+            ${socPreview.strip[k] ? `<img src="${socPreview.strip[k]}" alt="${t('soc_fmt_' + k)}">` : `<span class="soc-strip-wait" style="aspect-ratio:${SOC_FORMATS[k].w}/${SOC_FORMATS[k].h}"></span>`}<small>${t('soc_fmt_' + k)}</small></button>`).join('')}</div></div>`}
         <div class="action-row" style="margin:12px 0 0;flex-wrap:wrap;">
           <button type="button" class="btn-primary btn-small" data-action="soc-dl-one" data-id="${pd.id}" ${socBusy ? 'disabled' : ''}>${t(socIsPrint(soc.format) ? 'soc_pdf_one' : 'soc_download_one')}</button>
-          <button type="button" class="btn-secondary btn-small" data-action="soc-dl-formats" data-id="${pd.id}" ${socBusy ? 'disabled' : ''}>${t('soc_download_all_formats')}</button>
+          ${pub ? '' : `<button type="button" class="btn-secondary btn-small" data-action="soc-dl-formats" data-id="${pd.id}" ${socBusy ? 'disabled' : ''}>${t('soc_download_all_formats')}</button>`}
           ${socCanShareFiles() && !socIsPrint(soc.format) ? `<button type="button" class="btn-primary btn-small soc-share" data-action="soc-share" data-id="${pd.id}" ${socBusy ? 'disabled' : ''}>${t('soc_share')}</button>` : ''}
         </div>
         ${socCanShareFiles() && !socIsPrint(soc.format) ? `<p class="hint" style="margin:8px 0 0;">${t('soc_share_hint')}</p>` : ''}
@@ -5349,6 +5362,7 @@ function socSetPreview(d, c){
   if(socGallery && socGallery.urls[d.id]) socGallery.urls[d.id] = socPreview.url;
 }
 async function socRenderStrip(d){
+  if(socPub()) return;
   for(const k of Object.keys(SOC_FORMATS)){
     if(socPreview.id !== d.id) return;
     try{
@@ -7514,6 +7528,7 @@ document.addEventListener('click', async (e) => {
 });
 
 document.addEventListener('input', (e) => {
+  if(e.target && e.target.id === 'socSearch'){ socQ = e.target.value; let n = 0; document.querySelectorAll('.soc-row').forEach(r => { const d = state.dogs.find(x => x.id === r.getAttribute('data-id')); const ok = !!d && socMatch(d); r.hidden = !ok; if(ok) n++; }); const nh = document.querySelector('.soc-nohit'); if(nh) nh.hidden = n > 0; return; }
   const el = e.target;
   if(el.matches && el.matches('[data-xmas-wish]')){ xmas.wishes[el.getAttribute('data-xmas-wish')] = el.value; xmasSave(); if(xmasPreview.id === el.getAttribute('data-xmas-wish')) xmasRefreshPreviewSoon(); return; }
   if(el.id === 'xmasZoom' && xmasPreview.id){
