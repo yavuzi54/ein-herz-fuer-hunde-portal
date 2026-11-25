@@ -4340,7 +4340,7 @@ Object.assign(I18N.de, {
   soc_qr:'QR-Code zum Hundeprofil statt Button (gut für Stories und Ausdrucke)', soc_fee:'Schutzgebühr zeigen', soc_fee_label:'Schutzgebühr', soc_fee_amount:'Betrag (€)',
   soc_hashtags:'Hashtags für den Bildtext', soc_hashtags_default:'#einherzfuerhunde #tierschutz #adoptdontshop #hundeausbosnien #hundsuchtzuhause #tiervermittlung #adoptierenstattkaufen #rescuedog #österreich',
   soc_note_ph:'Kurztext (optional), z. B. „Verschmust, verträgt sich mit Katzen, liebt lange Spaziergänge.“', soc_note_label:'Kurztext',
-  soc_preview:'Vorschau', soc_download:'Bild', soc_download_one:'Bild herunterladen', soc_share:'📲 Teilen (Instagram …)', soc_share_video:'📲 Video teilen (Instagram …)', soc_share_ready:'Bild ist fertig. Bitte noch einmal auf Teilen tippen.', soc_share_caption:'Text kopiert. In Instagram einfach einfügen.', soc_share_hint:'Am Handy öffnet „Teilen“ das Teilen-Menü des Handys. Dort Instagram wählen (Story oder Beitrag) und den kopierten Text einfügen.', soc_download_all_formats:'Alle 4 Formate (ZIP)', soc_zip_selected:'{n} Bilder herunterladen (ZIP)', soc_none:'Bitte zuerst Hunde auswählen.',
+  soc_preview:'Vorschau', soc_download:'Bild', soc_download_one:'Bild herunterladen', soc_share:'📲 Teilen (Instagram …)', soc_share_video:'📲 Video teilen (Instagram …)', soc_video_save_hint:'Am Handy öffnet sich das Teilen-Menü: dort „Video sichern“ antippen.', soc_share_ready:'Bild ist fertig. Bitte noch einmal auf Teilen tippen.', soc_share_caption:'Text kopiert. In Instagram einfach einfügen.', soc_share_hint:'Am Handy öffnet „Teilen“ das Teilen-Menü des Handys. Dort Instagram wählen (Story oder Beitrag) und den kopierten Text einfügen.', soc_download_all_formats:'Alle 4 Formate (ZIP)', soc_zip_selected:'{n} Bilder herunterladen (ZIP)', soc_none:'Bitte zuerst Hunde auswählen.',
   soc_working:'Bild {i} von {n} …', soc_done:'{n} Bilder heruntergeladen', soc_done_one:'Bild heruntergeladen', soc_error:'Das Bild konnte nicht erstellt werden.',
   soc_preview_hint:'Bei einem Hund auf „Vorschau“ klicken.', soc_formats_strip:'Alle Formate (antippen zum Wechseln)', soc_photo_pick:'Foto wählen', soc_photo_pick3:'Fotos für die Collage wählen (bis zu 3, in Reihenfolge antippen: 1 = großes Foto)',
   soc_caption:'Bildtext', soc_profile_link:'Link zum Hundeprofil (z. B. für den Instagram-Link-Sticker)', soc_copy_link:'🔗 Link kopieren', soc_link_copied:'Link kopiert', soc_video_layout:'Design für das Video', soc_copy_caption:'Bildtext kopieren', soc_caption_copied:'Bildtext kopiert',
@@ -4363,7 +4363,7 @@ Object.assign(I18N.en, {
   soc_qr:'QR code to the dog profile instead of the button (good for stories and prints)', soc_fee:'Show adoption fee', soc_fee_label:'Schutzgebühr', soc_fee_amount:'Amount (€)',
   soc_hashtags:'Hashtags for the caption', soc_hashtags_default:'#einherzfuerhunde #tierschutz #adoptdontshop #hundeausbosnien #hundsuchtzuhause #tiervermittlung #adoptierenstattkaufen #rescuedog #österreich',
   soc_note_ph:'Short text (optional), e.g. “Cuddly, fine with cats, loves long walks.”', soc_note_label:'Short text',
-  soc_preview:'Preview', soc_download:'Picture', soc_download_one:'Download picture', soc_share:'📲 Share (Instagram …)', soc_share_video:'📲 Share video (Instagram …)', soc_share_ready:'Picture is ready. Please tap Share once more.', soc_share_caption:'Text copied. Just paste it in Instagram.', soc_share_hint:'On a phone, Share opens your phone menu. Pick Instagram there (story or post) and paste the copied text.', soc_download_all_formats:'All 4 formats (ZIP)', soc_zip_selected:'Download {n} pictures (ZIP)', soc_none:'Please select dogs first.',
+  soc_preview:'Preview', soc_download:'Picture', soc_download_one:'Download picture', soc_share:'📲 Share (Instagram …)', soc_share_video:'📲 Share video (Instagram …)', soc_video_save_hint:'On the phone the share menu opens: tap “Save video” there.', soc_share_ready:'Picture is ready. Please tap Share once more.', soc_share_caption:'Text copied. Just paste it in Instagram.', soc_share_hint:'On a phone, Share opens your phone menu. Pick Instagram there (story or post) and paste the copied text.', soc_download_all_formats:'All 4 formats (ZIP)', soc_zip_selected:'Download {n} pictures (ZIP)', soc_none:'Please select dogs first.',
   soc_working:'Picture {i} of {n} …', soc_done:'{n} pictures downloaded', soc_done_one:'Picture downloaded', soc_error:'The picture could not be created.',
   soc_preview_hint:'Click “Preview” on a dog.', soc_formats_strip:'All formats (tap to switch)', soc_photo_pick:'Choose photo', soc_photo_pick3:'Choose the collage photos (up to 3, tap in order: 1 = big photo)',
   soc_caption:'Caption', soc_profile_link:'Link to the dog profile (e.g. for the Instagram link sticker)', soc_copy_link:'🔗 Copy link', soc_link_copied:'Link copied', soc_video_layout:'Design for the video', soc_copy_caption:'Copy caption', soc_caption_copied:'Caption copied',
@@ -4661,7 +4661,8 @@ function adminSocialTab(pub){
           <button type="button" class="btn-primary btn-small" data-action="soc-video" data-id="${pd.id}" ${socVideo.busy ? 'disabled' : ''}>${socVideo.busy ? t('soc_video_recording', { s: socVideo.left }) : t('soc_video_make')}</button>
           ${socVideo.url && socVideo.id === pd.id && !socVideo.busy ? `<p style="margin:12px 0 6px;"><b>${t('soc_video_ready')}</b></p>
             <video class="soc-video-player" src="${socVideo.url}" controls playsinline preload="metadata"></video>
-            <a class="btn-secondary btn-small" href="${socVideo.url}" download="${esc(socVideo.name)}" style="display:inline-block;margin-top:6px;">${t('soc_video_download')}</a>
+            ${socPhoneSave() && socVideo.blob ? `<button type="button" class="btn-secondary btn-small" data-action="soc-share-video" style="margin-top:6px;">${t('soc_video_download')}</button><p class="hint" style="margin:4px 0 0;">${t('soc_video_save_hint')}</p>`
+              : `<a class="btn-secondary btn-small" href="${socVideo.url}" download="${esc(socVideo.name)}" style="display:inline-block;margin-top:6px;">${t('soc_video_download')}</a>`}
             ${socCanShareFiles() && socVideo.blob ? `<button type="button" class="btn-primary btn-small soc-share" data-action="soc-share-video" style="margin-top:6px;">${t('soc_share_video')}</button>` : ''}` : ''}
           <p class="hint" style="margin:8px 0 0;">${t('soc_music_note')}</p>
         </div>`}
@@ -4791,7 +4792,9 @@ function socCover(g, img, x, y, w, h, fx, fy, z, free){
   const dw = img.width * s, dh = img.height * s;
   const place = (c, size, box, f) => { const want = c + box / 2 - f * size; return size >= box ? Math.max(c + box - size, Math.min(c, want)) : Math.max(c, Math.min(c + box - size, want)); };
   // free: the photo follows the finger without hitting an edge (gaps get a blurred fill behind)
-  const dx = free ? x + w / 2 - fx * dw : place(x, dw, w, fx), dy = free ? y + h / 2 - fy * dh : place(y, dh, h, fy);
+  // free: the photo may go a little past the edge (12 % of the shape) so dragging never feels stuck, but never so far that a big gap opens
+  const loose = (c, size, box, f) => { const want = c + box / 2 - f * size, m = box * 0.12; return size >= box ? Math.max(c + box - size - m, Math.min(c + m, want)) : Math.max(c - m, Math.min(c + box - size + m, want)); };
+  const dx = free ? loose(x, dw, w, fx) : place(x, dw, w, fx), dy = free ? loose(y, dh, h, fy) : place(y, dh, h, fy);
   if(g) g.drawImage(img, dx, dy, dw, dh);
   return { x, y, w, h, dx, dy, dw, dh, iw: img.width, ih: img.height };
 }
@@ -4808,7 +4811,7 @@ function socDrawPhoto(P, i, x, y, w, h, clip){
     const z = cr ? cr.z || 1 : 1;
     const free = !!cr && isFinite(cr.fx);
     const pre = socCover(null, img, x, y, w, h, fx, fy, z, free);
-    if(pre.dx > x + 0.5 || pre.dy > y + 0.5 || pre.dx + pre.dw < x + w - 0.5 || pre.dy + pre.dh < y + h - 0.5){ socBlurFill(g, img, x, y, w, h, fx, fy); }
+    if(pre.dx > x + 0.5 || pre.dy > y + 0.5 || pre.dx + pre.dw < x + w - 0.5 || pre.dy + pre.dh < y + h - 0.5){ g.fillStyle = P.th.bg2; g.fillRect(x, y, w, h); }
     const info = socCover(g, img, x, y, w, h, fx, fy, z, free);
     if(i === 0) P.photo = info;
     (P.photos = P.photos || [])[i] = info;
@@ -5478,6 +5481,9 @@ async function socJpeg(d, fmt){
   return new Uint8Array(await blob.arrayBuffer());
 }
 // ---- share straight to the phone's share menu (Instagram, WhatsApp, ...) ----
+// iPhone / iPad (and phones in general) ignore <a download> for videos, above all inside the website iframe:
+// there the download button opens the share sheet instead, which has "Video sichern" / "Save video".
+function socPhoneSave(){ return socCanShareFiles() && (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform)) || matchMedia('(pointer:coarse)').matches); }
 function socCanShareFiles(){
   try{ return !!(navigator.canShare && navigator.share && navigator.canShare({ files: [new File([new Uint8Array(1)], 'a.jpg', { type: 'image/jpeg' })] })); }catch(_){ return false; }
 }
