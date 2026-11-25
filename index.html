@@ -179,7 +179,7 @@
   .soc-photos{margin-top:10px;} .soc-photos > div{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
   .soc-photo{width:46px;height:46px;padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;cursor:pointer;background:none;}
   .soc-photo{position:relative;} .soc-photo img{width:100%;height:100%;object-fit:cover;display:block;} .soc-photo-n{position:absolute;top:2px;left:2px;min-width:18px;height:18px;border-radius:9px;background:var(--clay);color:#fff;font-size:0.72rem;font-weight:800;line-height:18px;text-align:center;} .soc-photo.on{border-color:var(--clay);}
-  .soc-scenes{margin:0 0 10px;} .soc-scenes > div{display:flex;gap:8px;overflow-x:auto;padding:4px 0;} .soc-scenes figure{margin:0;flex:0 0 auto;width:96px;} .soc-scenes img{width:100%;border-radius:6px;display:block;box-shadow:0 1px 4px rgba(0,0,0,.2);} .soc-scenes figcaption{font-size:0.7rem;opacity:.75;margin-top:2px;}
+  .soc-scenes{margin:0 0 10px;} .soc-scenes > div{display:flex;gap:8px;overflow-x:auto;padding:4px 0;} .soc-scenes figure{margin:0;flex:0 0 auto;width:96px;} .soc-scenes figure[data-action]{cursor:pointer;} .soc-scenes figure.on img{outline:3px solid var(--clay);outline-offset:1px;} .soc-vedit{margin:0 0 12px;padding:10px;border:1px solid rgba(0,0,0,.12);border-radius:10px;} .soc-vedit canvas{display:block;width:100%;max-width:300px;height:auto;margin:0 auto 8px;border-radius:6px;cursor:grab;touch-action:none;user-select:none;box-shadow:0 4px 12px -6px rgba(0,0,0,.4);} .soc-scenes img{width:100%;border-radius:6px;display:block;box-shadow:0 1px 4px rgba(0,0,0,.2);} .soc-scenes figcaption{font-size:0.7rem;opacity:.75;margin-top:2px;}
   .soc-strip{margin-top:12px;font-size:0.82rem;color:var(--ink-soft);} .soc-strip > div{display:flex;gap:8px;align-items:flex-end;margin-top:6px;}
   .soc-strip-item{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:1px solid transparent;border-radius:8px;padding:4px;cursor:pointer;font:inherit;color:var(--ink);}
   .soc-strip-item img,.soc-strip-wait{width:100%;height:auto;display:block;border-radius:3px;background:var(--paper-card);}
@@ -190,6 +190,30 @@
   .soc-video-player{width:100%;max-height:420px;background:#000;border-radius:6px;display:block;}
   @media (min-width:901px){ .soc-preview-box{max-height:calc(100vh - 32px);overflow-y:auto;overscroll-behavior:contain;padding-right:6px;} }
   @media (max-width:900px){ .soc-preview-box{max-width:420px;} }
+  /* Social media tab in the website look (black, white, logo red #D2223E; pills, no arrows, no gradients) */
+  .soc-seg{gap:8px;}
+  .soc-opt{border:0;border-radius:999px;padding:9px 16px;min-height:40px;background:#fff;color:#111;box-shadow:inset 0 0 0 1.5px rgba(17,17,17,.16);font-weight:700;font-size:0.9rem;transition:box-shadow .15s,background .15s,color .15s;}
+  .soc-opt b{font-weight:700;} .soc-opt small{color:#555;font-weight:600;}
+  .soc-opt:hover{box-shadow:inset 0 0 0 1.5px #111;}
+  .soc-opt.on{background:#111;color:#fff;box-shadow:none;} .soc-opt.on small{color:rgba(255,255,255,.75);}
+  .soc-photos > small, .soc-scenes > small, .soc-strip > small{display:block;font-size:13.5px;font-weight:600;color:#111;margin-bottom:6px;}
+  .soc-photos > div{gap:8px;}
+  .soc-photo{width:54px;height:54px;border:0;border-radius:12px;box-shadow:inset 0 0 0 1.5px rgba(17,17,17,.12);transition:transform .15s;}
+  .soc-photo:hover{transform:translateY(-1px);}
+  .soc-photo.on{box-shadow:0 0 0 3px #111;}
+  .soc-photo-n{top:4px;left:4px;min-width:20px;height:20px;line-height:20px;border-radius:10px;background:#D2223E;}
+  .soc-video{background:#fff;border:0;border-radius:20px;padding:18px;box-shadow:0 10px 30px -14px rgba(17,17,17,.25);}
+  .soc-video > b{display:block;font-size:1.15rem;font-weight:700;letter-spacing:-.02em;color:#111;}
+  .soc-video .hint{color:#555;}
+  .soc-scenes figure{width:104px;} .soc-scenes img{border-radius:12px;box-shadow:0 6px 16px -8px rgba(17,17,17,.35);}
+  .soc-scenes figure.on img{outline:3px solid #D2223E;outline-offset:2px;}
+  .soc-scenes figcaption{font-size:12px;font-weight:600;color:#555;opacity:1;margin-top:4px;}
+  .soc-vedit{border:0;border-radius:20px;background:#F2F2F2;padding:14px;}
+  .soc-vedit canvas{border-radius:12px;}
+  .soc-strip-item{border:0;border-radius:12px;} .soc-strip-item.on{background:#F2F2F2;box-shadow:inset 0 0 0 1.5px #111;}
+  .soc-video [data-action="soc-video"]{background:#111;color:#fff;border:0;border-radius:999px;min-height:52px;padding:0 28px;font-weight:700;}
+  .soc-video [data-action="soc-video"]:hover:not(:disabled){background:#D2223E;}
+  .soc-link{border-radius:12px;}
   .xmas-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start;}
   .xmas-settings{padding:20px 22px;}
   .xmas-formats{display:flex;flex-direction:column;gap:6px;}
@@ -4305,11 +4329,11 @@ async function xmasExport(dogs){
 Object.assign(I18N.de, {
   pub_soc_title:'Teilen hilft', pub_soc_intro:'Machen Sie mit wenigen Klicks ein Bild oder Video für Instagram, Facebook oder WhatsApp: Hund auswählen, Format und Design wählen, herunterladen und teilen. Jedes geteilte Bild kann für einen Hund den Unterschied machen.',
   pub_soc_locked:'Texte und Link auf dem Bild kommen immer von uns, damit niemand falsche Angaben in unserem Namen verbreitet.', pub_soc_open:'Bild zum Teilen erstellen', nav_share_maker:'Bilder zum Teilen',
-  admin_tab_social:'📣 Social Media', soc_fmt_a5:'A5 Flyer', soc_fmt_a5_sub:'14,8 × 21 cm · PDF', soc_fmt_a6:'A6 Flyer', soc_fmt_a6_sub:'10,5 × 14,8 cm · PDF', soc_print_hint:'Flyer werden als druckfertiges PDF (300 dpi) erstellt, immer mit QR-Code zum Hundeprofil.', soc_pdf_one:'PDF herunterladen', soc_pdf_selected:'PDF mit {n} Flyern', soc_pdf_done:'PDF mit {n} Flyern erstellt', soc_video:'Video mit Musik', soc_video_hint:'Diashow aus den Fotos des Hundes mit Abspann. Wird live aufgenommen und dauert so lange wie das Video. Bitte diesen Tab währenddessen offen lassen.', soc_music:'Musik', soc_music_none:'Keine Musik', soc_music_sonnig:'Sonnig · fröhlich', soc_music_ruhig:'Ruhig · sanft', soc_music_verspielt:'Verspielt · flott', soc_listen:'▶ Anhören', soc_secs:'Sekunden pro Foto', soc_volume:'Lautstärke', soc_video_make:'🎬 Video erstellen', soc_video_recording:'Video wird aufgenommen … {s} s', soc_video_ready:'Dein Video ist fertig', soc_video_download:'Video herunterladen', soc_video_error:'Das Video konnte in diesem Browser nicht erstellt werden.', soc_video_print:'Videos gibt es nur für die Social-Media-Formate.', soc_outro:'Mehr auf', soc_outro_line:'Vielleicht beginnt mein Happy End bei dir.', soc_video_pick:'Fotos fürs Video in Reihenfolge antippen (bis zu 8). Nichts gewählt = alle Fotos.', soc_video_pick_reset:'Auswahl zurücksetzen', soc_scenes:'Vorschau der Szenen', soc_scene:'Szene', soc_scene_end:'Abspann · 3 s', soc_scenes_wait:'Vorschau wird erstellt …', soc_music_note:'🎵 = lizenzfreie Musik (Pixabay), automatisch auf die Videolänge gekürzt und ausgeblendet. Die anderen Melodien werden im Browser erzeugt.', soc_title:'Social-Media-Bilder',
+  admin_tab_social:'📣 Social Media', soc_fmt_a5:'A5 Flyer', soc_fmt_a5_sub:'14,8 × 21 cm · PDF', soc_fmt_a6:'A6 Flyer', soc_fmt_a6_sub:'10,5 × 14,8 cm · PDF', soc_print_hint:'Flyer werden als druckfertiges PDF (300 dpi) erstellt, immer mit QR-Code zum Hundeprofil.', soc_pdf_one:'PDF herunterladen', soc_pdf_selected:'PDF mit {n} Flyern', soc_pdf_done:'PDF mit {n} Flyern erstellt', soc_video:'Video mit Musik', soc_video_hint:'Diashow aus den Fotos des Hundes mit Abspann. Wird live aufgenommen und dauert so lange wie das Video. Bitte diesen Tab währenddessen offen lassen.', soc_music:'Musik', soc_music_none:'Keine Musik', soc_music_sonnig:'Sonnig · fröhlich', soc_music_ruhig:'Ruhig · sanft', soc_music_verspielt:'Verspielt · flott', soc_listen:'▶ Anhören', soc_secs:'Sekunden pro Foto', soc_volume:'Lautstärke', soc_video_make:'🎬 Video erstellen', soc_video_recording:'Video wird aufgenommen … {s} s', soc_video_ready:'Dein Video ist fertig', soc_video_download:'Video herunterladen', soc_video_error:'Das Video konnte in diesem Browser nicht erstellt werden.', soc_video_print:'Videos gibt es nur für die Social-Media-Formate.', soc_outro:'Mehr auf', soc_outro_line:'Vielleicht beginnt mein Happy End bei dir.', soc_video_pick:'Fotos fürs Video in Reihenfolge antippen (bis zu 8). Nichts gewählt = alle Fotos.', soc_video_pick_reset:'Auswahl zurücksetzen', soc_scenes:'Vorschau der Szenen', soc_vedit_tap:'Szene antippen, um das Foto zu verschieben oder zu zoomen (damit das Gesicht nicht abgeschnitten wird).', soc_vedit_title:'Szene {n} anpassen', soc_vedit_hint:'Foto mit der Maus / dem Finger verschieben, mit dem Regler zoomen.', soc_vedit_done:'Fertig', soc_scene:'Szene', soc_scene_end:'Abspann · 3 s', soc_scenes_wait:'Vorschau wird erstellt …', soc_music_note:'🎵 = lizenzfreie Musik (Pixabay), automatisch auf die Videolänge gekürzt und ausgeblendet. Die anderen Melodien werden im Browser erzeugt.', soc_title:'Social-Media-Bilder',
   soc_intro:'Fertige Bilder für Instagram und Facebook: Format, Design, Farbe und Muster wählen, Hunde auswählen, herunterladen. Den passenden Bildtext mit Hashtags gibt es zum Kopieren dazu.',
   soc_format:'Format', soc_fmt_story:'Story', soc_fmt_story_sub:'9:16 · Reel', soc_fmt_post:'Post', soc_fmt_post_sub:'4:5 · Hochformat', soc_fmt_square:'Quadrat', soc_fmt_square_sub:'1:1', soc_fmt_wide:'Link', soc_fmt_wide_sub:'1.91:1 · Facebook',
   soc_layout:'Design', soc_lay_bogen:'Bogen', soc_lay_vollbild:'Vollbild', soc_lay_steckbrief:'Steckbrief', soc_lay_collage:'Collage', soc_lay_herz:'Herz', soc_lay_magazin:'Magazin', soc_lay_split:'Zweifarbig', soc_lay_minimal:'Schlicht', soc_lay_poster:'Plakat',
-  soc_theme:'Farben', soc_th_schwarz:'Schwarz & Gold', soc_th_gruen:'Waldgrün & Gold', soc_th_creme:'Creme & Rost', soc_th_tanne:'Tanne & Gold', soc_th_terra:'Terrakotta', soc_th_herz:'Herzrot', soc_th_himmel:'Himmelblau', soc_th_salbei:'Salbei', soc_th_sand:'Sand', soc_th_nacht:'Nacht',
+  soc_theme:'Farben', soc_th_schwarz:'Schwarz & Gold', soc_th_gruen:'Waldgrün & Gold', soc_th_creme:'Creme & Rost', soc_th_rot:'Logo-Rot & Weiß', soc_th_weiss:'Weiß & Rot', soc_th_grau:'Grau & Schwarz', soc_th_nachtrot:'Schwarz & Rot', soc_th_tanne:'Tanne & Gold', soc_th_terra:'Terrakotta', soc_th_herz:'Herzrot', soc_th_himmel:'Himmelblau', soc_th_salbei:'Salbei', soc_th_sand:'Sand', soc_th_nacht:'Nacht',
   soc_pattern:'Muster', soc_pat_pfoten:'Pfoten', soc_pat_herzen:'Herzen', soc_pat_punkte:'Punkte', soc_pat_streifen:'Streifen', soc_pat_hunde:'Hunde', soc_pat_knochen:'Knochen', soc_pat_sterne:'Sterne', soc_pat_karo:'Karo', soc_pat_wellen:'Wellen', soc_pat_konfetti:'Konfetti', soc_pat_keins:'Ohne',
   soc_texts:'Texte', soc_tag_label:'Abzeichen', soc_tag_ph:'leer = automatisch („Sucht ein Zuhause“ / „Reserviert“)', soc_tag_default:'Sucht ein Zuhause', soc_tag_reserved:'Reserviert',
   soc_cta_label:'Button-Text', soc_cta_default:'Jetzt kennenlernen', soc_url_label:'Webadresse auf dem Bild', soc_url_default:'einherzfuerhunde.com/vermittlung',
@@ -4328,11 +4352,11 @@ Object.assign(I18N.de, {
 Object.assign(I18N.en, {
   pub_soc_title:'Sharing helps', pub_soc_intro:'Make a picture or video for Instagram, Facebook or WhatsApp in a few clicks: pick a dog, choose format and design, download and share. Every shared picture can make the difference for a dog.',
   pub_soc_locked:'Texts and the link on the picture always come from us, so nobody can spread false information in our name.', pub_soc_open:'Make a picture to share', nav_share_maker:'Pictures to share',
-  admin_tab_social:'📣 Social media', soc_fmt_a5:'A5 flyer', soc_fmt_a5_sub:'14.8 × 21 cm · PDF', soc_fmt_a6:'A6 flyer', soc_fmt_a6_sub:'10.5 × 14.8 cm · PDF', soc_print_hint:'Flyers are made as a print-ready PDF (300 dpi), always with a QR code to the dog profile.', soc_pdf_one:'Download PDF', soc_pdf_selected:'PDF with {n} flyers', soc_pdf_done:'PDF with {n} flyers created', soc_video:'Video with music', soc_video_hint:'Slideshow of the dog’s photos with an end card. It is recorded live, so it takes as long as the video. Please keep this tab open while it records.', soc_music:'Music', soc_music_none:'No music', soc_music_sonnig:'Sunny · cheerful', soc_music_ruhig:'Calm · gentle', soc_music_verspielt:'Playful · upbeat', soc_listen:'▶ Listen', soc_secs:'Seconds per photo', soc_volume:'Volume', soc_video_make:'🎬 Create video', soc_video_recording:'Recording video … {s} s', soc_video_ready:'Your video is ready', soc_video_download:'Download video', soc_video_error:'The video could not be made in this browser.', soc_video_print:'Videos are only available for the social media formats.', soc_outro:'More at', soc_outro_line:'Maybe my happy end starts with you.', soc_video_pick:'Tap the photos for the video in order (up to 8). None chosen = all photos.', soc_video_pick_reset:'Reset selection', soc_scenes:'Scene preview', soc_scene:'Scene', soc_scene_end:'End card · 3 s', soc_scenes_wait:'Making preview …', soc_music_note:'🎵 = royalty-free music (Pixabay), cut to the video length and faded out automatically. The other tunes are generated in the browser.', soc_title:'Social media pictures',
+  admin_tab_social:'📣 Social media', soc_fmt_a5:'A5 flyer', soc_fmt_a5_sub:'14.8 × 21 cm · PDF', soc_fmt_a6:'A6 flyer', soc_fmt_a6_sub:'10.5 × 14.8 cm · PDF', soc_print_hint:'Flyers are made as a print-ready PDF (300 dpi), always with a QR code to the dog profile.', soc_pdf_one:'Download PDF', soc_pdf_selected:'PDF with {n} flyers', soc_pdf_done:'PDF with {n} flyers created', soc_video:'Video with music', soc_video_hint:'Slideshow of the dog’s photos with an end card. It is recorded live, so it takes as long as the video. Please keep this tab open while it records.', soc_music:'Music', soc_music_none:'No music', soc_music_sonnig:'Sunny · cheerful', soc_music_ruhig:'Calm · gentle', soc_music_verspielt:'Playful · upbeat', soc_listen:'▶ Listen', soc_secs:'Seconds per photo', soc_volume:'Volume', soc_video_make:'🎬 Create video', soc_video_recording:'Recording video … {s} s', soc_video_ready:'Your video is ready', soc_video_download:'Download video', soc_video_error:'The video could not be made in this browser.', soc_video_print:'Videos are only available for the social media formats.', soc_outro:'More at', soc_outro_line:'Maybe my happy end starts with you.', soc_video_pick:'Tap the photos for the video in order (up to 8). None chosen = all photos.', soc_video_pick_reset:'Reset selection', soc_scenes:'Scene preview', soc_vedit_tap:'Tap a scene to move or zoom its photo (so the face is not cut off).', soc_vedit_title:'Adjust scene {n}', soc_vedit_hint:'Drag the photo with the mouse / finger, zoom with the slider.', soc_vedit_done:'Done', soc_scene:'Scene', soc_scene_end:'End card · 3 s', soc_scenes_wait:'Making preview …', soc_music_note:'🎵 = royalty-free music (Pixabay), cut to the video length and faded out automatically. The other tunes are generated in the browser.', soc_title:'Social media pictures',
   soc_intro:'Ready-made pictures for Instagram and Facebook: pick format, design, colours and pattern, select dogs, download. A matching caption with hashtags comes with it to copy.',
   soc_format:'Format', soc_fmt_story:'Story', soc_fmt_story_sub:'9:16 · Reel', soc_fmt_post:'Post', soc_fmt_post_sub:'4:5 · portrait', soc_fmt_square:'Square', soc_fmt_square_sub:'1:1', soc_fmt_wide:'Link', soc_fmt_wide_sub:'1.91:1 · Facebook',
   soc_layout:'Design', soc_lay_bogen:'Arch', soc_lay_vollbild:'Full photo', soc_lay_steckbrief:'Profile', soc_lay_collage:'Collage', soc_lay_herz:'Heart', soc_lay_magazin:'Magazine', soc_lay_split:'Two-tone', soc_lay_minimal:'Clean', soc_lay_poster:'Poster',
-  soc_theme:'Colours', soc_th_schwarz:'Black & gold', soc_th_gruen:'Forest green & gold', soc_th_creme:'Cream & rust', soc_th_tanne:'Pine & gold', soc_th_terra:'Terracotta', soc_th_herz:'Heart red', soc_th_himmel:'Sky blue', soc_th_salbei:'Sage', soc_th_sand:'Sand', soc_th_nacht:'Night',
+  soc_theme:'Colours', soc_th_schwarz:'Black & gold', soc_th_gruen:'Forest green & gold', soc_th_creme:'Cream & rust', soc_th_rot:'Logo red & white', soc_th_weiss:'White & red', soc_th_grau:'Grey & black', soc_th_nachtrot:'Black & red', soc_th_tanne:'Pine & gold', soc_th_terra:'Terracotta', soc_th_herz:'Heart red', soc_th_himmel:'Sky blue', soc_th_salbei:'Sage', soc_th_sand:'Sand', soc_th_nacht:'Night',
   soc_pattern:'Pattern', soc_pat_pfoten:'Paws', soc_pat_herzen:'Hearts', soc_pat_punkte:'Dots', soc_pat_streifen:'Stripes', soc_pat_hunde:'Dogs', soc_pat_knochen:'Bones', soc_pat_sterne:'Stars', soc_pat_karo:'Checks', soc_pat_wellen:'Waves', soc_pat_konfetti:'Confetti', soc_pat_keins:'None',
   soc_texts:'Texts', soc_tag_label:'Badge', soc_tag_ph:'empty = automatic (“Sucht ein Zuhause” / “Reserviert”)', soc_tag_default:'Sucht ein Zuhause', soc_tag_reserved:'Reserviert',
   soc_cta_label:'Button text', soc_cta_default:'Jetzt kennenlernen', soc_url_label:'Web address on the picture', soc_url_default:'einherzfuerhunde.com/vermittlung',
@@ -4361,7 +4385,12 @@ const SOC_MUSIC = ['none', ...Object.keys(SOC_TRACKS), 'sonnig', 'ruhig', 'versp
 const SOC_THEMES = {
   schwarz: { bg:'#0B100D', bg2:'#1C2620', accent:'#F2C27A', accentInk:'#0B100D', on:'#F6F0E5', soft:'rgba(246,240,229,0.66)', ink2:'#A6512E' },
   gruen:   { bg:'#24322B', bg2:'#3A4D40', accent:'#F2C27A', accentInk:'#24322B', on:'#F6F0E5', soft:'rgba(246,240,229,0.72)', ink2:'#57684A' },
-  creme:   { bg:'#F6F0E5', bg2:'#EAD9C2', accent:'#A6512E', accentInk:'#FFFFFF', on:'#24322B', soft:'rgba(36,50,43,0.72)', ink2:'#A6512E' }
+  creme:   { bg:'#F6F0E5', bg2:'#EAD9C2', accent:'#A6512E', accentInk:'#FFFFFF', on:'#24322B', soft:'rgba(36,50,43,0.72)', ink2:'#A6512E' },
+  // brand colours of the new website: logo red #D2223E, black #111111, white, light grey #F2F2F2
+  rot:     { bg:'#D2223E', bg2:'#B01B33', accent:'#FFFFFF', accentInk:'#D2223E', on:'#FFFFFF', soft:'rgba(255,255,255,0.82)', ink2:'#111111', brandInk:'#FFFFFF', brandRed:'#111111' },
+  weiss:   { bg:'#FFFFFF', bg2:'#F2F2F2', accent:'#D2223E', accentInk:'#FFFFFF', on:'#111111', soft:'rgba(17,17,17,0.66)', ink2:'#D2223E', brandInk:'#111111', brandRed:'#D2223E' },
+  grau:    { bg:'#F2F2F2', bg2:'#E2E2E2', accent:'#111111', accentInk:'#FFFFFF', on:'#111111', soft:'rgba(17,17,17,0.66)', ink2:'#D2223E', brandInk:'#111111', brandRed:'#D2223E' },
+  nachtrot:{ bg:'#111111', bg2:'#2A2A2A', accent:'#D2223E', accentInk:'#FFFFFF', on:'#FFFFFF', soft:'rgba(255,255,255,0.7)', ink2:'#D2223E', brandInk:'#FFFFFF', brandRed:'#D2223E' }
 };
 const SOC_CARD = { bg:'#FBF8F2', ink:'#24322B', soft:'#66706a' };
 const SOC_KEY = 'ehfh_social_cards_v1';
@@ -4377,7 +4406,7 @@ function socLoad(){
     tag: str(s.tag), cta: str(s.cta), url: str(s.url), hashtags: str(s.hashtags),
     qr: !!s.qr, fee: false, music: SOC_MUSIC.includes(s.music) ? s.music : 'funny-pets', secs: s.secs >= 2 && s.secs <= 6 ? +s.secs : 3.5, vol: s.vol >= 0 && s.vol <= 1 ? +s.vol : 0.7, feeAmount: s.feeAmount != null && s.feeAmount !== '' ? String(s.feeAmount) : '430',
     group: ['verfuegbar','reserviert','all'].includes(s.group) ? s.group : 'all',
-    notes: obj(s.notes), crop: obj(s.crop), photo: obj(s.photo), pick: obj(s.pick), vpick: obj(s.vpick),
+    notes: obj(s.notes), crop: obj(s.crop), photo: obj(s.photo), pick: obj(s.pick), vpick: obj(s.vpick), vcrop: obj(s.vcrop),
     selected: Array.isArray(s.selected) ? s.selected : []
   };
 }
@@ -4430,17 +4459,81 @@ function socVideoPhotos(d){
   const all = (d.photos || []).filter(Boolean), pk = socVPickList(d, all);
   return pk.length ? pk.map(j => all[j]) : socPhotoList(d).slice(0, 6);
 }
+// options of video scene i: its photo first; position/zoom = what was set for this scene in the video box, else the card's setting for the card photo
+function socVSceneKey(d, i){ const all = (d.photos || []).filter(Boolean), list = socVideoPhotos(d); return 'p' + Math.max(0, all.indexOf(list[i])); }
+function socVSceneCrop(d, i){
+  const own = (soc.vcrop[d.id] || {})[socVSceneKey(d, i)]; if(own) return own;
+  const list = socVideoPhotos(d), first = socPhotoList(d)[0];
+  return list[i] === first && list.indexOf(first) === i ? soc.crop[d.id] || null : null;
+}
+function socVSceneOpts(d, i, fmt, scale){
+  const list = socVideoPhotos(d), o = socOpts(d, scale || 1, fmt);
+  if(list.length){ o.photos = [list[i], ...list.filter((_, j) => j !== i)]; o.crop = socVSceneCrop(d, i); }
+  return o;
+}
 async function socVideoSlides(d, fmt, scale){
-  const list = socVideoPhotos(d), first = socPhotoList(d)[0], n = Math.max(1, list.length), slides = [];
-  for(let i = 0; i < n; i++){
-    const o = socOpts(d, scale || 1, fmt);
-    if(list.length){ o.photos = [list[i], ...list.filter((_, j) => j !== i)]; if(list[i] !== first || (i && list.indexOf(first) < i)) o.crop = null; }
-    slides.push(await socCanvas(d, o));
-  }
+  const n = Math.max(1, socVideoPhotos(d).length), slides = [];
+  for(let i = 0; i < n; i++) slides.push(await socCanvas(d, socVSceneOpts(d, i, fmt, scale)));
   return slides;
 }
+// Scene editor in the video box: tap a scene, then drag / zoom its photo
+let socVScene = -1, socVSlot = 0, socVEditBusy = false, socVEditAgain = false, socVEditInfo = null, socVDrag = null, socVEnd = null;
+function socVSetCrop(d, i, slot, val){
+  const k = socVSceneKey(d, i), all = soc.vcrop[d.id] = soc.vcrop[d.id] || {}, cur = all[k] || socVSceneCrop(d, i) || {};
+  if(slot){ all[k] = { ...cur, ['s' + slot]: val }; }
+  else { const keep = {}; Object.keys(cur).forEach(x => { if(/^s\d$/.test(x)) keep[x] = cur[x]; }); all[k] = { ...keep, ...val }; }
+}
+async function socVEditDraw(){
+  if(socVEditBusy){ socVEditAgain = true; return; }
+  const d = state.dogs.find(x => x.id === socPreview.id), cv = document.getElementById('socVEdit');
+  if(!d || !cv || socVScene < 0) return;
+  socVEditBusy = true;
+  try{
+    const F = SOC_FORMATS[soc.format], c = await socCanvas(d, socVSceneOpts(d, socVScene, soc.format, 0.3));
+    const cv2 = document.getElementById('socVEdit');
+    if(cv2){ cv2.width = c.width; cv2.height = c.height; cv2.getContext('2d').drawImage(c, 0, 0); socVEditInfo = (c.socPhotos || []).map(p => p ? { ...p, cw: F.w, ch: F.h } : null); }
+  }catch(_){}
+  socVEditBusy = false;
+  if(socVEditAgain){ socVEditAgain = false; requestAnimationFrame(socVEditDraw); }
+}
+function socVEditHtml(d){
+  const n = socVideoPhotos(d).length;
+  if(socVScene >= n) socVScene = -1;
+  if(socVScene < 0) return n ? `<p class="hint" style="margin:0 0 10px;">${t('soc_vedit_tap')}</p>` : '';
+  const F = SOC_FORMATS[soc.format], z = ((socSlotCrop(socVSceneCrop(d, socVScene), socVSlot) || {}).z || 1);
+  setTimeout(socVEditDraw, 0);
+  return `<div class="soc-vedit"><b>${t('soc_vedit_title').replace('{n}', socVScene + 1)}</b>
+    <p class="hint" style="margin:2px 0 8px;">${t('soc_vedit_hint')}</p>
+    <canvas id="socVEdit" style="aspect-ratio:${F.w}/${F.h}"></canvas>
+    <label class="xmas-zoom">${t('xmas_zoom')} <input type="range" id="socVZoom" min="40" max="300" step="5" value="${Math.round(z * 100)}"></label>
+    <div><button type="button" class="link-btn" data-action="soc-vedit-reset">${t('xmas_crop_reset')}</button> · <button type="button" class="link-btn" data-action="soc-vscene" data-idx="-1">${t('soc_vedit_done')}</button></div></div>`;
+}
+function socVEditCommit(){ socSave(); clearTimeout(socVEnd); socVEnd = setTimeout(() => { const d = state.dogs.find(x => x.id === socPreview.id), el = document.getElementById('socScenes'); if(d && el) el.outerHTML = socScenesHtml(d); }, 350); }
+document.addEventListener('pointerdown', e => {
+  if(!e.target || e.target.id !== 'socVEdit' || !socVEditInfo) return;
+  const d = state.dogs.find(x => x.id === socPreview.id); if(!d) return;
+  const r = e.target.getBoundingClientRect(), ps = socVEditInfo, p0 = ps.find(Boolean); if(!p0) return;
+  const cx = (e.clientX - r.left) / r.width * p0.cw, cy = (e.clientY - r.top) / r.height * p0.ch;
+  let slot = -1; for(let i = ps.length - 1; i >= 0; i--){ const q = ps[i]; if(q && cx >= q.x && cx <= q.x + q.w && cy >= q.y && cy <= q.y + q.h){ slot = i; break; } }
+  if(slot < 0) return;
+  const p = ps[slot], c = socSlotCrop(socVSceneCrop(d, socVScene), slot) || {};
+  if(socVSlot !== slot){ socVSlot = slot; const zr = document.getElementById('socVZoom'); if(zr) zr.value = Math.round((c.z || 1) * 100); }
+  socVDrag = { d, slot, x: e.clientX, y: e.clientY, r, p, moved: false,
+    fx: isFinite(c.fx) ? c.fx : (p.x + p.w / 2 - p.dx) / p.dw, fy: isFinite(c.fy) ? c.fy : (p.y + p.h / 2 - p.dy) / p.dh };
+  e.preventDefault();
+});
+document.addEventListener('pointermove', e => {
+  if(!socVDrag) return;
+  const { r, p, d, slot } = socVDrag, ddx = (e.clientX - socVDrag.x) / r.width * p.cw, ddy = (e.clientY - socVDrag.y) / r.height * p.ch;
+  if(!socVDrag.moved && Math.hypot(e.clientX - socVDrag.x, e.clientY - socVDrag.y) < 4) return;
+  socVDrag.moved = true; e.preventDefault();
+  const old = socSlotCrop(socVSceneCrop(d, socVScene), slot) || {};
+  socVSetCrop(d, socVScene, slot, { fx: Math.max(0, Math.min(1, socVDrag.fx - ddx / p.dw)), fy: Math.max(0, Math.min(1, socVDrag.fy - ddy / p.dh)), z: old.z || 1 });
+  socVEditDraw();
+});
+document.addEventListener('pointerup', () => { if(!socVDrag) return; const m = socVDrag.moved; socVDrag = null; if(m) socVEditCommit(); });
 let socVPrev = { key: '', urls: [], busy: false };
-function socVPrevKey(d){ return JSON.stringify([d.id, soc.format, soc.layout, soc.theme, soc.pattern, socTagCustom(), socVPickList(d), soc.crop[d.id] || null, socNote(d), soc.pick[d.id] || null, soc.photo[d.id] || 0, lang]); }
+function socVPrevKey(d){ return JSON.stringify([d.id, soc.format, soc.layout, soc.theme, soc.pattern, socTagCustom(), socVPickList(d), soc.crop[d.id] || null, soc.vcrop[d.id] || null, socNote(d), soc.pick[d.id] || null, soc.photo[d.id] || 0, lang]); }
 async function socVPrevBuild(d){
   const key = socVPrevKey(d);
   if(socVPrev.busy || socVPrev.key === key) return;
@@ -4455,7 +4548,7 @@ async function socVPrevBuild(d){
 function socScenesHtml(d){
   const ok = socVPrev.key === socVPrevKey(d) && socVPrev.urls.length;
   if(!ok) setTimeout(() => socVPrevBuild(d), 0);
-  return `<div id="socScenes" class="soc-scenes"><small>${t('soc_scenes')}</small><div>${ok ? socVPrev.urls.map((u, i) => `<figure><img src="${u}" alt=""><figcaption>${i === socVPrev.urls.length - 1 ? t('soc_scene_end') : (i + 1) + '. ' + t('soc_scene') + ' · ' + soc.secs + ' s'}</figcaption></figure>`).join('') : `<span class="hint">${t('soc_scenes_wait')}</span>`}</div></div>`;
+  return `<div id="socScenes" class="soc-scenes"><small>${t('soc_scenes')}</small><div>${ok ? socVPrev.urls.map((u, i) => `<figure ${i < socVPrev.urls.length - 1 ? `data-action="soc-vscene" data-idx="${i}" class="${i === socVScene ? 'on' : ''}"` : ''}><img src="${u}" alt=""><figcaption>${i === socVPrev.urls.length - 1 ? t('soc_scene_end') : (i + 1) + '. ' + t('soc_scene') + ' · ' + soc.secs + ' s'}</figcaption></figure>`).join('') : `<span class="hint">${t('soc_scenes_wait')}</span>`}</div></div>`;
 }
 function socPickList(d, list){
   const n = (list || (d.photos || []).filter(Boolean)).length;
@@ -4560,6 +4653,7 @@ function adminSocialTab(pub){
           <div class="soc-photos" style="margin:0 0 8px;"><small>${t('soc_video_layout')}</small>${seg('layout', SOC_LAYOUTS, k => `<b>${t('soc_lay_' + k)}</b>`)}</div>
           ${photos.length > 1 ? (() => { const vk = socVPickList(pd, photos); return `<div class="soc-photos" style="margin:0 0 8px;"><small>${t('soc_video_pick')}</small><div>${photos.map((u, i) => { const k = vk.indexOf(i); return `<button type="button" class="soc-photo ${k >= 0 ? 'on' : ''}" data-action="soc-vpick" data-idx="${i}" aria-pressed="${k >= 0}"><img src="${esc(thumbUrl(u))}" alt="" loading="lazy">${k >= 0 ? `<span class="soc-photo-n">${k + 1}</span>` : ''}</button>`; }).join('')}</div>${vk.length ? `<button type="button" class="link-btn" data-action="soc-vpick-reset">${t('soc_video_pick_reset')}</button>` : ''}</div>`; })() : ''}
           ${socScenesHtml(pd)}
+          ${socVEditHtml(pd)}
           <div class="soc-seg">${SOC_MUSIC.map(k => `<button type="button" class="soc-opt ${soc.music === k ? 'on' : ''}" data-action="soc-music" data-val="${k}"><b>${SOC_TRACKS[k] ? '🎵 ' + SOC_TRACKS[k] : t('soc_music_' + k)}</b></button>`).join('')}</div>
           ${soc.music !== 'none' ? `<button type="button" class="link-btn" data-action="soc-listen" style="margin-top:6px;">${t('soc_listen')}</button>` : ''}
           <label class="xmas-zoom" style="margin-top:10px;">${t('soc_secs')} <input type="range" id="socSecs" min="2" max="6" step="0.5" value="${soc.secs}"> <span id="socSecsVal">${soc.secs} s</span></label>
@@ -4683,6 +4777,15 @@ function socPattern(g, W, H, kind, th, seed){
 }
 // cover-crop img into the box; focus = wanted centre (0..1), z = zoom
 // z < 1 = zoomed out: the whole photo gets smaller inside the shape (to fit a dog into the heart etc.)
+// Blurred, darkened copy of the photo behind the gaps. Safari/iPhone ignores ctx.filter, which made the
+// photo show twice side by side: so the blur is done by shrinking the photo to a tiny canvas and scaling it back up.
+function socBlurFill(g, img, x, y, w, h, fx, fy){
+  const k = document.createElement('canvas'), sw = 24, sh = Math.max(8, Math.round(24 * (h + 40) / (w + 40)));
+  k.width = sw; k.height = sh; const kg = k.getContext('2d');
+  socCover(kg, img, 0, 0, sw, sh, fx, fy, 1);
+  g.save(); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(k, x - 20, y - 20, w + 40, h + 40);
+  g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(x, y, w, h); g.restore();
+}
 function socCover(g, img, x, y, w, h, fx, fy, z, free){
   const s = Math.max(w / img.width, h / img.height) * Math.max(0.4, Math.min(z || 1, 4));
   const dw = img.width * s, dh = img.height * s;
@@ -4705,7 +4808,7 @@ function socDrawPhoto(P, i, x, y, w, h, clip){
     const z = cr ? cr.z || 1 : 1;
     const free = !!cr && isFinite(cr.fx);
     const pre = socCover(null, img, x, y, w, h, fx, fy, z, free);
-    if(pre.dx > x + 0.5 || pre.dy > y + 0.5 || pre.dx + pre.dw < x + w - 0.5 || pre.dy + pre.dh < y + h - 0.5){ g.save(); g.filter = `blur(${Math.round(Math.max(w, h) / 30)}px) brightness(0.85)`; socCover(g, img, x - 20, y - 20, w + 40, h + 40, fx, fy, 1); g.restore(); }
+    if(pre.dx > x + 0.5 || pre.dy > y + 0.5 || pre.dx + pre.dw < x + w - 0.5 || pre.dy + pre.dh < y + h - 0.5){ socBlurFill(g, img, x, y, w, h, fx, fy); }
     const info = socCover(g, img, x, y, w, h, fx, fy, z, free);
     if(i === 0) P.photo = info;
     (P.photos = P.photos || [])[i] = info;
@@ -6970,12 +7073,18 @@ document.addEventListener('click', async (e) => {
     return;
   }
   if(action === 'soc-crop-reset'){ delete soc.crop[actionEl.getAttribute('data-id')]; socSave(); render(); socRefreshSoon(0); return; }
+  if(action === 'soc-vscene'){ const i = Number(actionEl.getAttribute('data-idx')); socVScene = i === socVScene ? -1 : i; socVSlot = 0; render(); return; }
+  if(action === 'soc-vedit-reset'){
+    const d = state.dogs.find(x => x.id === socPreview.id);
+    if(d && socVScene >= 0){ (soc.vcrop[d.id] = soc.vcrop[d.id] || {})[socVSceneKey(d, socVScene)] = {}; socSave(); render(); }
+    return;
+  }
   if(action === 'soc-vpick' || action === 'soc-vpick-reset'){
     if(socPreview.id){
       const d = state.dogs.find(x => x.id === socPreview.id), i = Number(actionEl.getAttribute('data-idx')) || 0;
       let pk = action === 'soc-vpick-reset' ? [] : socVPickList(d);
       if(action === 'soc-vpick') pk = pk.includes(i) ? pk.filter(j => j !== i) : pk.length >= 8 ? pk : [...pk, i];
-      soc.vpick[d.id] = pk; socSave(); render();
+      soc.vpick[d.id] = pk; socVScene = -1; socSave(); render();
     }
     return;
   }
@@ -7400,6 +7509,7 @@ document.addEventListener('input', (e) => {
   }
   if(el.matches && el.matches('[data-soc-note]') && !socPub()){ soc.notes[el.getAttribute('data-soc-note')] = el.value; socSave(); if(socPreview.id === el.getAttribute('data-soc-note')) socRefreshSoon(); return; }
   if(el.id === 'socZoom' && socPreview.id){ const id = socPreview.id; socSetSlot(id, socSlot, { ...(socSlotCrop(soc.crop[id], socSlot) || {}), z: Number(el.value) / 100 }); socSave(); socLiveDraw(); clearTimeout(socZoomEnd); socZoomEnd = setTimeout(() => { socRefreshSoon(0, true); }, 250); return; }
+  if(el.id === 'socVZoom' && socPreview.id && socVScene >= 0){ const d = state.dogs.find(x => x.id === socPreview.id); if(d){ socVSetCrop(d, socVScene, socVSlot, { ...(socSlotCrop(socVSceneCrop(d, socVScene), socVSlot) || {}), z: Number(el.value) / 100 }); socVEditDraw(); socVEditCommit(); } return; }
   if(el.id === 'socSecs'){ soc.secs = Number(el.value); socSave(); const v = document.getElementById('socSecsVal'); if(v) v.textContent = soc.secs + ' s'; return; }
   if(el.id === 'socVol'){ soc.vol = Number(el.value) / 100; socSave(); return; }
   if(['socTag','socCta','socUrl','socFeeAmount','socHashtags'].includes(el.id) && !socPub()){
