@@ -1306,6 +1306,46 @@
     .fan-2{transform:rotate(3deg) translateX(-30px);}
     .mini-kenncard:hover{transform:rotate(0deg) translateY(4px);}
   }
+  /* ----- MORE RED (25 Nov 2026, Patlican): the quote section is a red band, main buttons are red ----- */
+  .philo-section{position:relative;z-index:1;background:#D2223E;color:#FFFFFF;margin:0;padding:64px 0 72px;}
+  .philo-section::before,.philo-section::after{content:"";position:absolute;left:0;right:0;height:var(--curve);pointer-events:none;
+    background:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%201440%2048'%20preserveAspectRatio%3D'none'%3E%3Cpath%20d%3D'M0%2C34%20C300%2C6%20620%2C4%20900%2C20%20C1140%2C34%201300%2C30%201440%2C12%20L1440%2C48%20L0%2C48%20Z'%20fill%3D'%23D2223E'%2F%3E%3C%2Fsvg%3E") center/100% 100% no-repeat;}
+  .philo-section::before{bottom:calc(100% - 1px);}
+  .philo-section::after{top:calc(100% - 1px);transform:scale(-1,-1);}
+  .philo-wrap{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(32px,6vw,88px);}
+  .philo-arch{background:#FFFFFF;border:2px solid #111111;}
+  .philo-text{text-align:left;position:relative;}
+  .philo-quote{color:#FFFFFF;font-family:var(--serif);font-weight:700;font-size:clamp(1.7rem,3.3vw,2.75rem);line-height:1.12;letter-spacing:-0.035em;max-width:24ch;margin:0 0 26px;}
+  .philo-names{color:#FFFFFF;font-size:1.15rem;}
+  .philo-org{color:#FFFFFF;opacity:0.85;font-weight:600;}
+  /* a white card with the dog and the heart jar, pegged like the photos */
+  .philo-dog{position:relative;margin:30px 0 0;width:min(250px,62vw);background:#FFFFFF;border:2px solid #111111;border-radius:16px;padding:8px 10px 4px;rotate:-2deg;transform-origin:50% 0;transition:rotate .5s ease;}
+  .philo-dog:hover{rotate:0deg;}
+  .philo-dog::before{content:"";position:absolute;top:-30px;left:50%;width:22px;height:54px;margin-left:-11px;background:url(ill/ui-peg.webp) center/contain no-repeat;z-index:2;pointer-events:none;}
+  .philo-dog .ill-philo{width:100%;}
+  @media (min-width:861px){
+    .philo-text{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:28px;align-items:start;}
+    .philo-quote{grid-column:1/-1;}
+    .philo-names{grid-column:1;grid-row:2;align-self:end;}
+    .philo-org{grid-column:1;grid-row:3;align-self:start;}
+    .philo-dog{grid-column:2;grid-row:2/4;margin:14px 0 0;width:clamp(180px,16vw,230px);rotate:3deg;}
+  }
+  @media (max-width:860px){.philo-wrap{grid-template-columns:minmax(0,1fr);gap:28px;}.philo-photo{max-width:320px;}.philo-section{padding:44px 0 56px;}.philo-dog{max-width:calc(100% - 16px);margin-left:6px;}}
+  @media (prefers-reduced-motion:reduce){.philo-dog{rotate:0deg;}}
+  /* main buttons red with the black ink line, black on hover */
+  .btn-primary,.topbar .btn-primary,.mini-status{background:#D2223E;color:#FFFFFF;border-color:#111111;}
+  .btn-primary:hover,.topbar .btn-primary:hover,.mini-kenncard:hover .mini-status{background:#111111;color:#FFFFFF;}
+  .support-section .btn-primary,.feed-cta .btn-primary{border-color:#FFFFFF;}
+  /* red for what is chosen / active */
+  .chip.on,.dog-pick-item.on,.follow-btn.on{background:#D2223E;border-color:#111111;color:#FFFFFF;}
+  .topbar .nav-btn.active{color:#D2223E;}
+  .admin-tab.active{background:#D2223E;color:#FFFFFF;box-shadow:none;}
+  .admin-tab.active .count{background:rgba(255,255,255,0.22);color:#FFFFFF;}
+  .detail-tab.on{color:#D2223E;}
+  .progress-steps li.done .ps-dot{background:#D2223E;border-color:#111111;}
+  .badge.status-verfuegbar{border-color:#D2223E;color:#D2223E;}
+  .how-steps .steps-title,.page-title{text-decoration:none;}
+  .dog-tag-strip{background:#D2223E;}
 </style>
 </head>
 <body>
@@ -2303,6 +2343,7 @@ function viewHome(){
         <blockquote class="philo-quote">${t('philo_quote')}</blockquote>
         <div class="philo-names">Amra &amp; Michael</div>
         <div class="philo-org">Ein Herz für Hunde</div>
+        <figure class="philo-dog">${ill('herzglas','ill-philo')}</figure>
       </div>
     </div>
   </section>
