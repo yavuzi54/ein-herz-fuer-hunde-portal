@@ -1056,6 +1056,256 @@
     .hero-strip::-webkit-scrollbar{display:none;}
     .hero-strip .mini-kenncard{width:72vw;max-width:260px;flex-shrink:0;scroll-snap-align:center;transform:none;margin:0;}
   }
+  /* ===================================================================
+     LOOK: SCHWARZ, WEISS & LOGO-ROT (24 Nov 2026), same as the website
+     (website-src/assets/look.css, PR #61). White / light grey pages,
+     black bands (supporter band, footer, admin sidebar) with one calm
+     curve, logo red #D2223E only for accents and the main call to action,
+     hand-inked outline buttons (2px black, pill), inked cards (2px black,
+     16px radius, no floating shadows), photos pegged on a red line,
+     small drawings from the website (portal/ill/). No small uppercase
+     labels above headings, no script accent word, no arrows in buttons.
+     Overrides the WEBSITE LOOK block above. Only look, no logic.
+     =================================================================== */
+  :root{
+    --paper:#F2F2F2; --paper-card:#FFFFFF; --paper2:#FFFFFF; --sand:#E8E8E8;
+    --ink:#111111; --ink-black:#111111; --ink-soft:#555555; --cream:#FFFFFF;
+    --honey:#D2223E; --clay:#D2223E; --clay-dark:#A81A31; --red:#D2223E; --blush:#FBE8EC;
+    --moss:#666666; --moss-light:#8A8A8A; --amber:#D2223E;
+    --line:rgba(17,17,17,0.14); --line-soft:rgba(17,17,17,0.08);
+    --curve:clamp(22px,3vw,44px);
+  }
+  html,body{background:#FFFFFF;}
+  body{color:#111111;}
+  ::selection{background:#D2223E;color:#fff;}
+  :focus-visible{outline:2px solid #D2223E;outline-offset:3px;}
+  h1,h2,h3,.display{font-weight:700;letter-spacing:-0.035em;color:#111111;}
+  /* the last word is no longer a red script word: same font and colour as the heading */
+  em.accent,.hero h1 em.accent{font-family:inherit;font-style:normal;font-weight:inherit;letter-spacing:inherit;color:inherit;}
+  .page-title{font-size:clamp(2.1rem,4.2vw,3.2rem);line-height:1;letter-spacing:-0.04em;}
+  .steps-title,.how-head .steps-title,.happy-home h2{font-weight:700;letter-spacing:-0.035em;line-height:1.04;}
+  /* no small uppercase labels above headings */
+  .eyebrow-line,.how-eyebrow,.philo-eyebrow,.support-eyebrow,.eyebrow{display:none !important;}
+  .form-section-label{color:#111111;text-transform:none;letter-spacing:0;font-size:1.05rem;font-weight:700;font-family:var(--serif);}
+
+  /* buttons: hand-inked outline pills. Black = main, white = second, red = the one big next step */
+  .btn-primary,.btn-secondary,.how-end-btn,.follow-btn{border-radius:999px;border:2px solid #111111;box-shadow:none !important;font-weight:700;}
+  .btn-primary{background:#111111;color:#FFFFFF;padding:13px 26px;}
+  .btn-primary:hover{background:#D2223E;border-color:#111111;color:#FFFFFF;transform:none;}
+  .btn-secondary{background:#FFFFFF;color:#111111;padding:13px 24px;}
+  .btn-secondary:hover{background:#111111;color:#FFFFFF;box-shadow:none;}
+  .btn-small{border-radius:999px;padding:7px 14px;}
+  .btn-danger-outline{border-radius:999px;}
+  .hero .btn-primary,.steps-cta .btn-primary{background:#D2223E;color:#FFFFFF;border-color:#111111;}
+  .hero .btn-primary:hover,.steps-cta .btn-primary:hover{background:#111111;}
+  .hero .btn-secondary{background:#FFFFFF;color:#111111;box-shadow:none;}
+  .hero .btn-secondary:hover{background:#111111;color:#FFFFFF;}
+  .link-btn,.read-more-btn,.profile-link,.pw-tip a{color:#111111;text-decoration:underline;text-decoration-color:#D2223E;text-decoration-thickness:2px;text-underline-offset:4px;}
+  .lang-float{border-radius:999px;background:#FFFFFF;color:#111111;border:2px solid #111111;letter-spacing:0.04em;}
+  .lang-float:hover{background:#111111;color:#FFFFFF;border-color:#111111;}
+
+  /* applicant top bar: white bar like the website nav */
+  .topbar{background:rgba(255,255,255,0.94);border-bottom:1px solid rgba(17,17,17,0.08);}
+  .topbar-hello{color:#555555;}
+  .topbar .nav-btn{color:#555555;border-radius:999px;}
+  .topbar .nav-btn:hover{color:#111111;background:rgba(17,17,17,0.06);}
+  .topbar .nav-btn.active{color:#111111;text-decoration:underline;text-decoration-color:#D2223E;text-decoration-thickness:2px;text-underline-offset:6px;}
+  .topbar .btn-primary{background:#111111;color:#FFFFFF;}
+  .topbar .btn-primary:hover{background:#D2223E;}
+  .topbar .btn-secondary{background:#FFFFFF;color:#111111;box-shadow:none;}
+  .topbar .btn-secondary:hover{background:#111111;color:#FFFFFF;}
+  .topbar .lang-inline{border-radius:999px;color:#111111;border-color:rgba(17,17,17,0.3);}
+  .topbar .unread-dot{background:#D2223E;color:#FFFFFF;}
+
+  /* start page hero: white, the dog cards inked like tags */
+  .hero{background:#FFFFFF;color:#111111;}
+  .hero h1{color:#111111;font-weight:700;}
+  .hero p.lede{color:#555555;}
+  .fan-nav{background:#FFFFFF;color:#111111;border:2px solid #111111;}
+  .fan-nav:hover{background:#111111;color:#FFFFFF;border-color:#111111;}
+  .mini-kenncard{border:2px solid #111111;border-radius:16px;box-shadow:none;}
+  .mini-status{border-radius:999px;background:#111111;color:#FFFFFF;}
+  .mini-kenncard:hover .mini-status{background:#D2223E;color:#FFFFFF;}
+  .fan-0{transform:rotate(-3deg) translate(30px,22px);}
+  .fan-2{transform:rotate(3deg) translate(-30px,22px);}
+
+  /* "So funktioniert's": light grey, inked cards, last card white with red button */
+  .how-steps{background:#F2F2F2;}
+  .how-step{border:2px solid #111111;border-radius:16px;box-shadow:none;}
+  .how-n{color:#D2223E;}
+  .how-step p{color:#555555;}
+  .how-ctrl{color:#555555;}
+  .how-ctrl button{border:2px solid #111111;background:#FFFFFF;}
+  .how-ctrl button:hover{background:#111111;color:#FFFFFF;transform:none;}
+  .how-end{background:#FFFFFF;color:#111111;}
+  .how-step .how-end-t{font-family:var(--serif);font-weight:700;font-size:1.7rem;line-height:1.1;letter-spacing:-0.03em;color:#111111;}
+  .how-end-btn{background:#D2223E;color:#FFFFFF;}
+  .how-end:hover .how-end-btn{background:#111111;transform:none;}
+  .how-prog{background:rgba(17,17,17,0.1);}
+  .how-prog i{background:#D2223E;}
+  .step{border-top-color:#111111;}
+  .step-n{color:#D2223E;}
+
+  /* philosophy: white, the photo on light grey instead of the gold arch */
+  .philo-section{background:#FFFFFF;border:0;}
+  .philo-arch{background:#F2F2F2;border:2px solid #111111;border-radius:16px;box-shadow:none;}
+  .philo-arch::after{display:none;}
+  .philo-photo img{border-radius:0 0 14px 14px;}
+  .philo-quote{font-weight:500;}
+  .philo-org{color:#D2223E;}
+
+  /* cards, fields, chips */
+  .card,.post-card,.list-row,.transport-card{background:#FFFFFF;border:2px solid #111111;border-radius:16px;box-shadow:none;}
+  .list-row{border-width:1.5px;border-color:rgba(17,17,17,0.22);border-radius:12px;}
+  .list-row:hover,.transport-card:hover{border-color:#111111;}
+  .field input[type=text],.field input[type=email],.field input[type=tel],.field input[type=number],.field input[type=date],.field input[type=password],.field input:not([type]),.field select,.field textarea,.filter-search,.hb-form input[type=email]{border-radius:12px;border:1.5px solid rgba(17,17,17,0.28);background:#FFFFFF;}
+  .field input:focus,.field select:focus,.field textarea:focus,.filter-search:focus{outline:0;border-color:#111111;box-shadow:0 0 0 4px rgba(210,34,62,0.18);background:#FFFFFF;}
+  .consent-box,.pw-tip,.spam-hint,.bank-box,.release-all-toggle,.story-cta,.profile-locked,.fb-follow-card,.sponsor-box,.feed-cta,.hb-box,.ig-box,.follow-row,.paten-card,.impact-item{border-radius:16px;}
+  .pickup-question{border-radius:16px;border:2px solid #111111;background:#FFFFFF;}
+  .pickup-question.needs-answer{border-color:#D2223E;box-shadow:0 0 0 4px rgba(210,34,62,0.18);}
+  .pq-opt{border-radius:999px;}
+  .contract-note,.optimize-box,.upload-progress-banner,.chat-hint{background:#F2F2F2;border-radius:12px;}
+  .confirm-icon,.empty-block svg,.applied-note{color:#D2223E;}
+  .chip{border-radius:999px;background:#FFFFFF;border:1.5px solid rgba(17,17,17,0.22);}
+  .chip:hover{border-color:#111111;}
+  .chip.on{background:#111111;border-color:#111111;color:#FFFFFF;}
+  .chip.on .chip-n{color:#FFFFFF;opacity:0.7;}
+  input[type=checkbox],input[type=radio],input[type=range]{accent-color:#D2223E;}
+
+  /* dog + Happy End cards: inked tags, photo inside the border */
+  .dog-card{border:2px solid #111111;border-radius:16px;box-shadow:none;overflow:hidden;}
+  .dog-card:hover{transform:translateY(-3px) rotate(-0.4deg);box-shadow:none;}
+  .dog-name{font-weight:700;}
+  .dog-tag-strip{background:#111111;color:#FFFFFF;}
+  .dog-photo,.profile-hero-photo,.photo-picker-preview{background:#E8E8E8;}
+  .badge{border-radius:999px;}
+  .badge.status-verfuegbar{background:#FFFFFF;color:#111111;border:1.5px solid #111111;}
+  .badge.status-reserviert{background:#D2223E;color:#FFFFFF;border-color:#D2223E;}
+  .badge.status-vermittelt{background:#E8E8E8;color:#555555;border-color:#E8E8E8;}
+  .badge-sponsor,.sup-badge{background:#FBE8EC;color:#A81A31;border-color:#F4C3CD;}
+  .sponsor-box{background:#FBE8EC;border:2px solid #111111;}
+  .sponsor-box h3 svg,.sup-badge svg{color:#D2223E;}
+  .profile-hero-photo{border-radius:16px;}
+  .profile-dots .dot.active{background:#D2223E;}
+  .story-thumb.on{border-color:#D2223E;}
+  .happy-home{background:#F2F2F2;}
+  .happy-home .dog-card{border-color:#111111;}
+
+  /* applicant area */
+  .progress-steps li.done::before,.progress-steps li.current::before{background:#D2223E;}
+  .progress-steps li.done .ps-dot{background:#111111;border-color:#111111;color:#FFFFFF;}
+  .progress-steps li.current .ps-dot{border-color:#D2223E;color:#111111;background:#FFFFFF;}
+  .bubble-row.mine .bubble{background:#FBE8EC;border-color:#F4C3CD;}
+  .unread-badge,.unread-dot{background:#D2223E;}
+  .detail-tab.on{border-bottom-color:#D2223E;}
+  .dog-pick-item,.post-dog{border-radius:999px;}
+  .dog-pick-item.on{background:#111111;color:#FFFFFF;border-color:#111111;}
+  .follow-btn{background:#FFFFFF;color:#111111;}
+  .follow-btn.on{background:#111111;color:#FFFFFF;border-color:#111111;}
+  .arch-photo{border-radius:16px;border:2px solid #111111;box-shadow:none;}
+
+  /* black bands with one calm curve on top (same curve as the website) */
+  .support-section,footer,.privacy-strip{background:#111111;color:#FFFFFF;}
+  .support-section,footer{position:relative;}
+  .support-section{margin-top:var(--curve);}
+  /* the footer curve is drawn over the end of the page above it (no extra white strip, also under the admin sidebar) */
+  .support-section{padding:72px 0 84px;}
+  .privacy-strip+footer::before,.support-section+footer::before{display:none;}
+  .privacy-strip+footer,.support-section+footer{margin-top:0;}
+  .support-section+.privacy-strip::before{display:none;}
+  footer::before,.support-section::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:var(--curve);pointer-events:none;
+    background:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%201440%2048'%20preserveAspectRatio%3D'none'%3E%3Cpath%20d%3D'M0%2C34%20C300%2C6%20620%2C4%20900%2C20%20C1140%2C34%201300%2C30%201440%2C12%20L1440%2C48%20L0%2C48%20Z'%20fill%3D'%23111111'%2F%3E%3C%2Fsvg%3E") center/100% 100% no-repeat;}
+  .support-section h2,.support-section h3{color:#FFFFFF;}
+  .support-section .support-text{color:rgba(255,255,255,0.72);}
+  .support-section .impact-item{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.14);}
+  .support-section .impact-item b{color:#D2223E;}
+  .support-section .btn-primary{background:#D2223E;color:#FFFFFF;border-color:#FFFFFF;}
+  .support-section .btn-primary:hover{background:#FFFFFF;color:#111111;}
+  .support-section .btn-secondary{background:transparent;color:#FFFFFF;border-color:#FFFFFF;box-shadow:none;}
+  .support-section .btn-secondary:hover{background:#FFFFFF;color:#111111;}
+  /* the two founder photos hang on a red line with wooden pegs */
+  .support-photos{position:relative;padding-top:34px;gap:22px;}
+  .support-photos::before{content:"";position:absolute;left:-4%;right:-4%;top:40px;height:3px;border-radius:3px;background:#D2223E;}
+  .support-photo{background:#FFFFFF;padding:10px 10px 12px;border-radius:14px;rotate:-1.6deg;transform-origin:50% 0;transition:rotate .5s ease;}
+  .support-photo:nth-child(2){rotate:1.3deg;}
+  .support-photo:hover{rotate:0deg;}
+  .support-photo::before{content:"";position:absolute;top:-30px;left:50%;width:22px;height:54px;margin-left:-11px;background:url(ill/ui-peg.webp) center/contain no-repeat;z-index:2;pointer-events:none;}
+  .support-photo img{border-radius:8px;}
+  .support-photo figcaption{color:#555555;margin-top:8px;}
+  @media (prefers-reduced-motion:reduce){.support-photo,.support-photo:nth-child(2){rotate:0deg;}}
+  .privacy-strip{color:rgba(255,255,255,0.78);border-top:1px solid rgba(255,255,255,0.1);}
+  .privacy-strip svg,.privacy-strip b{color:#FFFFFF;}
+  .privacy-strip b{text-decoration:underline;text-decoration-color:#D2223E;text-decoration-thickness:2px;text-underline-offset:3px;}
+  footer{color:rgba(255,255,255,0.62);}
+  footer a,.social-row a{color:rgba(255,255,255,0.85);}
+  footer a:hover,.social-row a:hover{color:#FFFFFF;text-decoration-color:#D2223E;}
+  .social-label{color:rgba(255,255,255,0.5);}
+  .feed-cta{background:#111111;color:#FFFFFF;}
+  .feed-cta .btn-primary{background:#D2223E;color:#FFFFFF;border-color:#FFFFFF;}
+  .feed-cta .btn-secondary{background:transparent;color:#FFFFFF;border-color:#FFFFFF;box-shadow:none;}
+  .toast{background:#111111;color:#FFFFFF;border-radius:14px;border-left:4px solid #D2223E;}
+
+  /* admin: black sidebar, active tab white with a red mark */
+  .admin-side{background:#111111;}
+  .admin-side h3{color:rgba(255,255,255,0.55);letter-spacing:0;text-transform:none;font-size:0.82rem;}
+  .admin-tab{color:rgba(255,255,255,0.78);border-radius:999px;}
+  .admin-tab:hover{background:rgba(255,255,255,0.08);color:#FFFFFF;}
+  .admin-tab.active{background:#FFFFFF;color:#111111;box-shadow:inset 4px 0 0 #D2223E;}
+  .admin-tab.active .count{background:rgba(17,17,17,0.1);}
+  .detail-overlay{background:rgba(17,17,17,0.55);}
+
+  /* small drawings beside page headings (decoration only) */
+  .ill{display:block;height:auto;pointer-events:none;mix-blend-mode:multiply;}
+  .ill-head{float:right;width:clamp(150px,17vw,230px);margin:-12px 0 6px 20px;}
+  .ill-center{width:min(210px,56vw);margin:0 auto 6px;}
+  .ill-done{width:min(200px,52vw);}
+  .login-card:has(.ill-done) .done-icon{display:none;}
+  @media (max-width:640px){.ill-head{width:120px;margin:-6px 0 4px 12px;}}
+  /* ----- more drawings, animations and inked UI (24 Nov 2026 evening) ----- */
+  /* drawings: still ones sway gently like on the website; animated ones are short muted video loops */
+  @keyframes ill-sway{0%,100%{transform:rotate(0) translateY(0);}50%{transform:rotate(-1.2deg) translateY(-4px);}}
+  img.ill{transform-origin:50% 90%;animation:ill-sway 5.5s ease-in-out infinite;}
+  img.ill:hover{animation-duration:1.6s;}
+  video.ill{object-fit:contain;background:transparent;}
+  video.ill::-webkit-media-controls{display:none !important;}
+  @media (prefers-reduced-motion:reduce){img.ill{animation:none;}}
+  .confirm-box:has(.ill-done) .confirm-icon{display:none;}
+  .ill-404{width:min(300px,70vw);}
+  /* "So funktioniert's": the last card is a drawn card (dog in front of a home) */
+  .how-end{flex-direction:column;align-items:stretch;justify-content:flex-start;}
+  .how-end .ill-end{display:block;width:100%;height:auto;aspect-ratio:16/10;object-fit:contain;background:#FFFFFF;padding:10px 10px 0;}
+  .how-end .how-b{padding:14px 26px 28px;gap:16px;}
+  /* Happy Ends on the start page: sleeping dog next to the heading */
+  .hh-head{display:flex;align-items:flex-end;justify-content:flex-start;gap:14px;margin-bottom:18px;}
+  .hh-head .steps-title{margin:0;}
+  .ill-hh{flex:none;width:clamp(140px,14vw,190px);aspect-ratio:16/9;object-fit:cover;object-position:50% 70%;margin:0 0 -6px;order:2;}
+  @media (max-width:640px){.ill-hh{width:110px;}}
+  .more-link{color:#111111;font-weight:700;text-decoration:underline;text-decoration-color:#D2223E;text-decoration-thickness:2px;text-underline-offset:5px;}
+  .more-link:hover{color:#D2223E;}
+  /* empty lists: the dog with the magnifying glass instead of a box icon */
+  .empty-block .ill-empty{width:120px;margin:0 auto 4px;}
+  /* small drawn icons on the main buttons: paw on "Selbstauskunft starten", heart on "Unterstützer:in werden" */
+  .btn-primary[data-nav="bewerbung"],.btn-primary[data-nav="unterstuetzen"],.btn-primary[data-nav="mein-bereich"]{display:inline-flex;align-items:center;gap:9px;}
+  .btn-primary[data-nav="bewerbung"]::before,.btn-primary[data-nav="unterstuetzen"]::before,.btn-primary[data-nav="mein-bereich"]::before{content:"";flex:none;width:18px;height:18px;background:currentColor;-webkit-mask:var(--ico) center/contain no-repeat;mask:var(--ico) center/contain no-repeat;}
+  .btn-primary[data-nav="unterstuetzen"],.btn-primary[data-nav="mein-bereich"]{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.2c-.4 0-.8-.2-1.1-.4C6.6 17.4 2.6 14 2.6 9.2 2.6 6 5 3.6 8 3.6c1.7 0 3.1.8 4 2 .9-1.2 2.3-2 4-2 3 0 5.4 2.4 5.4 5.6 0 4.8-4 8.2-8.3 11.6-.3.2-.7.4-1.1.4z'/%3E%3C/svg%3E");}
+  .btn-primary[data-nav="bewerbung"]{--ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cellipse cx='5.2' cy='10' rx='2.3' ry='3'/%3E%3Cellipse cx='9.4' cy='5.6' rx='2.4' ry='3.2'/%3E%3Cellipse cx='14.6' cy='5.6' rx='2.4' ry='3.2'/%3E%3Cellipse cx='18.8' cy='10' rx='2.3' ry='3'/%3E%3Cpath d='M12 11.2c-3 0-6.6 4.6-6.6 7.4 0 1.8 1.4 2.8 3 2.8 1.4 0 2.3-.8 3.6-.8s2.2.8 3.6.8c1.6 0 3-1 3-2.8 0-2.8-3.6-7.4-6.6-7.4z'/%3E%3C/svg%3E");}
+  @keyframes hf-beat{0%,100%{transform:scale(1);}20%{transform:scale(1.22);}40%{transform:scale(.96);}60%{transform:scale(1.14);}}
+  @keyframes hf-stamp{0%,100%{transform:none;}35%{transform:translateY(2px) scale(.86);}}
+  .btn-primary[data-nav="unterstuetzen"]:hover::before,.btn-primary[data-nav="mein-bereich"]:hover::before{animation:hf-beat .9s ease;}
+  .btn-primary[data-nav="bewerbung"]:hover::before{animation:hf-stamp .5s ease;}
+  @media (prefers-reduced-motion:reduce){.btn-primary::before{animation:none !important;}}
+  /* start page: the three dog cards hang on a red line with wooden pegs (desktop fan) */
+  @media (min-width:641px){
+    .hero-fan{position:relative;align-items:flex-start;padding-top:38px;}
+    .hero-fan::before{content:"";position:absolute;left:-2%;right:-2%;top:52px;height:3px;border-radius:3px;background:#D2223E;}
+    .mini-kenncard{overflow:visible;position:relative;transform-origin:50% 0;}
+    .mini-kenncard::after{content:"";position:absolute;top:-34px;left:50%;width:22px;height:54px;margin-left:-11px;background:url(ill/ui-peg.webp) center/contain no-repeat;z-index:3;pointer-events:none;}
+    .mini-photo{border-radius:14px 14px 0 0;}
+    .fan-0{transform:rotate(-3deg) translateX(30px);}
+    .fan-1{transform:none;z-index:2;}
+    .fan-2{transform:rotate(3deg) translateX(-30px);}
+    .mini-kenncard:hover{transform:rotate(0deg) translateY(4px);}
+  }
 </style>
 </head>
 <body>
@@ -1411,7 +1661,7 @@ Object.assign(I18N.de, {
   hero_lede:'Damit jede Vermittlung passt, prüfen wir jede Anfrage persönlich. Füllen Sie zunächst eine kurze Selbstauskunft aus. Nach Freigabe erhalten Sie Zugang zu den Hunden, die zu Ihrer Situation passen.',
   hero_cta_apply:'Selbstauskunft starten', hero_cta_login:'Ich habe schon Zugang', hero_mini_cta:'Profil ansehen',
   steps_eyebrow:'So funktioniert\'s', steps_title:'Von der Straße auf die Couch.', steps_count:'Schritt {n} von {total}', steps_prev:'Zurück', steps_next:'Weiter',
-  steps_end_eyebrow:'Jetzt bist du dran', steps_end_t:'Vom Leben auf der Straße bis in die Arme einer liebevollen Familie.', steps_end_btn:'Jetzt Hunde kennenlernen →',
+  steps_end_eyebrow:'Jetzt bist du dran', steps_end_t:'Vom Leben auf der Straße bis in die Arme einer liebevollen Familie.', steps_end_btn:'Jetzt Hunde kennenlernen',
   step1_t:'Auf der Straße', step1_d:'Unsere Arbeit beginnt auf den Straßen und einer Mülldeponie in Bosnien. Wir retten Hunde in Not, bringen sie in Sicherheit und geben ihnen die Chance auf ein besseres Leben.',
   step2_t:'Hund finden', step2_d:'Lerne unsere geretteten Hunde kennen. Mit Fotos, Videos und persönlichen Beschreibungen helfen wir dir, den Hund zu finden, der zu dir und deinem Leben passt.',
   step3_t:'Selbstauskunft', step3_d:'Du hast dich verliebt? Dann erzähl uns etwas über dich, dein Zuhause und deinen Alltag. So können wir gemeinsam herausfinden, ob du und dein Wunschhund zusammenpassen.',
@@ -1459,7 +1709,7 @@ Object.assign(I18N.de, {
   login_note_pre:'Noch keine Selbstauskunft ausgefüllt? ', login_note_link:'Jetzt starten',
   portal_welcome:'Willkommen, {name}', portal_lede:'Diese Hunde wurden für Sie persönlich freigegeben, basierend auf Ihrer Selbstauskunft.',
   portal_empty:'Aktuell wurden noch keine Hunde für Sie freigegeben. Schauen Sie bald wieder vorbei.',
-  kennkarte:'Kennkarte', years:'Jahre', months:'Monate', badge_kidfriendly:'Kinderfreundlich', badge_garden:'Garten nötig', view_profile:'Profil ansehen →',
+  kennkarte:'Kennkarte', years:'Jahre', months:'Monate', badge_kidfriendly:'Kinderfreundlich', badge_garden:'Garten nötig', view_profile:'Profil ansehen',
   apply_for_dog:'Interesse anmelden', apply_requested:'Anfrage gesendet',
   apply_confirm_title:'Anfrage gesendet!', apply_confirm_text:'Ihre Anfrage für {dog} wurde an das Team von Ein Herz für Hunde übermittelt.',
   apply_next_steps_title:'Wie geht es weiter?',
@@ -1532,7 +1782,7 @@ Object.assign(I18N.de, {
   change_password_title:'Passwort ändern', current_password_label:'Aktuelles Passwort', new_password_label:'Neues Passwort (mind. 8 Zeichen)', confirm_password_label:'Neues Passwort bestätigen',
   change_password_btn:'Passwort ändern', password_mismatch_error:'Die neuen Passwörter stimmen nicht überein.', password_changed_success:'Passwort erfolgreich geändert.',
   feature_story:'Auf Startseite hervorheben', unfeature_story:'Nicht mehr hervorheben', toast_story_updated:'Aktualisiert', toast_story_deleted:'Geschichte gelöscht',
-  homepage_happytails_title:'Happy Ends', see_all_stories:'Alle Geschichten ansehen →', video_too_big:'Video zu groß, maximal 20 MB', video_wrong_type:'Nur MP4, MOV oder WebM erlaubt',
+  homepage_happytails_title:'Happy Ends', see_all_stories:'Alle Geschichten ansehen', video_too_big:'Video zu groß, maximal 20 MB', video_wrong_type:'Nur MP4, MOV oder WebM erlaubt',
   spam_hint:'Wichtig: Unsere E-Mails landen manchmal im Spam-Ordner. Bitte prüfen Sie diesen und markieren Sie unsere Nachricht als „Kein Spam“, damit Sie alle weiteren Infos sicher erhalten.', forgot_submit:'Neue Zugangsdaten anfordern', forgot_note_generic:'Falls zu dieser E-Mail-Adresse ein freigegebener Zugang existiert, wurden soeben neue Zugangsdaten versendet. Bitte prüfen Sie auch Ihren Spam-Ordner.', forgot_back_login:'Zurück zum Login',
   contract_section_title:'Schutzvertrag', contract_choose_dog:'Für welchen Hund?', contract_choose_dog_placeholder:'Bitte wählen …', contract_dogs_first:'Angefragt / freigegeben', contract_dogs_other:'Alle weiteren Hunde', contract_unlock_btn:'Schutzvertrag freischalten',
   applicant_requested_dog:'Interessent:in hat sich beworben für:', requested_dog_badge:'Wunschhund:',
@@ -1552,7 +1802,7 @@ Object.assign(I18N.en, {
   hero_lede:'So every match is a good one, we review every request personally. Start by filling in a short self-disclosure form. Once approved, you will get access to the dogs that fit your situation.',
   hero_cta_apply:'Start application', hero_cta_login:'I already have access', hero_mini_cta:'View profile',
   steps_eyebrow:'How it works', steps_title:'From the street to the couch.', steps_count:'Step {n} of {total}', steps_prev:'Back', steps_next:'Next',
-  steps_end_eyebrow:'Your turn', steps_end_t:'From life on the street into the arms of a loving family.', steps_end_btn:'Meet our dogs now →',
+  steps_end_eyebrow:'Your turn', steps_end_t:'From life on the street into the arms of a loving family.', steps_end_btn:'Meet our dogs now',
   step1_t:'On the street', step1_d:'Our work begins on the streets and at a rubbish dump in Bosnia. We rescue dogs in need, bring them to safety and give them the chance of a better life.',
   step2_t:'Find a dog', step2_d:'Get to know our rescued dogs. With photos, videos and personal descriptions we help you find the dog that fits you and your life.',
   step3_t:'Adoption form', step3_d:'Fallen in love? Then tell us a little about yourself, your home and your daily life. Together we can find out whether you and the dog you want are a good match.',
@@ -1600,7 +1850,7 @@ Object.assign(I18N.en, {
   login_note_pre:'Have not applied yet? ', login_note_link:'Start now',
   portal_welcome:'Welcome, {name}', portal_lede:'These dogs have been personally released for you, based on your application.',
   portal_empty:'No dogs have been released for you yet. Check back soon.',
-  kennkarte:'Profile card', years:'years', months:'months', badge_kidfriendly:'Good with kids', badge_garden:'Needs garden', view_profile:'View profile →',
+  kennkarte:'Profile card', years:'years', months:'months', badge_kidfriendly:'Good with kids', badge_garden:'Needs garden', view_profile:'View profile',
   apply_for_dog:'Apply for this dog', apply_requested:'Application sent',
   apply_confirm_title:'Application sent!', apply_confirm_text:'Your application for {dog} has been sent to the Ein Herz für Hunde team.',
   apply_next_steps_title:'What happens next?',
@@ -1673,7 +1923,7 @@ Object.assign(I18N.en, {
   change_password_title:'Change Password', current_password_label:'Current password', new_password_label:'New password (min. 8 characters)', confirm_password_label:'Confirm new password',
   change_password_btn:'Change password', password_mismatch_error:'The new passwords do not match.', password_changed_success:'Password changed successfully.',
   feature_story:'Feature on homepage', unfeature_story:'Remove from homepage', toast_story_updated:'Updated', toast_story_deleted:'Story deleted',
-  homepage_happytails_title:'Happy Ends', see_all_stories:'See all stories →', video_too_big:'Video too large, 20 MB maximum', video_wrong_type:'Only MP4, MOV or WebM allowed',
+  homepage_happytails_title:'Happy Ends', see_all_stories:'See all stories', video_too_big:'Video too large, 20 MB maximum', video_wrong_type:'Only MP4, MOV or WebM allowed',
   spam_hint:'Important: our emails sometimes end up in the spam folder. Please check it and mark our message as “not spam” so you receive all further information.', forgot_submit:'Request new login details', forgot_note_generic:'If an approved account exists for this email address, new login details were just sent. Please also check your spam folder.', forgot_back_login:'Back to login',
   contract_section_title:'Adoption contract', contract_choose_dog:'For which dog?', contract_choose_dog_placeholder:'Please choose …', contract_dogs_first:'Requested / released', contract_dogs_other:'All other dogs', contract_unlock_btn:'Unlock adoption contract',
   applicant_requested_dog:'Applicant has applied for:', requested_dog_badge:'Requested:',
@@ -1799,6 +2049,27 @@ function photoBlock(d){
 function accentLast(html){
   const m = String(html).match(/^([\s\S]*?)([^\s<>&;]+?)([.!?:,]*)$/);
   return m && m[1].trim() && m[2].length > 2 && !/^[\d.,]+$/.test(m[2]) ? `${m[1]}<em class="accent">${m[2]}</em>${m[3]}` : html;
+}
+// small drawings from the website (portal/ill/), decoration only, 24 Nov 2026
+// animated ones are short muted loops (mp4, 50-160 KB) that only load and play while on screen (illWake); the webp is the poster
+const ILL_SIZE = { lupe:[560,560], sofa:[900,676], brief:[560,560], tuer:[560,420], karte:[640,480], gesendet:[900,900], zuhause:[640,480], 'schlaf-herz':[440,440], huette:[560,420], handy:[560,420], stempel:[640,480], post:[560,420], herzglas:[640,480], '404':[900,678] };
+function ill(name, cls){
+  const [w, h] = ILL_SIZE[name] || [560, 420];
+  if(ILL_SIZE[name]) return `<video class="ill ill-vid ${cls||''}" data-src="ill/${name}.mp4" poster="ill/${name}.webp" muted loop playsinline preload="none" disablepictureinpicture aria-hidden="true" tabindex="-1" width="${w}" height="${h}"></video>`;
+  return `<img class="ill ${cls||''}" src="ill/${name}.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="${w}" height="${h}">`;
+}
+let illObserver = null;
+function illWake(){
+  const vids = document.querySelectorAll('video.ill-vid:not([data-on])');
+  if(!vids.length) return;
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return; // poster only
+  if(!('IntersectionObserver' in window)) return;
+  if(!illObserver) illObserver = new IntersectionObserver(entries => entries.forEach(e => {
+    const v = e.target;
+    if(e.isIntersecting){ if(!v.getAttribute('src')) v.src = v.dataset.src; const p = v.play(); if(p && p.catch) p.catch(() => {}); }
+    else if(!v.paused) v.pause();
+  }), { rootMargin: '120px' });
+  vids.forEach(v => { v.dataset.on = '1'; illObserver.observe(v); });
 }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 const MONTHS_DE = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
@@ -1959,7 +2230,7 @@ function stepsSectionHTML(){
       <div class="how-ctrl"><button type="button" data-action="steps-go" data-dir="-1" aria-label="${t('steps_prev')}">←</button><span class="how-count">${t('steps_count').replace('{n}', '1').replace('{total}', n)}</span><button type="button" data-action="steps-go" data-dir="1" aria-label="${t('steps_next')}">→</button></div>
     </div>
     <div class="how-track" tabindex="0">${items}
-      <button type="button" class="how-step how-end" data-nav="alle-hunde"><div class="how-b"><span class="how-eyebrow">${t('steps_end_eyebrow')}</span><p class="how-end-t">${t('steps_end_t')}</p><span class="how-end-btn">${t('steps_end_btn')}</span></div></button>
+      <button type="button" class="how-step how-end" data-nav="alle-hunde">${ill('zuhause','ill-end')}<div class="how-b"><span class="how-eyebrow">${t('steps_end_eyebrow')}</span><p class="how-end-t">${t('steps_end_t')}</p><span class="how-end-btn">${t('steps_end_btn')}</span></div></button>
     </div>
     <div class="wrap"><div class="how-prog"><i></i></div></div>
   </section>`;
@@ -2042,9 +2313,9 @@ function viewHome(){
     return `
   <section class="steps-section happy-home">
     <div class="wrap">
-      <h2 class="steps-title">${accentLast(t('homepage_happytails_title'))}</h2>
+      <div class="hh-head">${ill('schlaf-herz','ill-hh')}<h2 class="steps-title">${accentLast(t('homepage_happytails_title'))}</h2></div>
       <div class="dog-grid">${featured.map(happyTailCardHTML).join('')}</div>
-      <p style="margin-top:20px;"><a href="#" data-nav="happy-tails" style="color:var(--clay);font-weight:600;text-decoration:none;">${t('see_all_stories')}</a></p>
+      <p style="margin-top:20px;"><a href="#" data-nav="happy-tails" class="more-link">${t('see_all_stories')}</a></p>
     </div>
   </section>`;
   })()}
@@ -2068,7 +2339,7 @@ function viewBewerbung(){
   return `
   <section class="section">
     <div class="section-narrow">
-      <h1 class="page-title">${accentLast(t('bewerbung_title'))}</h1>
+      ${ill('brief','ill-head')}<h1 class="page-title">${accentLast(t('bewerbung_title'))}</h1>
       <p class="page-lede">${t('bewerbung_lede')}</p>
       <form class="card" id="bewerbungForm" novalidate>
 
@@ -2233,7 +2504,7 @@ function viewBewerbungConfirm(){
   <section class="section">
     <div class="section-narrow">
       <div class="card confirm-box">
-        <div class="confirm-icon">${ic.check}</div>
+        <div class="confirm-icon">${ic.check}</div>${ill('gesendet','ill-center ill-done')}
         <h2>${t('confirm_title')}</h2>
         <p>${t('confirm_text')}</p>
         <p class="spam-hint">${t('spam_hint')}</p>
@@ -2251,7 +2522,7 @@ function viewLogin(){
   return `
   <section class="section">
     <div class="wrap login-card">
-      <h1 class="page-title" style="text-align:center;">${accentLast(t('login_title'))}</h1>
+      ${ill('tuer','ill-center')}<h1 class="page-title" style="text-align:center;">${accentLast(t('login_title'))}</h1>
       <p class="page-lede" style="text-align:center;">${t('login_lede')}</p>
       <form class="card" id="loginForm" novalidate>
         <div class="field"><label>${t('label_email_plain')}</label><input type="email" name="email" required></div>
@@ -2270,7 +2541,7 @@ function viewForgotPassword(){
   return `
   <section class="section">
     <div class="wrap login-card">
-      <h1 class="page-title" style="text-align:center;">${t('forgot_title')}</h1>
+      ${ill('brief','ill-center')}<h1 class="page-title" style="text-align:center;">${t('forgot_title')}</h1>
       <p class="page-lede" style="text-align:center;">${t('forgot_lede')}</p>
       <form class="card" id="forgotForm" novalidate>
         <div class="field"><label>${t('label_email_plain')}</label><input type="email" name="email" required></div>
@@ -2300,7 +2571,7 @@ function viewApplicantMessages(){
   return `
   <section class="section">
     <div class="section-narrow">
-      <h1 class="page-title">${t('nav_messages')}</h1>
+      ${ill('handy','ill-head')}<h1 class="page-title">${t('nav_messages')}</h1>
       <p class="page-lede">${t('chat_intro_applicant')}</p>
       <div class="card chat-card">
         <div class="chat-box">${chatHTML(applicantChat.messages, 'applicant')}</div>
@@ -2347,7 +2618,7 @@ function viewPortal(){
   return `
   <section class="section">
     <div class="wrap">
-      <h1 class="page-title">${t('portal_welcome', {name: esc(applicant.name.split(' ')[0])})}</h1>
+      ${ill('huette','ill-head')}<h1 class="page-title">${t('portal_welcome', {name: esc(applicant.name.split(' ')[0])})}</h1>
       <p class="page-lede">${t('portal_lede')}</p>
       ${stageOf(applicant) === 'rejected' ? `<div class="rejected-note">${t('applicant_rejected_note')}</div>` : progressHTML(applicant)}
       <div class="portal-links">
@@ -2478,7 +2749,7 @@ function viewContract(){
   return `
   <section class="section">
     <div class="section-narrow contract-page">
-      <h1 class="page-title">${t('contract_page_title')}</h1>
+      ${ill('stempel','ill-head')}<h1 class="page-title">${t('contract_page_title')}</h1>
       <p class="page-lede">${t('contract_intro_real', { dog: dogName })}</p>
       ${lang==='en' ? `<p class="hint">${t('contract_german_note')}</p>` : ''}
       <form class="card" id="contractForm" novalidate>
@@ -2586,7 +2857,7 @@ function viewSubmitHappyTail(){
   return `
   <section class="section">
     <div class="section-narrow">
-      <h1 class="page-title">${t('submit_happytail_title')}</h1>
+      ${ill('post','ill-head')}<h1 class="page-title">${t('submit_happytail_title')}</h1>
       <p class="page-lede">${t('submit_happytail_intro')}</p>
       <form class="card" id="storyForm" novalidate>
         <div class="field"><label>${t('field_author_name')}</label><input type="text" name="authorName" value="${esc(applicant ? applicant.name.split(' ')[0] : '')}" maxlength="80" required></div>
@@ -2822,7 +3093,7 @@ function viewAllDogs(){
   return `
   <section class="section">
     <div class="wrap">
-      <h1 class="page-title">${accentLast(t('all_dogs_title'))}</h1>
+      ${ill('lupe','ill-head')}<h1 class="page-title">${accentLast(t('all_dogs_title'))}</h1>
       <p class="page-lede">${t('all_dogs_intro', {count: sorted.length})}</p>
       ${sorted.length ? `<div class="stage-tabs public-status-tabs">${groups.map(([k, l]) => `<button type="button" class="chip ${publicDogStatus===k?'on':''}" data-action="set-public-dog-status" data-status="${k}">${l} <span class="chip-n">${count(k)}</span></button>`).join('')}</div>` : ''}
       ${sorted.length ? filterBarHTML('public', filtered.length, inGroup.length) : ''}
@@ -2833,7 +3104,7 @@ function viewAllDogs(){
 }
 
 function emptyBlock(msg){
-  return `<div class="empty-block card">${ic.empty}<p>${esc(msg)}</p></div>`;
+  return `<div class="empty-block card"><img class="ill ill-empty" src="ill/lupe.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" width="560" height="560"><p>${esc(msg)}</p></div>`;
 }
 
 function isDogUnlockedForSession(d){
@@ -2917,10 +3188,10 @@ async function shareDog(d){
 function viewDogProfile(){
   const d = state.dogs.find(x => x.id === route.dogId);
   if(d && d.status === 'vermittelt' && !session.admin){
-    return `<section class="section"><div class="wrap" style="text-align:center;max-width:560px;"><h1 class="page-title">${t('dog_adopted_title', { name: esc(d.name) })}</h1><p class="page-lede">${t('dog_adopted_text')}</p><button class="btn-primary" data-nav="alle-hunde">${t('nav_all_dogs')}</button></div></section>`;
+    return `<section class="section"><div class="wrap" style="text-align:center;max-width:560px;">${ill('zuhause','ill-center')}<h1 class="page-title">${t('dog_adopted_title', { name: esc(d.name) })}</h1><p class="page-lede">${t('dog_adopted_text')}</p><button class="btn-primary" data-nav="alle-hunde">${t('nav_all_dogs')}</button></div></section>`;
   }
   if(!d){
-    return `<section class="section"><div class="wrap"><p>${t('profile_notfound')}</p><button class="btn-secondary" data-nav="home">${t('back_home')}</button></div></section>`;
+    return `<section class="section"><div class="wrap" style="text-align:center;">${ill('404','ill-center ill-404')}<p>${t('profile_notfound')}</p><button class="btn-secondary" data-nav="home">${t('back_home')}</button></div></section>`;
   }
   const photos = (Array.isArray(d.photos) ? d.photos : []).filter(Boolean);
   const fallback = dogAvatarSVG(d.coat||'tan');
@@ -3075,7 +3346,7 @@ function viewHappyTails(){
   return `
   <section class="section">
     <div class="wrap">
-      <h1 class="page-title">${accentLast(t('happytails_title'))}</h1>
+      ${ill('sofa','ill-head')}<h1 class="page-title">${accentLast(t('happytails_title'))}</h1>
       <p class="page-lede">${t('happytails_intro')}</p>
       <div class="story-cta"><div><b>${t('story_cta_title')}</b><br><span>${t('story_cta_text')}</span></div><button class="btn-primary" data-action="open-story-form">${t('story_cta_btn')}</button></div>
       ${stories.length ? `<div class="dog-grid">${stories.map(happyTailCardHTML).join('')}</div>` : emptyBlock(t('happytails_empty'))}
@@ -6435,6 +6706,7 @@ function render(){
   // keep the scroll position of inner scroll panels (social media preview) across re-renders
   const keepScroll = ['.soc-preview-box', '.soc-scenes > div', '.soc-photos > div'].map(q => [...document.querySelectorAll(q)].map(el => [el.scrollTop, el.scrollLeft]));
   renderInner();
+  illWake();
   ['.soc-preview-box', '.soc-scenes > div', '.soc-photos > div'].forEach((q, k) => document.querySelectorAll(q).forEach((el, i) => { const v = keepScroll[k][i]; if(v){ el.scrollTop = v[0]; el.scrollLeft = v[1]; } }));
 }
 function renderInner(){
@@ -8134,7 +8406,7 @@ function viewFeed(){
   return `
   <section class="section">
     <div class="wrap feed-wrap">
-      <h1 class="page-title">${accentLast(t('feed_title'))}</h1>
+      ${ill('karte','ill-head')}<h1 class="page-title">${accentLast(t('feed_title'))}</h1>
       <p class="page-lede">${t('feed_lede')}</p>
       ${loggedIn ? `<div class="stage-tabs" style="margin:18px 0 6px;">
         <button type="button" class="chip ${!feed.mine ? 'on' : ''}" data-action="feed-mine" data-mine="0">${t('feed_all')}</button>
@@ -8157,7 +8429,7 @@ function viewFeed(){
 function viewSignup(){
   if(signupDone) return `
   <section class="section"><div class="wrap login-card" style="text-align:center;">
-    <div class="done-icon">${ic2.mail}</div>
+    <div class="done-icon">${ic2.mail}</div>${ill('gesendet','ill-center ill-done')}
     <h1 class="page-title">${t('signup_done_title')}</h1>
     <p class="page-lede">${t('signup_done_text')}</p>
     <button class="btn-primary" data-nav="login">${t('hero_cta_login')}</button>
@@ -8208,7 +8480,7 @@ function viewMyArea(){
   return `
   <section class="section">
     <div class="wrap">
-      <h1 class="page-title">${t('my_title', { name: esc(String(me.name || applicant.name || '').split(' ')[0]) })}</h1>
+      ${ill('herzglas','ill-head')}<h1 class="page-title">${t('my_title', { name: esc(String(me.name || applicant.name || '').split(' ')[0]) })}</h1>
       <p class="page-lede">${t('my_lede')}</p>
       ${!isSupporterAccount(applicant) ? `<p><button class="btn-ghost btn-small" data-nav="portal">${ic2.home} ${t('my_to_portal')}</button></p>` : ''}
       <div class="badge-row" aria-label="${t('my_badges')}">${badgesFor(me, applicant).map(([icon, label]) => `<span class="sup-badge">${icon}<span>${label}</span></span>`).join('')}</div>
